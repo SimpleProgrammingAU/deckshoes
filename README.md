@@ -28,11 +28,14 @@ import { chain, deal, seededRandom, shuffle } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 
 // Functions: every call returns new data and leaves its input alone.
-const deck = shuffle(standard52(), seededRandom(42));
+const deck = shuffle(standard52(), { random: seededRandom(42) });
 const { hands, rest } = deal(deck, 4, 5);
 
 // Or the same thing as a chain, giving the same { hands, rest }.
-const same = chain(standard52()).shuffle(seededRandom(42)).deal(4, 5).value();
+const same = chain(standard52())
+  .shuffle({ random: seededRandom(42) })
+  .deal(4, 5)
+  .value();
 ```
 
 Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.

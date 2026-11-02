@@ -4,16 +4,20 @@ deckshoes is a set of pure functions over frozen data: every stack operation ret
 
 ```ts no-test
 // Functions
-const { hands, rest } = deal(shuffle(standard52(), seededRandom(42)), 4, 5);
+const deck = shuffle(standard52(), { random: seededRandom(42) });
+const { hands, rest } = deal(deck, 4, 5);
 
 // The same thing as a chain
-const same = chain(standard52()).shuffle(seededRandom(42)).deal(4, 5).value();
+const same = chain(standard52())
+  .shuffle({ random: seededRandom(42) })
+  .deal(4, 5)
+  .value();
 ```
 
 ## Considered options
 
 - **Classes, as in 0.4** (`new Deck().shuffle()`). Methods hide state that changes under you, and a bundler has to keep every method.
-- **`pipe` with curried functions** (`pipe(stack, shuffle(random), deal(4, 5))`). Tree-shakeable with nothing to wrap or unwrap, but every function needs a second, curried form, which doubles the types and the docs.
+- **`pipe` with curried functions** (`pipe(stack, shuffle({ random }), deal(4, 5))`). Tree-shakeable with nothing to wrap or unwrap, but every function needs a second, curried form, which doubles the types and the docs.
 - **Functions only.** The smallest API, but pipelines become nested calls or temporary variables.
 
 ## Consequences
