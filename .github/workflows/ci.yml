@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm format:check
@@ -27,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm typecheck
 
@@ -39,6 +43,8 @@ jobs:
         node: [22, 24, 26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node }}
@@ -60,24 +66,15 @@ jobs:
       - name: Smoke-test the packed tarball (import and require)
         run: |
           pnpm build
-          pnpm pack --pack-destination "$RUNNER_TEMP"
-          mkdir "$RUNNER_TEMP/smoke" && cd "$RUNNER_TEMP/smoke"
-          npm init -y > /dev/null
-          npm install --no-audit --no-fund "$RUNNER_TEMP"/deckshoes-*.tgz
-          node --input-type=module -e '
-            import { isDeckshoesError, InvalidCardError } from "deckshoes";
-            if (!isDeckshoesError(new InvalidCardError("x"))) throw new Error("ESM import failed");
-          '
-          node -e '
-            const { isDeckshoesError, InvalidCardError } = require("deckshoes");
-            if (!isDeckshoesError(new InvalidCardError("x"))) throw new Error("require() failed");
-          '
+          pnpm smoke
 
   docs:
     name: API docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm docs:build
 
@@ -86,6 +83,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm build
       - run: pnpm check:package
@@ -96,5 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm knip

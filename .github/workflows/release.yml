@@ -12,31 +12,55 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Runs every devDependency, so it gets no write access and no OIDC token.
+  verify:
+    name: Check everything before releasing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm check
+
   release:
     name: Version PR or publish
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
-      contents: write # push the version commit, tags and GitHub releases
-      pull-requests: write # open and update the "Version Packages" PR
+      contents: write # tags and GitHub releases (fallback token only)
+      pull-requests: write # the "version packages" PR (fallback token only)
       id-token: write # npm trusted publishing (OIDC) and provenance
     outputs:
       published: ${{ steps.changesets.outputs.published }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
 
-      - name: Check everything before releasing
-        run: pnpm check
+      # PRs opened with GITHUB_TOKEN don't trigger other workflows, so CI would
+      # never run on the version PR. A GitHub App token avoids that. Without the
+      # app configured, this falls back to GITHUB_TOKEN.
+      - id: app-token
+        if: vars.RELEASE_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
+          github-token: ${{ steps.app-token.outputs.token || github.token }}
           version-script: pnpm version-packages
           publish-script: pnpm release
           commit-message: "chore: version packages"
           pr-title: "chore: version packages"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
 
   docs:
     name: Deploy API docs
