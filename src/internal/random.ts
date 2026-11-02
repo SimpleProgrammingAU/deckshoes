@@ -1,6 +1,7 @@
 import type { RandomSource } from "../random.ts";
 
 import { InvalidArgumentError } from "../errors.ts";
+import { assert } from "./assert.ts";
 import { display } from "./display.ts";
 
 /**
@@ -89,10 +90,14 @@ export function xoshiro128StarStar(seed: number): RandomSource {
  * It splits the 2³² values of `floor(r × 2³²)` into n buckets of
  * `floor(2³² / n)` and returns the bucket the value falls in, drawing again
  * when it lands in the incomplete last bucket. `n` must be an integer from 1
- * to 2³². This mapping is fixed for 1.x: changing it changes every seeded
+ * to 2³², which callers guarantee, so anything else is a bug. This mapping is fixed for 1.x: changing it changes every seeded
  * result.
  */
 export function randomIndex(n: number, random: RandomSource): number {
+  assert(
+    Number.isInteger(n) && n >= 1 && n <= TWO_TO_THE_32,
+    `randomIndex needs an integer n from 1 to 2³², not ${String(n)}`,
+  );
   const size = Math.floor(TWO_TO_THE_32 / n);
   for (let rejections = 0; rejections < MAX_REJECTIONS; rejections++) {
     const value: unknown = random();
