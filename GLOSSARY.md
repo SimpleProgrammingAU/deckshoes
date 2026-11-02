@@ -134,3 +134,7 @@ _Avoid_: RNG, PRNG, generator, randomiser
 **Chain**:
 A stack wrapped so that operations can be written as a pipeline and then unwrapped.
 _Avoid_: wrapper, fluent API, builder
+
+**Install**:
+One installation of the deckshoes package in an app, which can have more than one, such as when a dependency needs another major version.
+_Avoid_: copy, duplicate
