@@ -38,7 +38,7 @@
   "scripts": {
     "build": "tsdown",
     "changeset": "changeset",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm docs:build && pnpm build && pnpm check:package && pnpm size && pnpm knip",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm coverage && pnpm docs:build && pnpm build && pnpm check:package && pnpm size && pnpm smoke && pnpm knip",
     "check:package": "publint && attw --pack --profile esm-only",
     "coverage": "pnpm doctest:gen && vitest run --coverage",
     "dev": "tsdown --watch",
@@ -52,6 +52,7 @@
     "prepare": "husky",
     "release": "pnpm build && changeset publish",
     "size": "size-limit",
+    "smoke": "node scripts/smoke.ts",
     "test": "pnpm doctest:gen && vitest run",
     "test:watch": "pnpm doctest:gen && vitest",
     "typecheck": "pnpm doctest:gen && tsc --noEmit",
