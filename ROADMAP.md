@@ -8,7 +8,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 
 ## M1: Core (`1.0.0-alpha.N`)
 
-- `Card`, `Rank` and `Suit` types for the 52 standard cards. Cards are frozen and interned, so identical cards are `===`.
+- `Card`, `Rank`, `Suit` and `Color` types for the 52 standard cards. Cards are frozen and interned, so identical cards are `===`.
 - Parse and format cards: `"AS"`, `"10h"`, `"Th"`, `"A♠"`, `"Ace of Spades"`, and Unicode playing-card characters.
 - Rank orders (ace high or low) and suit orders, for sorting and comparing.
 - Stack operations, which never change their input: `shuffle`, `draw`, `drawBottom`, `peek`, `deal`, `cut`, `insert`, `remove`, `contains`, `count`, `sort`, `groupBy`.
