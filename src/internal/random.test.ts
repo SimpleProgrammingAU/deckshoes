@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { isDeckshoesError } from "../errors.ts";
 import { type RandomSource, seededRandom } from "../random.ts";
 import { randomIndex, secureRandom } from "./random.ts";
 
@@ -95,6 +96,19 @@ describe("randomIndex", () => {
         },
       ),
     );
+  });
+
+  it.each([
+    ["0", 0],
+    ["a fraction", 2.5],
+    ["more than 2³²", 2 ** 32 + 1],
+    ["NaN", NaN],
+  ])("treats %s as n as a bug, without drawing", (_label, n) => {
+    const random = source();
+    const error = thrownBy(() => randomIndex(n, random));
+    expect(isDeckshoesError(error)).toBe(false);
+    expect(error).toBeInstanceOf(Error);
+    expect(random.calls).toBe(0);
   });
 
   it("draws once for a single card", () => {
