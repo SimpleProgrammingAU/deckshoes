@@ -78,9 +78,13 @@ declare class CardBrand {
  * card, so cards compare with `===`, and `includes`, `indexOf`, `Set` and
  * `Map` work on them. The type is branded, so an object literal with the same
  * fields, or one spread from a card, isn't a `Card`: it could never be `===`
- * to the real one. Cards from
- * another install of deckshoes are separate objects, so they aren't `===` to
- * these either.
+ * to the real one. Cards from another install of deckshoes are separate
+ * objects, so they aren't `===` to these either.
+ *
+ * A cloned card, such as one sent with `postMessage`, kept in storage or made
+ * by `structuredClone`, is a plain object too, even where TypeScript still
+ * types it as a `Card`. Pass its rank and suit back through {@link card} to
+ * get the real card.
  *
  * @example
  * ```ts
