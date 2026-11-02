@@ -1,6 +1,6 @@
 {
   "name": "deckshoes",
-  "version": "0.4.0",
+  "version": "1.0.0-alpha.0",
   "description": "A lightweight, fully typed library for playing cards: decks, shoes, shuffling, dealing and more.",
   "keywords": [
     "cards",

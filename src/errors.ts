@@ -13,7 +13,7 @@
  * error.available; // => 1
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface DeckshoesErrorMap {
   /** A count, index or option was outside what the operation accepts. */
@@ -46,7 +46,7 @@ export interface DeckshoesErrorMap {
  * codeOf(new Error("boom")); // => undefined
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type DeckshoesErrorCode = keyof DeckshoesErrorMap;
 
@@ -77,7 +77,7 @@ const BRAND: unique symbol = Symbol.for("deckshoes.error.v1");
  * error.code; // => "INSUFFICIENT_CARDS"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export abstract class DeckshoesError extends Error {
   static {
@@ -104,7 +104,7 @@ export abstract class DeckshoesError extends Error {
  * error.message; // => "count must not be negative"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export class InvalidArgumentError extends DeckshoesError {
   /** Always `"INVALID_ARGUMENT"`. */
@@ -126,7 +126,7 @@ export class InvalidArgumentError extends DeckshoesError {
  * error.name; // => "InvalidCardError"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export class InvalidCardError extends DeckshoesError {
   /** Always `"INVALID_CARD"`. */
@@ -150,7 +150,7 @@ export class InvalidCardError extends DeckshoesError {
  * error.message; // => "Needed 5 cards but only 2 are available"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export class InsufficientCardsError extends DeckshoesError {
   /** How many cards are available. */
@@ -204,7 +204,7 @@ export class InsufficientCardsError extends DeckshoesError {
  * isDeckshoesError(new Error("boom")); // => false
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function isDeckshoesError<
   C extends DeckshoesErrorCode = DeckshoesErrorCode,
