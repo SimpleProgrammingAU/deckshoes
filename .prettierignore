@@ -1,0 +1,7 @@
+dist
+coverage
+docs-site
+.doctest
+pnpm-lock.yaml
+CHANGELOG.md
+.changeset/pre.json
