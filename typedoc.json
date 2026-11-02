@@ -9,7 +9,6 @@
   "excludeInternal": true,
   "sort": ["kind", "alphabetical"],
   "githubPages": true,
-  "gitRevision": "main",
   "sourceLinkExternal": true,
   "navigationLinks": {
     "GitHub": "https://github.com/SimpleProgrammingAU/deckshoes",
