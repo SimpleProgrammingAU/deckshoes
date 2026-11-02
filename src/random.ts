@@ -1,5 +1,6 @@
 import { InvalidArgumentError } from "./errors.ts";
 import { display } from "./internal/display.ts";
+import { xoshiro128StarStar } from "./internal/random.ts";
 
 /**
  * Where an operation that needs randomness, such as a shuffle, gets it: a
@@ -35,20 +36,6 @@ export type RandomSource = () => number;
 
 /** The largest seed, 2³² − 1. */
 const MAX_SEED = 0xff_ff_ff_ff;
-
-/** 2³², which turns a 32-bit integer into a number from 0 up to 1. */
-const TWO_TO_THE_32 = 2 ** 32;
-
-/**
- * Rotates a 32-bit integer left, as xoshiro128** does.
- *
- * @param value - The integer to rotate.
- * @param bits - How many bits to rotate it by, from 1 to 31.
- * @returns The rotated integer, as a signed 32-bit value.
- */
-function rotateLeft(value: number, bits: number): number {
-  return (value << bits) | (value >>> (32 - bits));
-}
 
 /**
  * Returns a random source that gives the same sequence for the same seed, in
@@ -103,36 +90,5 @@ export function seededRandom(seed: number): RandomSource {
     );
   }
 
-  // splitmix32 expands the seed into xoshiro128**'s 128 bits of state. It
-  // steps a 32-bit counter by 0x9E3779B9 and mixes each step with the hash
-  // [16 21f0aaad 15 735a2d97 15] from Hash Prospector. The mix is a
-  // bijection and the four counter values differ, so at most one word of
-  // state is 0, and no seed gives the all-zero state.
-  let counter = seed >>> 0;
-  const splitmix32 = (): number => {
-    counter = (counter + 0x9e_37_79_b9) >>> 0;
-    let z = counter;
-    z = Math.imul(z ^ (z >>> 16), 0x21_f0_aa_ad);
-    z = Math.imul(z ^ (z >>> 15), 0x73_5a_2d_97);
-    return (z ^ (z >>> 15)) >>> 0;
-  };
-  let s0 = splitmix32();
-  let s1 = splitmix32();
-  let s2 = splitmix32();
-  let s3 = splitmix32();
-
-  // xoshiro128** 1.1 by Blackman and Vigna, as in their reference C code.
-  // Every step is 32-bit integer arithmetic that ECMAScript defines exactly
-  // (Math.imul, shifts, xor), so every runtime gives the same sequence.
-  return () => {
-    const result = Math.imul(rotateLeft(Math.imul(s1, 5), 7), 9) >>> 0;
-    const t = s1 << 9;
-    s2 ^= s0;
-    s3 ^= s1;
-    s1 ^= s2;
-    s0 ^= s3;
-    s2 ^= t;
-    s3 = rotateLeft(s3, 11);
-    return result / TWO_TO_THE_32;
-  };
+  return xoshiro128StarStar(seed);
 }

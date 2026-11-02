@@ -11,7 +11,7 @@ declare const crypto: {
   getRandomValues(array: Uint32Array): Uint32Array;
 };
 
-/** 2³², the number of 32-bit values. */
+/** 2³², the number of 32-bit values, which turns one into a number from 0 up to 1. */
 const TWO_TO_THE_32 = 2 ** 32;
 
 /** How many 32-bit values {@link secureRandom} asks crypto for at once. */
@@ -38,6 +38,48 @@ export function secureRandom(): number {
   const value = pool[next]!;
   next += 1;
   return value / TWO_TO_THE_32;
+}
+
+/** Rotates a 32-bit integer left by `bits`, from 1 to 31. */
+function rotateLeft(value: number, bits: number): number {
+  return (value << bits) | (value >>> (32 - bits));
+}
+
+/** Returns xoshiro128** as a random source, its state expanded from a 32-bit `seed` by splitmix32. */
+export function xoshiro128StarStar(seed: number): RandomSource {
+  // splitmix32 expands the seed into xoshiro128**'s 128 bits of state. It
+  // steps a 32-bit counter by 0x9E3779B9 and mixes each step with the hash
+  // [16 21f0aaad 15 735a2d97 15] from Hash Prospector. The mix is a
+  // bijection and the four counter values differ, so at most one word of
+  // state is 0, and no seed gives the all-zero state.
+  let counter = seed >>> 0;
+  const splitmix32 = (): number => {
+    counter = (counter + 0x9e_37_79_b9) >>> 0;
+    let z = counter;
+    z = Math.imul(z ^ (z >>> 16), 0x21_f0_aa_ad);
+    z = Math.imul(z ^ (z >>> 15), 0x73_5a_2d_97);
+    return (z ^ (z >>> 15)) >>> 0;
+  };
+  let s0 = splitmix32();
+  let s1 = splitmix32();
+  let s2 = splitmix32();
+  let s3 = splitmix32();
+
+  // xoshiro128** 1.1 by Blackman and Vigna, as in their reference C code.
+  // Every step is 32-bit integer arithmetic that ECMAScript defines exactly
+  // (Math.imul, shifts, xor), so every runtime gives the same sequence. Each
+  // value is the 32-bit output divided by 2³².
+  return () => {
+    const result = Math.imul(rotateLeft(Math.imul(s1, 5), 7), 9) >>> 0;
+    const t = s1 << 9;
+    s2 ^= s0;
+    s3 ^= s1;
+    s1 ^= s2;
+    s0 ^= s3;
+    s2 ^= t;
+    s3 = rotateLeft(s3, 11);
+    return result / TWO_TO_THE_32;
+  };
 }
 
 /**
