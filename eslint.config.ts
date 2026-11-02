@@ -9,6 +9,7 @@ import perfectionist from "eslint-plugin-perfectionist";
 import unicorn from "eslint-plugin-unicorn";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
+import { builtinModules } from "node:module";
 import tseslint from "typescript-eslint";
 
 /** Virtual files that eslint-plugin-jsdoc's processor creates for `@example` code. */
@@ -122,7 +123,11 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
         {
           patterns: [
             {
-              group: ["node:*"],
+              group: [
+                "node:*",
+                ...builtinModules,
+                ...builtinModules.map((name) => `${name}/*`),
+              ],
               message:
                 "The library must run in browsers and every JS runtime; don't import Node built-ins.",
             },
