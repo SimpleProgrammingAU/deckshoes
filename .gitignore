@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+docs-site/
+.doctest/
+*.tgz
+*.log
+.DS_Store
+.eslintcache
+.claude/settings.local.json

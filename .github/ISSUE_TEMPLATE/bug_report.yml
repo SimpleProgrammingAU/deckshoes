@@ -1,0 +1,44 @@
+name: Bug report
+description: Something in deckshoes doesn't work as documented.
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. A minimal reproduction is the fastest way to a fix.
+  - type: input
+    id: version
+    attributes:
+      label: deckshoes version
+      placeholder: "1.0.0-alpha.0"
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and version
+      description: Node.js, Deno, Bun, or a browser, with its version.
+      placeholder: "Node.js 24.11.0"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The smallest code that shows the problem. Use a seeded RNG (`seededRng(…)`) if shuffling is involved.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: Include the full error, with its `code` if it's a deckshoes error.
+    validations:
+      required: true

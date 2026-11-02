@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm check)",
+      "Bash(pnpm check:package)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint:fix)",
+      "Bash(pnpm format)",
+      "Bash(pnpm format:check)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm coverage)",
+      "Bash(pnpm build)",
+      "Bash(pnpm docs:build)",
+      "Bash(pnpm size)",
+      "Bash(pnpm knip)",
+      "Bash(pnpm exec vitest:*)",
+      "Bash(pnpm exec eslint:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)"
+    ]
+  }
+}

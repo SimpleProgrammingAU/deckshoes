@@ -1,0 +1,38 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs-site",
+  "name": "deckshoes",
+  "readme": "README.md",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "sort": ["kind", "alphabetical"],
+  "githubPages": true,
+  "sourceLinkExternal": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/SimpleProgrammingAU/deckshoes",
+    "npm": "https://www.npmjs.com/package/deckshoes"
+  },
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "rewrittenLink": true,
+    "notDocumented": true,
+    "unusedMergeModuleWith": true
+  },
+  "requiredToBeDocumented": [
+    "Enum",
+    "EnumMember",
+    "Variable",
+    "Function",
+    "Class",
+    "Interface",
+    "Property",
+    "Method",
+    "Accessor",
+    "TypeAlias"
+  ],
+  "treatWarningsAsErrors": true,
+  "treatValidationWarningsAsErrors": true
+}
