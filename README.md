@@ -97,7 +97,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 - **ESM only.** Node.js 22.12 and later can also `require()` it.
 - **Runtimes:** Node.js 22.12+, Deno, Bun, and current browsers. The library doesn't use any Node.js APIs.
 - **TypeScript:** types are included. Strict mode is recommended.
-- **One install per app.** If you publish a library that uses deckshoes, list it in `peerDependencies` so your users' apps get one install. Two installs still work side by side, but their cards aren't `===` to each other; `isDeckshoesError` recognises errors from both.
+- **One install per app.** If you publish a library that uses deckshoes, list it in `peerDependencies` so your users' apps get one install. Two installs still work side by side, but their cards aren't `===` to each other; `isDeckshoesError` recognises errors from both if they share a major version.
 
 ## Documentation
 
