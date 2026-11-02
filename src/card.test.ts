@@ -167,7 +167,20 @@ describe("card with input that isn't standard", () => {
 
   it.each([
     ["quotes a string", asRank("11"), "S", 'Unknown rank "11"'],
+    [
+      "shows a 30-character string in full",
+      asRank("x".repeat(30)),
+      "S",
+      `Unknown rank "${"x".repeat(30)}"`,
+    ],
+    [
+      "cuts a longer string short",
+      asRank("x".repeat(1_000_000)),
+      "S",
+      `Unknown rank "${"x".repeat(30)}"…`,
+    ],
     ["shows a number as it is", asRank(10), "S", "Unknown rank 10"],
+    ["marks a bigint", asRank(10n), "S", "Unknown rank 10n"],
     ["shows null as it is", asRank(null), "S", "Unknown rank null"],
     ["shows only an object's type", asRank({}), "S", "Unknown rank (object)"],
     [
