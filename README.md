@@ -40,6 +40,29 @@ const same = chain(standard52())
 
 Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
+## Cards
+
+A card is a frozen object with a `rank`, a `suit` and a `color`. The ranks are `"A"`, `"2"` to `"10"`, `"J"`, `"Q"` and `"K"`, with ten written `"10"`. The suits are `"S"`, `"H"`, `"D"` and `"C"`, for spades, hearts, diamonds and clubs. A card's colour comes from its suit: red for hearts and diamonds, black for spades and clubs.
+
+There's exactly one object for each card, so cards compare with `===`, and `includes`, `indexOf`, `Set` and `Map` work on them without a helper.
+
+```ts
+import { card, isCard } from "deckshoes";
+
+const ace = card("A", "S");
+ace; // => { rank: "A", suit: "S", color: "black" }
+card("10", "H").color; // => "red"
+
+ace === card("A", "S"); // => true
+[card("K", "D"), ace].includes(card("A", "S")); // => true
+
+// An object with the same fields isn't a card.
+isCard(ace); // => true
+isCard({ rank: "A", suit: "S", color: "black" }); // => false
+```
+
+TypeScript rejects any other rank or suit. Values it can't check, such as user input, are checked when the card is made: a rank or suit that isn't standard throws `InvalidCardError`.
+
 ## Error handling
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
