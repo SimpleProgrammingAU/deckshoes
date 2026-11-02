@@ -50,7 +50,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky",
-    "release": "pnpm build && changeset publish",
+    "release": "pnpm build && node scripts/release.ts",
     "size": "size-limit",
     "smoke": "node scripts/smoke.ts",
     "test": "pnpm doctest:gen && vitest run",

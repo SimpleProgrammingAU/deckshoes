@@ -129,7 +129,17 @@ AI-assisted contributions are welcome and held to the same standard. `CLAUDE.md`
 Releases are automated with [Changesets](https://github.com/changesets/changesets):
 
 1. When PRs with changesets merge to `main`, the release workflow checks everything in a read-only job, then opens or updates a **"chore: version packages"** PR. It bumps the version, writes `CHANGELOG.md`, and replaces `@since NEXT` with the new version number.
-2. Merging that PR publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (no npm token is stored anywhere) and provenance, creates a git tag and a GitHub release, and redeploys the API docs.
+2. Merging that PR **stages** the new version on npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored anywhere. It also creates the git tag and the GitHub release, and redeploys the API docs. The run's summary shows the approval commands.
+3. **A maintainer approves the staged version** with 2FA, which makes it public:
+
+   ```sh
+   npm stage list deckshoes
+   npm stage approve <stage-id>
+   ```
+
+   Or approve it on the package page at npmjs.com. Until then, the GitHub release exists but `npm install` can't get the new version.
+
+The trusted publisher on npm only allows `npm stage publish`, not `npm publish`, so a compromised workflow can stage a release but can't make one public. The git tag `v<version>` marks a version as staged: `scripts/release.ts` does nothing once it exists. If staging fails, re-run the release job.
 
 While the project is in prerelease mode, releases go to the `alpha` dist-tag. To ship 1.0.0, run `pnpm changeset pre exit` in a PR, merge it, then merge the version PR that follows.
 
