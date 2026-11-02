@@ -66,7 +66,7 @@ const BRAND: unique symbol = Symbol.for("deckshoes.error.v1");
  * Catch it to handle any deckshoes error, then check
  * {@link DeckshoesError.code | code} to tell them apart. To test an unknown
  * value, prefer {@link isDeckshoesError}, which also works across two installs
- * of the package.
+ * of the same major version.
  *
  * @example
  * ```ts
@@ -187,7 +187,7 @@ export class InsufficientCardsError extends DeckshoesError {
  * specific {@link DeckshoesErrorCode}, and narrows its type to match.
  *
  * Unlike `instanceof`, this still works when an app ends up with two installs
- * of deckshoes.
+ * of deckshoes, as long as they share a major version.
  *
  * @param error - The value to check, typically from a `catch` block.
  * @param code - If given, also require the error to have this code.
