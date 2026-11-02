@@ -16,7 +16,10 @@
  * @since 1.0.0
  */
 export interface DeckshoesErrorMap {
-  /** A count, index or option was outside what the operation accepts. */
+  /**
+   * A count, index, seed or option was outside what the operation accepts, or
+   * a random source misbehaved.
+   */
   INVALID_ARGUMENT: InvalidArgumentError;
   /** A rank, suit or card string could not be recognised. */
   INVALID_CARD: InvalidCardError;
@@ -92,8 +95,10 @@ export abstract class DeckshoesError extends Error {
 }
 
 /**
- * Thrown when a count, index or option is outside what an operation accepts,
- * such as a negative number of cards or a cut position past the end of a deck.
+ * Thrown when a count, index, seed or option is outside what an operation
+ * accepts, such as a negative number of cards or a cut position past the end of
+ * a deck. Also thrown when a random source returns something other than a
+ * number from 0 up to 1, or keeps returning values that have to be rejected.
  *
  * @example
  * ```ts
