@@ -18,20 +18,21 @@ pnpm check     # everything CI runs; should pass on a fresh clone
 
 ## Scripts
 
-| Script                              | What it does                                                                             |
-| ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| `pnpm check`                        | Everything below, in the same order as CI. Run it before asking for review.              |
-| `pnpm lint` / `pnpm lint:fix`       | ESLint, including the code inside `@example` blocks.                                     |
-| `pnpm format` / `pnpm format:check` | Prettier.                                                                                |
-| `pnpm typecheck`                    | TypeScript, including the generated doctests.                                            |
-| `pnpm test` / `pnpm test:watch`     | Unit tests, type tests and doctests.                                                     |
-| `pnpm coverage`                     | Tests with a coverage report in `coverage/`.                                             |
-| `pnpm docs:build`                   | Builds the API reference in `docs-site/`. Fails on undocumented exports or broken links. |
-| `pnpm build`                        | Builds `dist/`.                                                                          |
-| `pnpm check:package`                | Checks the published package shape (publint, Are the Types Wrong).                       |
-| `pnpm size`                         | Checks bundle size budgets.                                                              |
-| `pnpm knip`                         | Finds unused files, exports and dependencies.                                            |
-| `pnpm changeset`                    | Adds a changeset describing your change for the changelog.                               |
+| Script                              | What it does                                                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                        | Everything below, in the same order as CI. Run it before asking for review.                                            |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint, including the code inside `@example` blocks.                                                                   |
+| `pnpm format` / `pnpm format:check` | Prettier.                                                                                                              |
+| `pnpm typecheck`                    | TypeScript, including the generated doctests.                                                                          |
+| `pnpm test` / `pnpm test:watch`     | Unit tests, type tests and doctests. Watch mode regenerates doctests as you edit examples.                             |
+| `pnpm coverage`                     | Tests with a coverage report in `coverage/`.                                                                           |
+| `pnpm docs:build`                   | Builds the API reference in `docs-site/`. Fails on undocumented exports or broken links.                               |
+| `pnpm build`                        | Builds `dist/`.                                                                                                        |
+| `pnpm check:package`                | Checks the published package shape (publint, Are the Types Wrong).                                                     |
+| `pnpm size`                         | Checks bundle size budgets.                                                                                            |
+| `pnpm smoke`                        | Installs the packed tarball in a scratch project and loads it with `import` and `require()`. Needs `pnpm build` first. |
+| `pnpm knip`                         | Finds unused files, exports and dependencies.                                                                          |
+| `pnpm changeset`                    | Adds a changeset describing your change for the changelog.                                                             |
 
 The pre-commit hook formats and lints staged files, then runs `typecheck` and `test`.
 
@@ -98,10 +99,10 @@ isDeckshoesError(error, "INVALID_CARD"); // => false
 someFunction(-1); // throws INVALID_ARGUMENT
 ```
 
-- `expr; // => value` asserts that `expr` deeply equals `value`. `const x = …; // => value` and `console.log(x); // => value` work too.
-- `expr; // throws CODE` asserts the error's `code`. Use an error class name instead (`// throws InvalidArgumentError`) to check its `name`.
+- `expr; // => value` asserts that `expr` deeply equals `value`. `const x = …; // => value` and `console.log(x); // => value` work too. The comment goes on the last line of the statement, so statements that Prettier wraps over several lines work.
+- `expr; // throws CODE` asserts the error's `code`. Use an error class name instead (`// throws InvalidArgumentError`) to check its `name`. If `expr` contains `await`, it asserts the promise rejects.
 - Import from `"deckshoes"`, the way users will.
-- Use a seeded random source so results are predictable.
+- Pass a seeded random source to every shuffle, so the results shown are the results you get.
 - Add `no-test` to the fence (` ```ts no-test `) for illustrations that shouldn't run, such as the block above.
 
 ## Errors
@@ -109,14 +110,14 @@ someFunction(-1); // throws INVALID_ARGUMENT
 - Throw only the classes in `src/errors.ts`; every error has a stable `code`.
 - Throw where user input enters the library, and nowhere else. Internal invariants use an internal `assert()`, which isn't part of the API.
 - Parsing functions get a non-throwing twin: `parseCard` throws, `tryParseCard` returns `undefined`.
-- Tests check the error `code`, not the message.
+- When a test checks that something throws, it asserts the error's `code`. Messages can be reworded freely; only tests of how a message is built (such as "1 card" vs "2 cards") look at message text.
 
 ## Tests
 
 - Unit tests live next to the code: `src/thing.ts` and `src/thing.test.ts`.
 - Type-level tests go in `src/thing.test-d.ts`, using `expectTypeOf`.
 - Use [fast-check](https://fast-check.dev/) property tests for deck operations. For example: a shuffle keeps every card exactly once, and dealing loses no cards.
-- Anything random gets a seeded random source.
+- Shuffles and anything else that takes a deckshoes random source get a seeded one, so results repeat. fast-check property tests stay unseeded: each run explores new cases, and a failure prints the seed that reproduces it.
 - Coverage must stay at or above the thresholds in `vitest.config.ts`.
 
 ## Using AI agents
@@ -127,7 +128,9 @@ AI-assisted contributions are welcome and held to the same standard. `CLAUDE.md`
 
 Releases are automated with [Changesets](https://github.com/changesets/changesets):
 
-1. When PRs with changesets merge to `main`, the release workflow opens or updates a **"chore: version packages"** PR. It bumps the version, writes `CHANGELOG.md`, and replaces `@since NEXT` with the new version number.
+1. When PRs with changesets merge to `main`, the release workflow checks everything in a read-only job, then opens or updates a **"chore: version packages"** PR. It bumps the version, writes `CHANGELOG.md`, and replaces `@since NEXT` with the new version number.
 2. Merging that PR publishes to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (no npm token is stored anywhere) and provenance, creates a git tag and a GitHub release, and redeploys the API docs.
 
 While the project is in prerelease mode, releases go to the `alpha` dist-tag. To ship 1.0.0, run `pnpm changeset pre exit` in a PR, merge it, then merge the version PR that follows.
+
+The release workflow opens the version PR with a token from a GitHub App, because PRs opened with the default `GITHUB_TOKEN` don't trigger CI. The App needs **Contents** and **Pull requests** read and write access on this repository. Its client ID goes in the `RELEASE_APP_CLIENT_ID` Actions variable and its private key in the `RELEASE_APP_PRIVATE_KEY` secret. Without them the workflow falls back to `GITHUB_TOKEN`, and CI won't run on the version PR.

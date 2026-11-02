@@ -12,7 +12,7 @@ Read `CONTRIBUTING.md` (Code rules, Documentation rules, Errors, Tests) before w
 
 - New public exports get `@since NEXT`; the release script stamps the real version.
 - `@throws` is only detected for a `throw` in the function's own body, so public functions validate their own inputs and `throw` right there.
-- Examples are doctests: `expr; // => value` and `expr; // throws CODE`. Seed anything random.
+- Examples are doctests: `expr; // => value` and `expr; // throws CODE`. Pass a seeded random source to every shuffle.
 - A failing doctest's title names the source file and line. Fix the example there; `.doctest/` is regenerated on every run.
 - Every change to the published package gets a changeset (`pnpm changeset`).
 
