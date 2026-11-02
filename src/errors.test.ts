@@ -103,15 +103,29 @@ describe("isDeckshoesError", () => {
     expect(isDeckshoesError(fake, "INVALID_CARD")).toBe(false);
   });
 
-  it("recognises errors from another copy of the package via the global brand", () => {
-    const foreign = Object.create(
-      Object.assign(Object.create(Error.prototype) as object, {
-        [Symbol.for("deckshoes.error")]: true,
-      }),
-    ) as object;
-    Object.assign(foreign, { code: "INVALID_CARD" });
+  /** Builds an error-like object branded the way another copy would brand it. */
+  function foreignError(brand: string, value: unknown): object {
+    const prototype = Object.assign(Object.create(Error.prototype) as object, {
+      [Symbol.for(brand)]: value,
+    });
+    return Object.assign(Object.create(prototype) as object, {
+      code: "INVALID_CARD",
+    });
+  }
+
+  it("recognises errors from another copy of the same major version", () => {
+    const foreign = foreignError("deckshoes.error.v1", true);
     expect(isDeckshoesError(foreign)).toBe(true);
     expect(isDeckshoesError(foreign, "INVALID_CARD")).toBe(true);
     expect(isDeckshoesError(foreign, "INVALID_ARGUMENT")).toBe(false);
+  });
+
+  it.each([
+    ["another major version", "deckshoes.error.v2", true],
+    ["an unversioned brand", "deckshoes.error", true],
+    ["a brand set to false", "deckshoes.error.v1", false],
+    ["a brand set to a truthy non-boolean", "deckshoes.error.v1", 1],
+  ])("rejects errors with %s", (_label, brand, value) => {
+    expect(isDeckshoesError(foreignError(brand, value))).toBe(false);
   });
 });

@@ -53,8 +53,12 @@ export type DeckshoesErrorCode = keyof DeckshoesErrorMap;
 /**
  * Marks deckshoes errors so {@link isDeckshoesError} can recognise them even
  * when two copies of the package are loaded, where `instanceof` would fail.
+ *
+ * The key names the major version: each major can change codes and error
+ * fields, so errors from another major must not be narrowed to this one's
+ * types. Bump the suffix in every major release.
  */
-const BRAND: unique symbol = Symbol.for("deckshoes.error");
+const BRAND: unique symbol = Symbol.for("deckshoes.error.v1");
 
 /**
  * Base class for every error deckshoes throws.
@@ -209,6 +213,7 @@ export function isDeckshoesError<
     typeof error === "object" &&
     error !== null &&
     BRAND in error &&
+    error[BRAND] === true &&
     (code === undefined || ("code" in error && error.code === code))
   );
 }
