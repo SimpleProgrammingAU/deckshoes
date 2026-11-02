@@ -67,11 +67,11 @@ TypeScript rejects any other rank or suit. Values it can't check, such as user i
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
 
-| Code                 | Class                    | Thrown when                                                |
-| -------------------- | ------------------------ | ---------------------------------------------------------- |
-| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, index or option is out of range                   |
-| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit or card string can't be recognised            |
-| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details) |
+| Code                 | Class                    | Thrown when                                                                   |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------- |
+| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, index, seed or option is out of range, or a random source misbehaves |
+| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit or card string can't be recognised                               |
+| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                    |
 
 Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
 
