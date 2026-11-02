@@ -55,7 +55,7 @@
     "smoke": "node scripts/smoke.ts",
     "test": "pnpm doctest:gen && vitest run",
     "test:watch": "pnpm doctest:gen && vitest",
-    "typecheck": "pnpm doctest:gen && tsc --noEmit",
+    "typecheck": "pnpm doctest:gen && tsc --noEmit && tsc --noEmit -p tsconfig.lib.json",
     "version-packages": "changeset version && node scripts/stamp-since.ts"
   },
   "publishConfig": {
