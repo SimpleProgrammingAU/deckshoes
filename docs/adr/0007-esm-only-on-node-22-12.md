@@ -4,7 +4,7 @@ deckshoes ships a single ES module build with types, and no CommonJS build. Node
 
 ## Considered options
 
-- **A dual ESM and CommonJS build.** Doubles what has to be built and tested, and brings the dual-package hazard: an app can load both builds, leaving two copies of the module state and failing `instanceof` checks.
+- **A dual ESM and CommonJS build.** Doubles what has to be built and tested, and brings the dual-package hazard: an app can load both builds, loading the module state twice and failing `instanceof` checks.
 - **Supporting Node.js 20.** It reached end of life in April 2026, so supporting it would mean testing on a runtime that no longer gets security fixes.
 
 ## Consequences

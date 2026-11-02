@@ -11,7 +11,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 - `Card`, `Rank` and `Suit` types for the 52 standard cards. Cards are frozen and interned, so identical cards are `===`.
 - Parse and format cards: `"AS"`, `"10h"`, `"Th"`, `"A♠"`, `"Ace of Spades"`, and Unicode playing-card characters.
 - Rank orders (ace high or low) and suit orders, for sorting and comparing.
-- Stack operations, each returning new stacks and leaving their input alone: `shuffle`, `draw`, `drawBottom`, `peek`, `deal`, `cut`, `insert`, `remove`, `contains`, `count`, `sort`, `groupBy`.
+- Stack operations, which never change their input: `shuffle`, `draw`, `drawBottom`, `peek`, `deal`, `cut`, `insert`, `remove`, `contains`, `count`, `sort`, `groupBy`.
 - Random sources: a secure default built on `crypto.getRandomValues`, and `seededRandom(seed)` for reproducible shuffles.
 - The chain: `chain(stack).shuffle(random).deal(4, 5).value()`.
 - Presets, imported from `deckshoes/presets`: standard 52, Piquet (32), Euchre (24) and Pinochle (48).
@@ -20,9 +20,9 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 ## M2: Stable (`1.0.0`)
 
 - `Shoe`: several decks dealt together, with a cut card or penetration, burn cards, a discard pile and a reshuffle trigger.
-- Serialization to JSON and to a compact string.
+- Serialisation to JSON and to a compact string.
 - Published API reference site.
-- Migration guide from 0.4, including what 1.0.0 doesn't cover yet: jokers, and the 500 and Spanish decks.
+- Migration guide from 0.4, naming what 1.0.0 doesn't cover: jokers, the 500 deck, and 0.4's French-suited Spanish deck, which is the standard 52 without the 10s.
 - Leave prerelease mode, publish 1.0.0 as `latest`, and deprecate 0.x with a pointer to the guide.
 
 ## M3: Game helpers (1.x, optional subpath imports)

@@ -18,7 +18,8 @@ const same = chain(standard52()).shuffle(seededRandom(42)).deal(4, 5).value();
 
 ## Consequences
 
-- "Deck" is a role a stack plays (see the glossary), and what `chain()` returns is always a chain, never a deck, so nothing is named twice.
+- "Deck" is a role a stack plays (see the glossary), and what `chain()` returns is always a chain, never a deck.
+- `.value()` keeps the name chaining libraries use for unwrapping, even though the glossary's Value is the number a game gives a card.
 - Importing `chain` bundles every stack operation, because methods can't be tree-shaken. Users who care about bundle size use the functions.
 - An operation that splits a stack returns a frozen object naming each part, never a tuple: `{ cards, rest }` from `draw`, `{ hands, rest }` from `deal`. The function and the chain give the same shape, and a new field can be added without breaking anyone.
 - A chain holding a split result offers only `.value()`. To carry on with the remainder, wrap it again with `chain(result.rest)`.

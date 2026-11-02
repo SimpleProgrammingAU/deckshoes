@@ -35,7 +35,7 @@ const { hands, rest } = deal(deck, 4, 5);
 const same = chain(standard52()).shuffle(seededRandom(42)).deal(4, 5).value();
 ```
 
-Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialization. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Error handling
 
@@ -47,7 +47,7 @@ Every error deckshoes throws extends `DeckshoesError` and carries a stable `code
 | `INVALID_CARD`       | `InvalidCardError`       | A rank, suit or card string can't be recognised            |
 | `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details) |
 
-Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with two copies of deckshoes installed.
+Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
 
 ```ts
 import { InsufficientCardsError, isDeckshoesError } from "deckshoes";
@@ -80,7 +80,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 
 ## Migrating from 0.4
 
-1.0 replaces the 0.x classes (`PlayingCard`, `Deck`, `Shoe`) with a new API. 1.0.0 covers the 52 standard cards; 0.4's jokers and its 500 and Spanish decks return in 1.x with custom decks. A full migration guide will be published with 1.0.0. Until then, 0.4.0 stays the `latest` release on npm, so `npm install deckshoes` still gives you 0.4.
+1.0 replaces the 0.x classes (`PlayingCard`, `Deck`, `Shoe`) with a new API. 1.0.0 covers the 52 standard cards. 0.4's jokers and 500 deck come back after 1.0 with custom decks. 0.4's Spanish deck used French suits, so it's the standard 52 without the 10s; custom decks bring Spanish decks with Spanish suits instead. A full migration guide will be published with 1.0.0. Until then, 0.4.0 stays the `latest` release on npm, so `npm install deckshoes` still gives you 0.4.
 
 ## Contributing
 
