@@ -64,6 +64,18 @@ describe("Card", () => {
     expectTypeOf(fake).toEqualTypeOf<Card>();
   });
 
+  it("isn't kept by object spread", () => {
+    const ace = {} as Card;
+    // @ts-expect-error a spread card with another suit can't pass for a card
+    const moved: Card = { ...ace, suit: "H" };
+    expectTypeOf({ ...ace }).not.toExtend<Card>();
+    expectTypeOf(moved).toEqualTypeOf<Card>();
+  });
+
+  it("has only rank, suit and color as keys", () => {
+    expectTypeOf<keyof Card>().toEqualTypeOf<"color" | "rank" | "suit">();
+  });
+
   it("can still be read as a rank, a suit and a colour", () => {
     expectTypeOf<Card>().toExtend<{
       readonly color: Color;

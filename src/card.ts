@@ -57,8 +57,19 @@ export type Suit = "S" | "H" | "D" | "C";
  */
 export type Color = "red" | "black";
 
-/** Brands {@link Card}. It exists only in types: cards have no such key. */
-declare const brand: unique symbol;
+/**
+ * Brands {@link Card}. It exists only in types: cards have no such field.
+ *
+ * The brand is a private field because object spread drops private fields, so
+ * `{ ...card("A", "S"), suit: "H" }` isn't a `Card` either, and `keyof Card`
+ * doesn't include it.
+ *
+ * @internal
+ */
+declare class CardBrand {
+  // eslint-disable-next-line no-unused-private-class-members -- a brand is never read
+  #brand: true;
+}
 
 /**
  * One of the 52 standard cards, as returned by {@link card}.
@@ -66,7 +77,8 @@ declare const brand: unique symbol;
  * A card is a frozen plain object, and there's exactly one object for each
  * card, so cards compare with `===`, and `includes`, `indexOf`, `Set` and
  * `Map` work on them. The type is branded, so an object literal with the same
- * fields isn't a `Card`: it could never be `===` to the real one. Cards from
+ * fields, or one spread from a card, isn't a `Card`: it could never be `===`
+ * to the real one. Cards from
  * another install of deckshoes are separate objects, so they aren't `===` to
  * these either.
  *
@@ -82,7 +94,7 @@ declare const brand: unique symbol;
  *
  * @since NEXT
  */
-export interface Card {
+export interface Card extends CardBrand {
   /** The card's rank, such as `"A"` or `"10"`. */
   readonly rank: Rank;
 
@@ -94,14 +106,6 @@ export interface Card {
    * for spades and clubs.
    */
   readonly color: Color;
-
-  /**
-   * Marks the objects {@link card} returns, so a look-alike object doesn't
-   * type-check as a card.
-   *
-   * @internal
-   */
-  readonly [brand]: true;
 }
 
 /**
