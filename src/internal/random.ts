@@ -14,30 +14,31 @@ declare const crypto: {
 /** 2³², the number of 32-bit values, which turns one into a number from 0 up to 1. */
 const TWO_TO_THE_32 = 2 ** 32;
 
-/** How many 32-bit values {@link secureRandom} asks crypto for at once. */
+/** How many 32-bit values a {@link secureRandom} source asks crypto for at once. */
 const POOL_SIZE = 256;
 
 /** How many values in a row {@link randomIndex} rejects before deciding the source is broken. */
 const MAX_REJECTIONS = 64;
 
-/** Values from crypto that {@link secureRandom} hasn't handed out yet, allocated on first use. */
-let pool: Uint32Array | undefined;
-
-/** Where the next unused value in {@link pool} is; `POOL_SIZE` once they're all used. */
-let next = POOL_SIZE;
-
-/** The default random source: secure, backed by `crypto.getRandomValues`, with 32 bits in each value. */
-export function secureRandom(): number {
-  pool ??= new Uint32Array(POOL_SIZE);
-  if (next === POOL_SIZE) {
-    // If this throws, `next` stays put and the next call tries again.
-    crypto.getRandomValues(pool);
-    next = 0;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- next < POOL_SIZE here
-  const value = pool[next]!;
-  next += 1;
-  return value / TWO_TO_THE_32;
+/**
+ * Returns a new secure random source, backed by `crypto.getRandomValues`, with
+ * 32 bits in each value. Each operation makes its own and drops it when done,
+ * so no values from crypto are kept between operations.
+ */
+export function secureRandom(): RandomSource {
+  const pool = new Uint32Array(POOL_SIZE);
+  let next = POOL_SIZE;
+  return () => {
+    if (next === POOL_SIZE) {
+      // If this throws, `next` stays put and the next call tries again.
+      crypto.getRandomValues(pool);
+      next = 0;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- next < POOL_SIZE here
+    const value = pool[next]!;
+    next += 1;
+    return value / TWO_TO_THE_32;
+  };
 }
 
 /** Rotates a 32-bit integer left by `bits`, from 1 to 31. */

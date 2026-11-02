@@ -2,7 +2,7 @@ import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { type RandomSource, seededRandom } from "../random.ts";
-import { randomIndex } from "./random.ts";
+import { randomIndex, secureRandom } from "./random.ts";
 
 /** A random source that returns each 32-bit integer as a value from 0 up to 1, and counts its calls. */
 function source(...integers: number[]): RandomSource & { calls: number } {
@@ -188,54 +188,63 @@ describe("secureRandom", () => {
     };
   }
 
-  /** Imports a fresh copy of the module, with its own empty pool. */
-  async function freshSecureRandom(): Promise<() => number> {
-    vi.resetModules();
-    const module = await import("./random.ts");
-    return module.secureRandom;
-  }
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("gives numbers from 0 up to 1 that are multiples of 2⁻³²", async () => {
-    const secureRandom = await freshSecureRandom();
+  it("gives numbers from 0 up to 1 that are multiples of 2⁻³²", () => {
+    const random = secureRandom();
     for (let i = 0; i < 1000; i++) {
-      const value = secureRandom();
+      const value = random();
       expect(value).toBeGreaterThanOrEqual(0);
       expect(value).toBeLessThan(1);
       expect(Number.isInteger(value * 2 ** 32)).toBe(true);
     }
   });
 
-  it("doesn't touch crypto when it's imported", async () => {
+  it("doesn't touch crypto until a source is used", async () => {
     const spy = vi.spyOn(crypto, "getRandomValues");
-    await freshSecureRandom();
+    vi.resetModules();
+    const module = await import("./random.ts");
+    const random = module.secureRandom();
     expect(spy).not.toHaveBeenCalled();
+    random();
+    expect(spy).toHaveBeenCalledOnce();
   });
 
-  it("hands out crypto's values in order, asking for 256 at a time", async () => {
+  it("hands out crypto's values in order, asking for 256 at a time", () => {
     const spy = vi
       .spyOn(crypto, "getRandomValues")
       .mockImplementation(countUp());
-    const secureRandom = await freshSecureRandom();
-    const values = Array.from({ length: 513 }, () => secureRandom() * 2 ** 32);
+    const random = secureRandom();
+    const values = Array.from({ length: 513 }, () => random() * 2 ** 32);
     expect(values).toStrictEqual(Array.from({ length: 513 }, (_, i) => i));
     expect(spy).toHaveBeenCalledTimes(3);
   });
 
-  it("tries crypto again after it throws", async () => {
+  it("gives each source its own values", () => {
+    const spy = vi
+      .spyOn(crypto, "getRandomValues")
+      .mockImplementation(countUp());
+    const first = secureRandom();
+    const second = secureRandom();
+    expect(first() * 2 ** 32).toBe(0);
+    expect(second() * 2 ** 32).toBe(256);
+    expect(first() * 2 ** 32).toBe(1);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("tries crypto again after it throws", () => {
     const spy = vi
       .spyOn(crypto, "getRandomValues")
       .mockImplementation(countUp())
       .mockImplementationOnce(() => {
         throw new Error("No randomness available");
       });
-    const secureRandom = await freshSecureRandom();
-    expect(() => secureRandom()).toThrow("No randomness available");
-    expect(secureRandom()).toBe(0);
-    expect(secureRandom() * 2 ** 32).toBe(1);
+    const random = secureRandom();
+    expect(() => random()).toThrow("No randomness available");
+    expect(random()).toBe(0);
+    expect(random() * 2 ** 32).toBe(1);
     expect(spy).toHaveBeenCalledTimes(2);
   });
 });
