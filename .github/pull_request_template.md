@@ -7,7 +7,7 @@ Closes #
 ## Checklist
 
 - [ ] `pnpm check` passes locally
-- [ ] Tests cover the change (property tests for deck operations; seeded RNG for anything random)
+- [ ] Tests cover the change (property tests for stack operations; a seeded random source for anything random)
 - [ ] Public exports have full doc comments, with new ones marked `@since NEXT`
 - [ ] `@example` blocks show results with `// =>` and pass as doctests
 - [ ] A changeset is included (`pnpm changeset`), or this PR doesn't change the published package

@@ -61,9 +61,10 @@ Any change to the published package needs a changeset: run `pnpm changeset`, pic
 
 Most of these are enforced by ESLint or TypeScript; the rest are checked in review.
 
-- **Pure functions over immutable data.** Operations return new values and never modify their inputs. The chainable wrapper only delegates to the functions.
+- **Pure functions over immutable data.** Operations return new values and never modify their inputs. The chain only delegates to the functions.
+- **Names follow the [glossary](./GLOSSARY.md).** Use its terms in identifiers, doc comments and issues, and none of the words it lists under _Avoid_.
 - **No runtime dependencies,** and no Node.js built-ins in `src/`; the library has to run in browsers and every JS runtime.
-- **Named exports only.** Everything public is exported from `src/index.ts`.
+- **Named exports only.** Everything public is exported from `src/index.ts`, except presets, which come from the `deckshoes/presets` entry point ([ADR 0008](./docs/adr/0008-presets-ship-from-a-subpath.md)).
 - **Imports use `.ts` extensions** (`import { x } from "./x.ts"`).
 - **Helpers that aren't public API go in `src/internal/`.** They need a one-line doc comment, nothing more.
 
@@ -81,10 +82,11 @@ Every public export needs a complete doc comment. ESLint enforces each of these:
 | `@since`      | `@since NEXT` on anything new; the release script replaces it with the version number.               |
 | `@deprecated` | When something is superseded: name the replacement with `{@link …}` and say when it will be removed. |
 
-Two things ESLint can't fully check:
+Three things ESLint can't fully check:
 
 - `@throws` is only detected for `throw` written directly in the function body. Validate inputs in the public function itself, so the `throw` is visible there, and document any error that a function you call can throw.
 - Deprecating something is a `minor` changeset; removing it is a `major` one.
+- Prose, including doc comments and error messages, is Australian English; identifiers are US English. A doc comment talks about a card's colour, and the property is `color`.
 
 ### Writing examples
 
@@ -116,7 +118,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 
 - Unit tests live next to the code: `src/thing.ts` and `src/thing.test.ts`.
 - Type-level tests go in `src/thing.test-d.ts`, using `expectTypeOf`.
-- Use [fast-check](https://fast-check.dev/) property tests for deck operations. For example: a shuffle keeps every card exactly once, and dealing loses no cards.
+- Use [fast-check](https://fast-check.dev/) property tests for stack operations. For example: a shuffle keeps every card exactly once, and dealing loses no cards.
 - Shuffles and anything else that takes a deckshoes random source get a seeded one, so results repeat. fast-check property tests stay unseeded: each run explores new cases, and a failure prints the seed that reproduces it.
 - Coverage must stay at or above the thresholds in `vitest.config.ts`.
 

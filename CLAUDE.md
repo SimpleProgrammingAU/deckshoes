@@ -4,7 +4,7 @@ A TypeScript library for playing cards, partway through a rewrite to 1.0 (Change
 
 ## Architecture
 
-A pure functional core over frozen, immutable data (cards, decks), plus a thin `chain()` wrapper that only delegates to those functions. The public API is exported from `src/index.ts`. Helpers that aren't public API live in `src/internal/`. Game helpers (poker, blackjack) will ship later as subpath entry points. Domain names and past decisions: `GLOSSARY.md` and `docs/adr/`.
+A pure functional core over frozen, immutable data (cards, stacks), plus `chain()`, which only delegates to those functions. The public API is exported from `src/index.ts`; presets ship from the `deckshoes/presets` subpath, and game helpers (poker, blackjack) will follow as their own subpaths. Helpers that aren't public API live in `src/internal/`. Name things with `GLOSSARY.md`'s terms, in code, docs and issues; read the ADRs in `docs/adr/` that touch what you're changing. Prose is Australian English, identifiers US English.
 
 ## Working in src/
 
