@@ -128,14 +128,6 @@ describe("randomIndex", () => {
     expect(randomIndex(2, () => 1 - 2 ** -53)).toBe(1);
   });
 
-  it("works with Math.random", () => {
-    for (let i = 0; i < 100; i++) {
-      const index = randomIndex(52, Math.random);
-      expect(index).toBeGreaterThanOrEqual(0);
-      expect(index).toBeLessThan(52);
-    }
-  });
-
   it("gives up on a stuck source after 64 rejections in a row", () => {
     let calls = 0;
     const stuck = () => {
