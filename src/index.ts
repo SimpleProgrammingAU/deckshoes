@@ -5,6 +5,14 @@
  */
 
 export {
+  card,
+  type Card,
+  type Color,
+  isCard,
+  type Rank,
+  type Suit,
+} from "./card.ts";
+export {
   DeckshoesError,
   type DeckshoesErrorCode,
   type DeckshoesErrorMap,

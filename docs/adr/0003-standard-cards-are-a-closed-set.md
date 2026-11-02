@@ -13,3 +13,4 @@ The glossary leaves room for them. Ranked, suited and coloured are overlapping t
 
 - 1.0.0 doesn't have 0.4's jokers, 500 deck or Spanish deck. The migration guide ([#31](https://github.com/SimpleProgrammingAU/deckshoes/issues/31)) names the gaps. 0.4's French-suited Spanish deck is the standard 52 without the 10s.
 - Stack operations, sorting included, are generic over the card type ([ADR 0004](./0004-a-stack-is-a-frozen-array-top-first.md)), so custom decks can arrive in 1.x without changing them.
+- The `Card`, `Rank`, `Suit` and `Color` types are the standard ones. A custom deck's cards have their own types, so `Card` names a standard card, not every card the glossary calls a card.
