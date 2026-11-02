@@ -22,7 +22,7 @@ One of the 52 cards of the standard deck: ranked, suited and coloured, with its 
 _Avoid_: normal card, regular card
 
 **Rank**:
-The mark, such as A, 2–10, J, Q or K on a standard card, that places a card relative to other cards for a game's rules. Cards with the same mark have the same rank whatever their suit, and the game's rank order says which ranks are higher.
+The mark, such as A, 2–10, J, Q or K on a standard card, that a game uses, often with the suit, to place a card relative to other cards. How the ranks compare is up to the game's rank order.
 _Avoid_: value, face, number
 
 **Suit**:
@@ -118,7 +118,7 @@ _Avoid_: depth
 ## Ordering
 
 **Rank order**:
-The ranks from lowest to highest, each listed once, so cards of the same rank tie. Ranks a game counts as equal, such as blackjack's 10 and king, share a value instead. Ace high and ace low are the built-in rank orders.
+The ranks from lowest to highest, each listed once. It compares ranks, not cards, so a suit order or a game's rules can still separate cards of the same rank. Ranks a game counts as equal, such as blackjack's 10 and king, share a value instead. Ace high and ace low are the built-in rank orders.
 _Avoid_: ranking, comparator, sort order
 
 **Suit order**:
