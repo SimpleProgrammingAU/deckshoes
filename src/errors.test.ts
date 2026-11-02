@@ -103,7 +103,7 @@ describe("isDeckshoesError", () => {
     expect(isDeckshoesError(fake, "INVALID_CARD")).toBe(false);
   });
 
-  /** Builds an error-like object branded the way another copy would brand it. */
+  /** Builds an error-like object branded the way another install would brand it. */
   function foreignError(brand: string, value: unknown): object {
     const prototype = Object.assign(Object.create(Error.prototype) as object, {
       [Symbol.for(brand)]: value,
@@ -113,7 +113,7 @@ describe("isDeckshoesError", () => {
     });
   }
 
-  it("recognises errors from another copy of the same major version", () => {
+  it("recognises errors from another install of the same major version", () => {
     const foreign = foreignError("deckshoes.error.v1", true);
     expect(isDeckshoesError(foreign)).toBe(true);
     expect(isDeckshoesError(foreign, "INVALID_CARD")).toBe(true);

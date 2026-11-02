@@ -192,7 +192,7 @@ describe("isCard", () => {
 
   it.each([
     ["an object literal", { color: "black", rank: "A", suit: "S" }],
-    ["a spread copy", { ...card("A", "S") }],
+    ["an object spread from a card", { ...card("A", "S") }],
     ["a structured clone", structuredClone(card("A", "S"))],
     ["an object inheriting from a card", Object.create(card("A", "S"))],
     ["a card's text", "AS"],

@@ -52,7 +52,7 @@ export type DeckshoesErrorCode = keyof DeckshoesErrorMap;
 
 /**
  * Marks deckshoes errors so {@link isDeckshoesError} can recognise them even
- * when two copies of the package are loaded, where `instanceof` would fail.
+ * when two installs of the package are loaded, where `instanceof` would fail.
  *
  * The key names the major version: each major can change codes and error
  * fields, so errors from another major must not be narrowed to this one's
@@ -65,8 +65,8 @@ const BRAND: unique symbol = Symbol.for("deckshoes.error.v1");
  *
  * Catch it to handle any deckshoes error, then check
  * {@link DeckshoesError.code | code} to tell them apart. To test an unknown
- * value, prefer {@link isDeckshoesError}, which also works across duplicate
- * copies of the package.
+ * value, prefer {@link isDeckshoesError}, which also works across two installs
+ * of the package.
  *
  * @example
  * ```ts
@@ -186,8 +186,8 @@ export class InsufficientCardsError extends DeckshoesError {
  * Checks whether a value is an error thrown by deckshoes, optionally with a
  * specific {@link DeckshoesErrorCode}, and narrows its type to match.
  *
- * Unlike `instanceof`, this still works when an app ends up with two copies of
- * deckshoes installed.
+ * Unlike `instanceof`, this still works when an app ends up with two installs
+ * of deckshoes.
  *
  * @param error - The value to check, typically from a `catch` block.
  * @param code - If given, also require the error to have this code.
