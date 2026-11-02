@@ -1,0 +1,136 @@
+# deckshoes
+
+The language of deckshoes: the cards, the stacks they sit in, and what you can do with them. Use these terms in code, docs and issues. Decisions behind them are in [docs/adr/](./docs/adr/).
+
+## Cards
+
+**Card**:
+Any playing card.
+_Avoid_: playing card, PlayingCard
+
+**Ranked card**:
+A card that has a rank. Ranked, suited and coloured are overlapping traits, not kinds of card.
+
+**Suited card**:
+A card that has a suit.
+
+**Coloured card**:
+A card that has a colour.
+
+**Standard card**:
+One of the 52 cards of the standard deck: ranked, suited and coloured, with its colour fixed by its suit.
+_Avoid_: normal card, regular card
+
+**Rank**:
+The mark, such as A, 2–10, J, Q or K on a standard card, that a game uses, often with the suit, to place a card relative to other cards. How the ranks compare is up to the game's rank order.
+_Avoid_: value, face, number
+
+**Suit**:
+The set a suited card belongs to. The standard suits are spades, hearts, diamonds and clubs.
+_Avoid_: colour, type
+
+**Colour**:
+The colour a game treats a card as having: red or black for standard cards. It isn't the printing, so a four-colour deck's diamonds are still red.
+_Avoid_: color (in prose)
+
+**Joker**:
+A coloured card with no rank or suit.
+_Avoid_: wild card
+
+**Copy**:
+One of several identical cards in a stack, as in a shoe or a Pinochle deck.
+_Avoid_: duplicate
+
+**Value**:
+The number a game gives a card, such as 10 for a king in blackjack.
+_Avoid_: rank, score
+
+## Stacks
+
+**Stack**:
+Any ordered group of cards, top first. It can hold any number of cards, including none, and copies.
+_Avoid_: collection, list, cards
+
+**Top**:
+The end of a stack that cards are drawn, dealt, burned and peeked from. The other end is the bottom.
+
+**Deck**:
+The stack that cards are drawn and dealt from. A preset gives a full one.
+_Avoid_: pack
+
+**Hand**:
+The stack dealt to one player.
+
+**Pile**:
+A stack set aside during play, such as the discard pile.
+_Avoid_: heap, discards
+
+**Shoe**:
+Several decks combined and dealt from as one, with a cut card that marks when to reshuffle.
+_Avoid_: multi-deck
+
+**Preset**:
+A ready-made deck with a documented list of cards in a documented order. Some presets depend on a choice, such as the 500 deck's player count, with a fixed list for each.
+_Avoid_: template, variant, deck type, generator
+
+**Stripped deck**:
+A preset made by removing ranks from the standard 52, such as Piquet or Euchre.
+
+## Actions
+
+**Stack operation**:
+Anything done to a stack, such as a shuffle, draw, deal or cut.
+_Avoid_: deck operation
+
+**Shuffle**:
+To put a stack in random order. Unqualified, every order is equally likely.
+_Avoid_: randomise, scramble
+
+**Draw**:
+To take cards from the top of a stack, or from the bottom when said.
+_Avoid_: pop, take
+
+**Peek**:
+To look at cards from the top of a stack without taking them.
+
+**Deal**:
+To draw cards from a deck into several hands, one at a time in turn (round-robin) unless dealt in blocks.
+_Avoid_: distribute
+
+**Burn**:
+To move cards from the top to the discard pile without using them.
+_Avoid_: discard
+
+**Cut**:
+To move cards from the top of a stack to the bottom, keeping their order.
+_Avoid_: rotate, split
+
+## Shoes
+
+**Cut card**:
+A marker in a shoe. Dealing past it means the shoe is due for a reshuffle.
+_Avoid_: stop card
+
+**Penetration**:
+How far into a shoe the cut card sits, as the proportion of cards dealt before it's reached.
+_Avoid_: depth
+
+## Ordering
+
+**Rank order**:
+The ranks from lowest to highest, each listed once. It compares ranks, not cards, so a suit order or a game's rules can still separate cards of the same rank. Ranks a game counts as equal, such as blackjack's 10 and king, share a value instead. Ace high and ace low are the built-in rank orders.
+_Avoid_: ranking, comparator, sort order
+
+**Suit order**:
+The suits from lowest to highest, each listed once.
+_Avoid_: suit ranking
+
+## Library
+
+**Random source**:
+Where every random operation gets its randomness: secure by default, reproducible when seeded.
+_Avoid_: RNG, PRNG, generator, randomiser
+
+**Chain**:
+A stack wrapped so that operations can be written as a pipeline and then unwrapped.
+_Avoid_: wrapper, fluent API, builder
