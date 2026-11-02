@@ -12,4 +12,4 @@ The glossary leaves room for them. Ranked, suited and coloured are overlapping t
 ## Consequences
 
 - 1.0.0 doesn't have 0.4's jokers, 500 deck or Spanish deck. The migration guide ([#31](https://github.com/SimpleProgrammingAU/deckshoes/issues/31)) names the gaps. 0.4's French-suited Spanish deck is the standard 52 without the 10s.
-- Stack operations are generic over the card type ([ADR 0004](./0004-a-stack-is-a-frozen-array-top-first.md)), so custom decks can arrive in 1.x without changing them.
+- Stack operations, sorting included, are generic over the card type ([ADR 0004](./0004-a-stack-is-a-frozen-array-top-first.md)), so custom decks can arrive in 1.x without changing them.

@@ -7,7 +7,7 @@ import { chain, seededRandom } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 ```
 
-Presets are functions named after the deck in camelCase, with the card count only when the name alone would be ambiguous: `standard52()`, `piquet()`, `euchre()`, `pinochle()`. Each builds its stack on the first call and returns the same frozen stack after that. They're functions rather than constants because some presets will take options, such as the 500 deck's player count ([#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)). Presets that arrive with custom decks go in the same subpath.
+Presets are functions named after the deck in camelCase, with the card count only when the name alone would be ambiguous: `standard52()`, `piquet()`, `euchre()`, `pinochle()`. A preset builds its stack on the first call and returns the same frozen stack after that. They're functions rather than constants because some presets will take options, such as the 500 deck's player count ([#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)); those cache one stack for each set of options. Presets that arrive with custom decks go in the same subpath.
 
 ## Considered options
 

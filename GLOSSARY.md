@@ -22,7 +22,7 @@ One of the 52 cards of the standard deck: ranked, suited and coloured, with its 
 _Avoid_: normal card, regular card
 
 **Rank**:
-A card's place within its suit. The standard ranks are A, 2–10, J, Q and K.
+The mark, such as A, 2–10, J, Q or K on a standard card, that places a card relative to other cards for a game's rules. Cards with the same mark have the same rank whatever their suit, and the game's rank order says which ranks are higher.
 _Avoid_: value, face, number
 
 **Suit**:
@@ -70,7 +70,7 @@ Several decks combined and dealt from as one, with a cut card that marks when to
 _Avoid_: multi-deck
 
 **Preset**:
-A ready-made deck with a fixed list of cards in a documented order.
+A ready-made deck with a documented list of cards in a documented order. Some presets depend on a choice, such as the 500 deck's player count, with a fixed list for each.
 _Avoid_: template, variant, deck type, generator
 
 **Stripped deck**:
@@ -118,11 +118,11 @@ _Avoid_: depth
 ## Ordering
 
 **Rank order**:
-The ranks from lowest to highest. Ace high and ace low are the built-in ones.
+The ranks from lowest to highest, each listed once, so cards of the same rank tie. Ranks a game counts as equal, such as blackjack's 10 and king, share a value instead. Ace high and ace low are the built-in rank orders.
 _Avoid_: ranking, comparator, sort order
 
 **Suit order**:
-The suits from lowest to highest.
+The suits from lowest to highest, each listed once.
 _Avoid_: suit ranking
 
 ## Library
