@@ -146,11 +146,15 @@ export interface Card extends CardBrand {
 export function card(rank: Rank, suit: Suit): Card {
   const bySuit = CARD_TABLE.get(rank);
   if (bySuit === undefined) {
-    throw new InvalidCardError(`Unknown rank ${display(rank)}`);
+    throw new InvalidCardError(
+      `Unknown rank ${display(rank)}: expected "A", "2" to "10", "J", "Q" or "K"`,
+    );
   }
   const found = bySuit.get(suit);
   if (found === undefined) {
-    throw new InvalidCardError(`Unknown suit ${display(suit)}`);
+    throw new InvalidCardError(
+      `Unknown suit ${display(suit)}: expected "S", "H", "D" or "C"`,
+    );
   }
   return found;
 }

@@ -191,8 +191,14 @@ describe("card with input that isn't standard", () => {
     ],
     ["names the suit", "A", asSuit("X"), 'Unknown suit "X"'],
     ["checks the rank first", asRank("11"), asSuit("X"), 'Unknown rank "11"'],
-  ] as const)("%s in the message", (_label, rank, suit, message) => {
-    expect(thrownBy(() => card(rank, suit))).toMatchObject({ message });
+  ] as const)("%s in the message", (_label, rank, suit, start) => {
+    // Each message ends by listing what would have been accepted.
+    const expected = start.startsWith("Unknown rank")
+      ? ': expected "A", "2" to "10", "J", "Q" or "K"'
+      : ': expected "S", "H", "D" or "C"';
+    expect(thrownBy(() => card(rank, suit))).toMatchObject({
+      message: `${start}${expected}`,
+    });
   });
 });
 
