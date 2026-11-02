@@ -15,7 +15,8 @@
  * - `const x = expr; // => value`  →  the declaration, then `expect(x)…`
  * - `console.log(expr); // => value`  →  `expect(expr)…`
  * - `expr; // throws CODE_OR_NAME`  →  asserts the thrown error's `code`
- *   (for `UPPER_SNAKE` values) or `name` (anything else). With `await` in
+ *   (for an `UPPER_SNAKE` code) or `name` (for a class name such as
+ *   `InvalidCardError`). Anything else is rejected. With `await` in
  *   `expr`, it asserts the rejection instead.
  *
  * Add `no-test` to a fence's info string (```ts no-test) to skip a block.
@@ -366,8 +367,18 @@ function renderAssertion(
       `${where}: "// throws" goes on an expression, not a declaration`,
     );
   }
-  const key = /^[A-Z][A-Z0-9_]*$/u.test(assertion.expected) ? "code" : "name";
-  const match = `{ ${key}: ${JSON.stringify(assertion.expected)} }`;
+  // Only a bare error code or class name is accepted, so it can be quoted
+  // into the generated code as-is.
+  const expected = assertion.expected;
+  let key: "code" | "name";
+  if (/^[A-Z][A-Z0-9_]*$/u.test(expected)) key = "code";
+  else if (/^[A-Za-z_$][\w$]*$/u.test(expected)) key = "name";
+  else {
+    throw new ExampleError(
+      `${where}: "// throws" takes an error code (INVALID_CARD) or class name (InvalidCardError), not \`${expected}\``,
+    );
+  }
+  const match = `{ ${key}: "${expected}" }`;
   if (/\bawait\b/u.test(statement)) {
     helpers.add("rejectionOf");
     return `expect(await rejectionOf(async () => (${statement}))).toMatchObject(${match});`;
