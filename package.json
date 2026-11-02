@@ -55,7 +55,7 @@
     "test": "pnpm doctest:gen && vitest run",
     "test:watch": "pnpm doctest:gen && vitest",
     "typecheck": "pnpm doctest:gen && tsc --noEmit",
-    "version-packages": "changeset version && node scripts/stamp-since.ts && prettier --write ."
+    "version-packages": "changeset version && node scripts/stamp-since.ts"
   },
   "publishConfig": {
     "access": "public"
