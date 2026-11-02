@@ -21,23 +21,21 @@ pnpm add deckshoes@alpha
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chainable wrapper for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. This is the API being built; the [roadmap](./ROADMAP.md) tracks progress.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. This is the API being built; the [roadmap](./ROADMAP.md) tracks progress.
 
 ```ts no-test
-import { chain, deal, seededRng, shuffle, standard52 } from "deckshoes";
+import { chain, deal, seededRandom, shuffle } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
 
 // Functions: every call returns new data and leaves its input alone.
-const deck = shuffle(standard52(), seededRng(42));
-const [hands, rest] = deal(deck, 4, 5);
+const deck = shuffle(standard52(), seededRandom(42));
+const { hands, rest } = deal(deck, 4, 5);
 
-// Or the same thing as a chain.
-const { hands: sameHands } = chain(standard52())
-  .shuffle(seededRng(42))
-  .deal(4, 5)
-  .value();
+// Or the same thing as a chain, giving the same { hands, rest }.
+const same = chain(standard52()).shuffle(seededRandom(42)).deal(4, 5).value();
 ```
 
-Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card deck, jokers, Piquet, Euchre, Spanish, 500 and Pinochle decks; multi-deck shoes with a cut card; and serialization. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks.
+Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialization. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Error handling
 
@@ -82,7 +80,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 
 ## Migrating from 0.4
 
-1.0 replaces the 0.x classes (`PlayingCard`, `Deck`, `Shoe`) with a new API. A full migration guide will be published with 1.0.0. Until then, 0.4.0 stays the `latest` release on npm, so `npm install deckshoes` still gives you 0.4.
+1.0 replaces the 0.x classes (`PlayingCard`, `Deck`, `Shoe`) with a new API. 1.0.0 covers the 52 standard cards; 0.4's jokers and its 500 and Spanish decks return in 1.x with custom decks. A full migration guide will be published with 1.0.0. Until then, 0.4.0 stays the `latest` release on npm, so `npm install deckshoes` still gives you 0.4.
 
 ## Contributing
 
