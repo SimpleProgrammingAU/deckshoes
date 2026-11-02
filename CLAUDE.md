@@ -32,3 +32,17 @@ Every change starts from a GitHub issue, numbered N here. Take the steps in orde
 8. **Ready.** `gh pr ready <PR#>`.
 9. **Merge.** The user rebase-merges. **Hard stop.** Merge it yourself only when the user explicitly tells you to.
 10. **Close.** Check `gh issue view N` shows the issue closed. If it's still open, close it with a comment linking the PR.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for SimpleProgrammingAU/deckshoes, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
