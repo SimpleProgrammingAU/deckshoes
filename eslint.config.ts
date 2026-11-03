@@ -255,7 +255,12 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
     settings: {
       jsdoc: {
         mode: "typescript",
-        tagNamePreference: { returns: "returns", throws: "throws" },
+        tagNamePreference: {
+          returns: "returns",
+          // TSDoc's name for it, which TypeDoc documents; jsdoc calls it @template.
+          template: "typeParam",
+          throws: "throws",
+        },
       },
     },
   },
