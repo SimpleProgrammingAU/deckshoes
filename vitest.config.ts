@@ -13,7 +13,7 @@ function hasExamples(file: string): boolean {
   return (
     relative.startsWith(`src${path.sep}`) &&
     relative.endsWith(".ts") &&
-    !/\.test(?:-d)?\.ts$/u.test(relative)
+    !/\.(?:test|test-d|bench)\.ts$/u.test(relative)
   );
 }
 
@@ -48,9 +48,12 @@ const config: ViteUserConfig = defineConfig({
     ],
   },
   test: {
+    // Only the bench project has benchmarks; `vitest bench` adds a benchmark
+    // run for every project.
+    benchmark: { include: [] },
     coverage: {
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/**/*.test-d.ts"],
+      exclude: ["src/**/*.test.ts", "src/**/*.test-d.ts", "src/**/*.bench.ts"],
       provider: "v8",
       reporter: ["text", "json-summary", "html"],
       thresholds: {
@@ -77,6 +80,19 @@ const config: ViteUserConfig = defineConfig({
         test: {
           name: "examples",
           include: [".doctest/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "bench",
+          // No tests: `pnpm bench` (`vitest bench`) runs its benchmarks.
+          include: [],
+          benchmark: { include: ["src/**/*.bench.ts"] },
+          // Node runs the source natively. Vite's module runner turns every
+          // import into a getter, and calls inside the library, such as
+          // shuffle to randomIndex, would time those getters too.
+          experimental: { viteModuleRunner: false },
         },
       },
     ],

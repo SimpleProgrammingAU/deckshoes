@@ -26,6 +26,7 @@ pnpm check     # everything CI runs; should pass on a fresh clone
 | `pnpm typecheck`                    | TypeScript, including the generated doctests.                                                                          |
 | `pnpm test` / `pnpm test:watch`     | Unit tests, type tests and doctests. Watch mode regenerates doctests as you edit examples.                             |
 | `pnpm coverage`                     | Tests with a coverage report in `coverage/`.                                                                           |
+| `pnpm bench`                        | Runs the benchmarks and prints a table of results. Not part of `pnpm check`, since timings vary from run to run.       |
 | `pnpm docs:build`                   | Builds the API reference in `docs-site/`. Fails on undocumented exports or broken links.                               |
 | `pnpm build`                        | Builds `dist/`.                                                                                                        |
 | `pnpm check:package`                | Checks the published package shape (publint, Are the Types Wrong).                                                     |
@@ -119,6 +120,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 
 - Unit tests live next to the code: `src/thing.ts` and `src/thing.test.ts`.
 - Type-level tests go in `src/thing.test-d.ts`, using `expectTypeOf`.
+- Benchmarks go in `src/thing.bench.ts`, using Vitest's `bench` fixture. They run in their own Vitest project without Vite's module runner, whose export getters would otherwise be timed along with the library.
 - Use [fast-check](https://fast-check.dev/) property tests for stack operations. For example: a shuffle keeps every card exactly once, and dealing loses no cards.
 - Shuffles and anything else that takes a deckshoes random source get a seeded one, so results repeat. fast-check property tests stay unseeded: each run explores new cases, and a failure prints the seed that reproduces it.
 - Coverage must stay at or above the thresholds in `vitest.config.ts`.

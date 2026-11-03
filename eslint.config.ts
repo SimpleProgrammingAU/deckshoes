@@ -14,7 +14,8 @@ import tseslint from "typescript-eslint";
 
 /** Virtual files that eslint-plugin-jsdoc's processor creates for `@example` code. */
 const EXAMPLES = "**/*.ts/*.ts";
-const TESTS = ["src/**/*.test.ts", "src/**/*.test-d.ts"];
+const BENCHMARKS = ["src/**/*.bench.ts"];
+const TESTS = ["src/**/*.test.ts", "src/**/*.test-d.ts", ...BENCHMARKS];
 
 /**
  * Declarations that make up the public API and need full documentation.
@@ -323,6 +324,15 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       ],
       "vitest/no-disabled-tests": "error",
       "vitest/no-focused-tests": "error",
+    },
+  },
+
+  {
+    files: BENCHMARKS,
+    name: "deckshoes/benchmarks",
+    rules: {
+      // Benchmarks measure; they don't assert.
+      "vitest/expect-expect": "off",
     },
   },
 

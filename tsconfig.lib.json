@@ -1,11 +1,12 @@
 {
   // The published library on its own. No Node.js types, so code that only
-  // works in Node (Buffer, process, …) fails to type-check. Tests, scripts and
-  // config files are checked by tsconfig.json, which includes Node types.
+  // works in Node (Buffer, process, …) fails to type-check. Tests, benchmarks,
+  // scripts and config files are checked by tsconfig.json, which includes Node
+  // types.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": []
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test-d.ts"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test-d.ts", "src/**/*.bench.ts"]
 }

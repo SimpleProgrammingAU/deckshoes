@@ -37,7 +37,11 @@ import path from "node:path";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.join(ROOT, ".doctest");
 const SOURCE_GLOB = "src/**/*.ts";
-const SOURCE_IGNORE = ["src/**/*.test.ts", "src/**/*.test-d.ts"];
+const SOURCE_IGNORE = [
+  "src/**/*.test.ts",
+  "src/**/*.test-d.ts",
+  "src/**/*.bench.ts",
+];
 const MARKDOWN_FILES = ["README.md"];
 
 interface Example {
