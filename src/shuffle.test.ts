@@ -81,11 +81,11 @@ describe("shuffle", () => {
 
     it("leaves the input unchanged, frozen or not", () => {
       fc.assert(
-        fc.property(stacks, fc.boolean(), seeds, (cards, frozen, seed) => {
-          const stack = frozen ? Object.freeze([...cards]) : [...cards];
+        fc.property(stacks, fc.boolean(), seeds, (original, frozen, seed) => {
+          const stack = frozen ? Object.freeze([...original]) : [...original];
           shuffle(stack, { random: seededRandom(seed) });
-          expect(stack).toHaveLength(cards.length);
-          expect(stack.every((c, i) => c === cards[i])).toBe(true);
+          expect(stack).toHaveLength(original.length);
+          expect(stack.every((c, i) => c === original[i])).toBe(true);
           expect(Object.isFrozen(stack)).toBe(frozen);
         }),
       );
@@ -138,13 +138,15 @@ describe("shuffle", () => {
     });
 
     it("makes every order of 3 cards about equally likely", () => {
-      // Each of the 6 orders should come up about 1000 times in 6000
-      // shuffles, give or take about 29. A shuffle that can't reach some
-      // orders, such as Sattolo's, gives 0 for those.
+      // Each of the 6 orders should come up about 10000 times in 60000
+      // shuffles, give or take about 91, so ±500 is about 5.5σ. The classic
+      // biased shuffle, which swaps each card with any position, gives some
+      // orders about 8900 times and others about 11100. One that can't reach
+      // some orders, such as Sattolo's, gives 0 for those.
       const random = seededRandom(1);
       const hand = [card("A", "S"), card("K", "H"), card("10", "D")];
       const counts = tally(
-        Array.from({ length: 6000 }, () =>
+        Array.from({ length: 60_000 }, () =>
           shuffle(hand, { random })
             .map((c) => short(c))
             .join(" "),
@@ -152,8 +154,8 @@ describe("shuffle", () => {
       );
       expect(counts.size).toBe(6);
       for (const count of counts.values()) {
-        expect(count).toBeGreaterThan(880);
-        expect(count).toBeLessThan(1120);
+        expect(count).toBeGreaterThan(9500);
+        expect(count).toBeLessThan(10_500);
       }
     });
   });
