@@ -24,7 +24,7 @@ let deck: CardStack | undefined;
  *
  * @example
  * ```ts
- * import { card } from "deckshoes";
+ * import { card, seededRandom, shuffle } from "deckshoes";
  * import { standard52 } from "deckshoes/presets";
  *
  * const deck = standard52();
@@ -37,6 +37,11 @@ let deck: CardStack | undefined;
  * // The same frozen stack every time.
  * standard52() === deck; // => true
  * Object.isFrozen(deck); // => true
+ *
+ * // Shuffling gives a new stack and leaves the deck alone.
+ * const shuffled = shuffle(deck, { random: seededRandom(42) });
+ * shuffled[0] === card("7", "H"); // => true
+ * deck[0] === card("A", "H"); // => true
  * ```
  *
  * @since NEXT
