@@ -18,22 +18,22 @@ pnpm check     # everything CI runs; should pass on a fresh clone
 
 ## Scripts
 
-| Script                              | What it does                                                                                                           |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `pnpm check`                        | Everything below, in the same order as CI. Run it before asking for review.                                            |
-| `pnpm lint` / `pnpm lint:fix`       | ESLint, including the code inside `@example` blocks.                                                                   |
-| `pnpm format` / `pnpm format:check` | Prettier.                                                                                                              |
-| `pnpm typecheck`                    | TypeScript, including the generated doctests.                                                                          |
-| `pnpm test` / `pnpm test:watch`     | Unit tests, type tests and doctests. Watch mode regenerates doctests as you edit examples.                             |
-| `pnpm coverage`                     | Tests with a coverage report in `coverage/`.                                                                           |
-| `pnpm bench`                        | Runs the benchmarks and prints a table of results. Not part of `pnpm check`, since timings vary from run to run.       |
-| `pnpm docs:build`                   | Builds the API reference in `docs-site/`. Fails on undocumented exports or broken links.                               |
-| `pnpm build`                        | Builds `dist/`.                                                                                                        |
-| `pnpm check:package`                | Checks the published package shape (publint, Are the Types Wrong).                                                     |
-| `pnpm size`                         | Checks bundle size budgets.                                                                                            |
-| `pnpm smoke`                        | Installs the packed tarball in a scratch project and loads it with `import` and `require()`. Needs `pnpm build` first. |
-| `pnpm knip`                         | Finds unused files, exports and dependencies.                                                                          |
-| `pnpm changeset`                    | Adds a changeset describing your change for the changelog.                                                             |
+| Script                              | What it does                                                                                                                                                                                          |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                        | Everything below, in the same order as CI. Run it before asking for review.                                                                                                                           |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint, including the code inside `@example` blocks.                                                                                                                                                  |
+| `pnpm format` / `pnpm format:check` | Prettier.                                                                                                                                                                                             |
+| `pnpm typecheck`                    | TypeScript, including the generated doctests.                                                                                                                                                         |
+| `pnpm test` / `pnpm test:watch`     | Unit tests, type tests and doctests. Watch mode regenerates doctests as you edit examples.                                                                                                            |
+| `pnpm coverage`                     | Tests with a coverage report in `coverage/`.                                                                                                                                                          |
+| `pnpm bench`                        | Runs the benchmarks and prints a table of results. Not part of `pnpm check`, since timings vary from run to run.                                                                                      |
+| `pnpm docs:build`                   | Builds the API reference in `docs-site/`. Fails on undocumented exports or broken links.                                                                                                              |
+| `pnpm build`                        | Builds `dist/`.                                                                                                                                                                                       |
+| `pnpm check:package`                | Checks the published package shape (publint, Are the Types Wrong).                                                                                                                                    |
+| `pnpm size`                         | Checks bundle size budgets.                                                                                                                                                                           |
+| `pnpm smoke`                        | Installs the packed tarball in a scratch project, loads both entry points with `import` and `require()`, and type-checks a file that uses them against the published types. Needs `pnpm build` first. |
+| `pnpm knip`                         | Finds unused files, exports and dependencies.                                                                                                                                                         |
+| `pnpm changeset`                    | Adds a changeset describing your change for the changelog.                                                                                                                                            |
 
 The pre-commit hook formats and lints staged files, then runs `typecheck` and `test`.
 
