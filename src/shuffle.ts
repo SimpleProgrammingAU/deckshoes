@@ -45,10 +45,10 @@ export interface ShuffleOptions {
  * @param stack - The stack to shuffle, top first.
  * @param options - Settings for the shuffle, such as its random source.
  * @returns A new frozen stack holding the same cards in random order.
- * @throws {@link InvalidArgumentError} When `options` isn't an object or its
- * `random` option isn't a function. Also when the random source returns
- * something other than a number from 0 up to 1, or keeps returning values that
- * have to be rejected.
+ * @throws {@link InvalidArgumentError} When `stack` isn't an array, `options`
+ * isn't an object, or its `random` option isn't a function. Also when the
+ * random source returns something other than a number from 0 up to 1, or keeps
+ * returning values that have to be rejected.
  *
  * @example
  * ```ts
@@ -78,6 +78,12 @@ export function shuffle<C>(
   options: ShuffleOptions = {},
 ): CardStack<C> {
   // Read as `unknown`: JavaScript callers can pass anything.
+  const given: unknown = stack;
+  if (!Array.isArray(given)) {
+    throw new InvalidArgumentError(
+      `Invalid stack ${display(given)}: expected an array of cards`,
+    );
+  }
   const settings: unknown = options;
   if (typeof settings !== "object" || settings === null) {
     throw new InvalidArgumentError(
