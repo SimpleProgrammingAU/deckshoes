@@ -19,6 +19,27 @@ npm install deckshoes@alpha
 pnpm add deckshoes@alpha
 ```
 
+## Quick start
+
+```ts
+import { card, seededRandom, shuffle } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+// A deck in new deck order, the order a new deck comes out of the box in.
+const deck = standard52();
+deck.length; // => 52
+deck[0] === card("A", "H"); // => true
+
+// Shuffle it. The seed makes the order the same every time.
+const shuffled = shuffle(deck, { random: seededRandom(42) });
+shuffled.slice(0, 3); // => [card("7", "H"), card("6", "C"), card("10", "D")]
+
+// Shuffling returns a new stack and leaves the deck as it was.
+deck[0] === card("A", "H"); // => true
+```
+
+A stack, such as a deck or a hand, is a frozen array of cards with the top card first. In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure random source. See [Random sources](#random-sources).
+
 ## What's coming in 1.0
 
 Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. This is the API being built; the [roadmap](./ROADMAP.md) tracks progress.
@@ -63,6 +84,31 @@ isCard({ rank: "A", suit: "S", color: "black" }); // => false
 
 TypeScript rejects any other rank or suit. Values it can't check, such as user input, are checked when the card is made: a rank or suit that isn't standard throws `InvalidCardError`.
 
+## Random sources
+
+Anything random, such as a shuffle, takes a random source as its `random` option. A random source is a function that returns a number from 0 up to, but not including, 1: the same shape as `Math.random`.
+
+- **Leave `random` out** to use a secure source, backed by `crypto.getRandomValues`. Each shuffle makes its own, and nothing is kept between shuffles. Use this in real games.
+- **Pass `seededRandom(seed)`** to get the same results for the same seed, in every runtime and every 1.x release. Use it for tests, examples and replays: record the seed, and you can replay the game. The seed is an integer from 0 to 2³² − 1.
+- **Pass any other source**, such as `Math.random` or one from another library, as it is.
+
+A seeded source moves on each time it's used, so one source passed to two shuffles gives two different orders. To repeat a result, make a fresh source with the same seed.
+
+```ts
+import { seededRandom, shuffle } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const random = seededRandom(7);
+const first = shuffle(standard52(), { random });
+const second = shuffle(standard52(), { random });
+first.every((card, i) => card === second[i]); // => false
+
+// A fresh source with the same seed repeats the first shuffle.
+shuffle(standard52(), { random: seededRandom(7) }); // => first
+```
+
+Anyone who sees enough of a seeded source's results can work out what comes next, so don't use one where a player could gain from guessing the next card. A source that returns anything but a number from 0 up to 1, such as `1` or `NaN`, makes the operation throw `InvalidArgumentError`.
+
 ## Error handling
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
@@ -97,6 +143,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 - **ESM only.** Node.js 22.12 and later can also `require()` it.
 - **Runtimes:** Node.js 22.12+, Deno, Bun, and current browsers. The library doesn't use any Node.js APIs.
 - **TypeScript:** types are included. Strict mode is recommended.
+- **Randomness:** the default random source uses the global `crypto.getRandomValues`, which Node.js 22.12+, Deno, Bun and current browsers all have. Where it's missing, such as React Native without a polyfill, a shuffle without a `random` option throws a `ReferenceError`. Polyfill `crypto.getRandomValues`, or pass a `random` source.
 - **One install per app.** If you publish a library that uses deckshoes, list it in `peerDependencies` so your users' apps get one install. Two installs still work side by side, but their cards aren't `===` to each other; `isDeckshoesError` recognises errors from both if they share a major version.
 
 ## Documentation
