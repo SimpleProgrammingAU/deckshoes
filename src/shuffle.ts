@@ -23,7 +23,9 @@ export interface ShuffleOptions {
   /**
    * The random source to shuffle with. Leave it out, or pass `undefined`, to
    * use a secure source backed by `crypto.getRandomValues`, made fresh for each
-   * shuffle. Pass {@link seededRandom} to get the same order every time.
+   * shuffle. Pass a fresh {@link seededRandom} source to get the same order
+   * every time: a seeded source moves on with each use, so reusing one gives a
+   * different order.
    */
   readonly random?: RandomSource | undefined;
 }
@@ -37,9 +39,15 @@ export interface ShuffleOptions {
  *
  * It's a Fisher–Yates shuffle, drawing from the `random` option. Leave the
  * option out to use a secure source, backed by `crypto.getRandomValues`: each
- * shuffle makes its own and keeps nothing from it afterwards. Pass
- * {@link seededRandom} to make the order reproducible: the same seed gives the
- * same order in every runtime and every 1.x release.
+ * shuffle makes its own and keeps nothing from it afterwards. Pass a fresh
+ * {@link seededRandom} source to make the order reproducible: the same seed
+ * gives the same order in every runtime and every 1.x release. A seeded source
+ * moves on with each use, so one source passed to two shuffles gives two
+ * different orders.
+ *
+ * Where the runtime has no `crypto.getRandomValues`, such as React Native
+ * without a polyfill, shuffling two or more cards without a `random` option
+ * throws the runtime's own error, not a deckshoes error.
  *
  * @typeParam C - The type of card in the stack.
  * @param stack - The stack to shuffle, top first.

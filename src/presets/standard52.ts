@@ -7,8 +7,8 @@ import { RANKS } from "../internal/card-table.ts";
 let deck: CardStack | undefined;
 
 /**
- * Returns the standard 52-card deck, in new deck order: the order a new deck
- * comes out of the box in.
+ * Returns the standard 52, each standard card once, in new deck order: the
+ * order a new deck comes out of the box in.
  *
  * Face down from the top, that's hearts and clubs from ace to king, then
  * diamonds and spades from king to ace. So the top card, `[0]`, is the ace of
