@@ -10,5 +10,11 @@
     "path": "dist/index.js",
     "import": "{ isDeckshoesError }",
     "limit": "1 kB"
+  },
+  {
+    "name": "deckshoes/presets (standard52 only)",
+    "path": "dist/presets.js",
+    "import": "{ standard52 }",
+    "limit": "1 kB"
   }
 ]

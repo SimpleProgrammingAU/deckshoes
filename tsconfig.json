@@ -31,7 +31,8 @@
     "forceConsistentCasingInFileNames": true,
 
     "paths": {
-      "deckshoes": ["./src/index.ts"]
+      "deckshoes": ["./src/index.ts"],
+      "deckshoes/presets": ["./src/presets/index.ts"]
     }
   },
   "include": ["src", "scripts", ".doctest/**/*.ts", "*.ts"]

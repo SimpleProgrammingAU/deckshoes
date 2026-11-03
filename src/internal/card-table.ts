@@ -1,7 +1,7 @@
 import type { Card, Color, Rank, Suit } from "../card.ts";
 
-/** Every standard rank. */
-const RANKS: readonly Rank[] = [
+/** Every standard rank, from ace to king. */
+export const RANKS: readonly Rank[] = [
   "A",
   "2",
   "3",
