@@ -4,6 +4,8 @@ Every operation that needs randomness takes a random source as its `random` opti
 
 To pick an index without modulo bias, deckshoes takes `floor(r × 2³²)` from the source and splits the 2³² possible values into n buckets of `floor(2³²/n)` each. The index is the bucket the value falls in, so it stays close to `floor(r × n)`. A value in the incomplete last bucket is rejected, and deckshoes draws again. This is exactly unbiased for any source with at least 32 bits of resolution, which includes both built-in sources and `Math.random` in every major engine. A broken source can land in that bucket every time (`() => 1 - Number.EPSILON` does for 52 cards), so after a fixed number of rejections in a row, far more than a working source ever needs, the operation throws `InvalidArgumentError` rather than loop forever.
 
+A shuffle is Durstenfeld's version of the Fisher–Yates shuffle, worked from the bottom of the stack up. For each position i from n − 1 down to 1, it picks an index from 0 to i in the way above, and swaps the cards at i and that index. So a 52-card shuffle picks 51 indices, the first from 52 positions and the last from 2.
+
 ## Considered options
 
 - **`Math.random` as the default.** Not suitable for anything where fairness matters, and not seedable.
@@ -16,4 +18,4 @@ To pick an index without modulo bias, deckshoes takes `floor(r × 2³²)` from t
 
 - A seeded source is stateful: each call moves it on, so passing the same source to two shuffles gives two different orders. This is the one deliberate impurity in the library. Create a fresh `seededRandom(seed)` to repeat a result.
 - A source that returns anything but a number in [0, 1), `NaN` included, is rejected with `InvalidArgumentError`. So is a seed that isn't an integer from 0 to 2³² − 1.
-- The algorithm, the seed expansion, the 32-bit values and the way a value becomes an index are fixed for 1.x. Changing any of them changes every seeded result, breaking doctests and users' replays, so it needs a major release.
+- The algorithm, the seed expansion, the 32-bit values, the way a value becomes an index and the order a shuffle picks and swaps in are fixed for 1.x. Changing any of them changes every seeded result, breaking doctests and users' replays, so it needs a major release.
