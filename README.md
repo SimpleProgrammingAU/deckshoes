@@ -90,7 +90,7 @@ Anything random, such as a shuffle, takes a random source as its `random` option
 
 - **Leave `random` out** to use a secure source, backed by `crypto.getRandomValues`. Each shuffle makes its own, and nothing is kept between shuffles. Use this in real games.
 - **Pass `seededRandom(seed)`** to get the same results for the same seed, in every runtime and every 1.x release. Use it for tests, examples and replays: record the seed, and you can replay the game. The seed is an integer from 0 to 2³² − 1.
-- **Pass any other source**, such as `Math.random` or one from another library, as it is.
+- **Pass any other source**, such as `Math.random`, as it is. A method that uses `this`, such as `rng.next` on a library's random-number object, has to be wrapped first: `{ random: () => rng.next() }`.
 
 A seeded source moves on each time it's used, so one source passed to two shuffles gives two different orders. To repeat a result, make a fresh source with the same seed.
 
@@ -143,7 +143,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 - **ESM only.** Node.js 22.12 and later can also `require()` it.
 - **Runtimes:** Node.js 22.12+, Deno, Bun, and current browsers. The library doesn't use any Node.js APIs.
 - **TypeScript:** types are included. Strict mode is recommended.
-- **Randomness:** the default random source uses the global `crypto.getRandomValues`, which Node.js 22.12+, Deno, Bun and current browsers all have. Where it's missing, such as React Native without a polyfill, a shuffle without a `random` option throws a `ReferenceError`. Polyfill `crypto.getRandomValues`, or pass a `random` source.
+- **Randomness:** the default random source uses the global `crypto.getRandomValues`, which Node.js 22.12+, Deno, Bun and current browsers all have. Where it's missing or incomplete, such as React Native without a polyfill, a shuffle without a `random` option throws the runtime's own error, such as a `ReferenceError` or `TypeError`, rather than a deckshoes error. Polyfill `crypto.getRandomValues`, or pass a `random` source.
 - **One install per app.** If you publish a library that uses deckshoes, list it in `peerDependencies` so your users' apps get one install. Two installs still work side by side, but their cards aren't `===` to each other; `isDeckshoesError` recognises errors from both if they share a major version.
 
 ## Documentation
