@@ -25,6 +25,13 @@ if (!deck.every((c) => c === card(c.rank, c.suit))) {
 if ("standard52" in root) {
   throw new Error("the deckshoes entry point exports a preset");
 }
+const shuffled = shuffle(deck, { random: seededRandom(42) });
+if (shuffled.length !== 52 || shuffled[0] !== card("7", "H")) {
+  throw new Error("shuffle() with seededRandom(42) gave the wrong order");
+}
+if (deck[0] !== card("A", "H")) {
+  throw new Error("shuffle() changed its input");
+}
 `;
 
 /**
@@ -32,10 +39,10 @@ if ("standard52" in root) {
  * copy of the branded Card type, the two wouldn't be assignable or comparable.
  */
 const TYPES = `
-import { type Card, card, type CardStack } from "deckshoes";
+import { type Card, card, type CardStack, seededRandom, shuffle } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 
-const deck: CardStack<Card> = standard52();
+const deck: CardStack<Card> = shuffle(standard52(), { random: seededRandom(1) });
 const top: Card | undefined = deck[0];
 export const same: boolean = top === card("A", "H");
 `;
@@ -79,7 +86,7 @@ try {
     path.join(dir, "esm.mjs"),
     [
       `import * as root from "deckshoes";`,
-      `import { card, InvalidCardError, isDeckshoesError } from "deckshoes";`,
+      `import { card, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
       `import { standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -88,7 +95,7 @@ try {
     path.join(dir, "cjs.cjs"),
     [
       `const root = require("deckshoes");`,
-      `const { card, InvalidCardError, isDeckshoesError } = root;`,
+      `const { card, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
       `const { standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),

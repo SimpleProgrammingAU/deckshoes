@@ -17,11 +17,15 @@ import type { Card } from "./card.ts";
  *
  * @example
  * ```ts
- * import { card, type CardStack } from "deckshoes";
+ * import { card, type CardStack, seededRandom, shuffle } from "deckshoes";
  *
  * const hand: CardStack = [card("A", "S"), card("10", "H")];
  * hand[0]; // => { rank: "A", suit: "S", color: "black" }
  * hand.length; // => 2
+ *
+ * // Stacks that operations return are frozen.
+ * const shuffled = shuffle(hand, { random: seededRandom(42) });
+ * Object.isFrozen(shuffled); // => true
  * ```
  *
  * @since NEXT
