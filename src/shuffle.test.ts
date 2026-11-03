@@ -30,6 +30,11 @@ function counted(random: () => unknown): RandomSource & { calls: number } {
   return wrapped;
 }
 
+/** Lets a test pass a stack that isn't an array, as untyped callers can. */
+function asStack(value: unknown): readonly Card[] {
+  return value as readonly Card[];
+}
+
 /** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
 function asOptions(value: unknown): ShuffleOptions {
   return value as ShuffleOptions;
@@ -193,6 +198,21 @@ describe("shuffle", () => {
         code: "INVALID_ARGUMENT",
       });
       expect(spy).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["undefined", undefined],
+      ["null", null],
+      ["a string", "AS KH"],
+      ["a one-character string", "A"],
+      ["a Set", new Set(standard52())],
+      ["an array-like object", { 0: card("A", "S"), length: 1 }],
+    ])("rejects %s as the stack", (_label, stack) => {
+      const random = counted(() => 0);
+      expect(thrownBy(() => shuffle(asStack(stack), { random }))).toMatchObject(
+        { code: "INVALID_ARGUMENT" },
+      );
+      expect(random.calls).toBe(0);
     });
 
     it.each([
