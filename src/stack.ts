@@ -28,6 +28,6 @@ import type { Card } from "./card.ts";
  * Object.isFrozen(shuffled); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type CardStack<C = Card> = readonly C[];

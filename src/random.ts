@@ -30,7 +30,7 @@ import { xoshiro128StarStar } from "./internal/random.ts";
  * typeof fast(); // => "number"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type RandomSource = () => number;
 
@@ -81,7 +81,7 @@ const MAX_SEED = 0xff_ff_ff_ff;
  * seededRandom(1.5); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function seededRandom(seed: number): RandomSource {
   if (!(Number.isInteger(seed) && seed >= 0 && seed <= MAX_SEED)) {

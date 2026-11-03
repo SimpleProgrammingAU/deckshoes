@@ -17,7 +17,7 @@ import { randomIndex, secureRandom } from "./internal/random.ts";
  * shuffle(standard52(), options)[0] === card("7", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface ShuffleOptions {
   /**
@@ -79,7 +79,7 @@ export interface ShuffleOptions {
  * shuffle(hand, { random: () => 1 }); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function shuffle<C>(
   stack: CardStack<C>,

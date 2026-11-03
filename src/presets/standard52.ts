@@ -44,7 +44,7 @@ let deck: CardStack | undefined;
  * deck[0] === card("A", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function standard52(): CardStack {
   if (deck === undefined) {
