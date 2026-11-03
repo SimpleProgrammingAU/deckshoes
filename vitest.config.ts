@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, type ViteUserConfig } from "vitest/config";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const deckshoes = path.join(root, "src", "index.ts");
 const readme = path.join(root, "README.md");
 
 /** Whether a changed file can contain examples that scripts/doctest.ts reads. */
@@ -38,7 +37,15 @@ const config: ViteUserConfig = defineConfig({
     },
   ],
   resolve: {
-    alias: { deckshoes },
+    // Exact matches: a string alias would also catch "deckshoes/presets" as
+    // "deckshoes" followed by a subpath.
+    alias: [
+      { find: /^deckshoes$/u, replacement: path.join(root, "src", "index.ts") },
+      {
+        find: /^deckshoes\/presets$/u,
+        replacement: path.join(root, "src", "presets", "index.ts"),
+      },
+    ],
   },
   test: {
     coverage: {

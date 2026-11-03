@@ -65,7 +65,7 @@ Most of these are enforced by ESLint or TypeScript; the rest are checked in revi
 - **Names follow the [glossary](./GLOSSARY.md).** Use its terms in identifiers, doc comments and issues. A word on a term's _Avoid_ list can still appear with another meaning, but never as a name for that term.
 - **Settings go in one options object,** the last parameter. The stack, and the counts or cards an operation acts on, stay positional ([ADR 0009](./docs/adr/0009-settings-go-in-one-options-object.md)).
 - **No runtime dependencies,** and no Node.js built-ins in `src/`; the library has to run in browsers and every JS runtime.
-- **Named exports only.** Everything public is exported from `src/index.ts`, except presets, which come from the `deckshoes/presets` entry point ([ADR 0008](./docs/adr/0008-presets-ship-from-a-subpath.md)).
+- **Named exports only.** Everything public is exported from `src/index.ts`, except presets, which are exported from `src/presets/index.ts`, the `deckshoes/presets` entry point ([ADR 0008](./docs/adr/0008-presets-ship-from-a-subpath.md)).
 - **Imports use `.ts` extensions** (`import { x } from "./x.ts"`).
 - **Helpers that aren't public API go in `src/internal/`.** They need a one-line doc comment, nothing more.
 
@@ -104,7 +104,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 
 - `expr; // => value` asserts that `expr` deeply equals `value`. `const x = …; // => value` and `console.log(x); // => value` work too. The comment goes on the last line of the statement, so statements that Prettier wraps over several lines work.
 - `expr; // throws CODE` asserts the error's `code`. Use an error class name instead (`// throws InvalidArgumentError`) to check its `name`. If `expr` contains `await`, it asserts the promise rejects.
-- Import from `"deckshoes"`, the way users will.
+- Import from `"deckshoes"`, or `"deckshoes/presets"` for presets, the way users will.
 - Pass a seeded random source to every shuffle, so the results shown are the results you get.
 - Add `no-test` to the fence (` ```ts no-test `) for illustrations that shouldn't run, such as the block above.
 
