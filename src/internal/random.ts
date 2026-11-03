@@ -94,10 +94,14 @@ export function xoshiro128StarStar(seed: number): RandomSource {
  * result.
  */
 export function randomIndex(n: number, random: RandomSource): number {
-  assert(
-    Number.isInteger(n) && n >= 1 && n <= TWO_TO_THE_32,
-    `randomIndex needs an integer n from 1 to 2³², not ${String(n)}`,
-  );
+  // Checked before calling assert, so the message is only built for a bug:
+  // a shuffle calls this once per card.
+  if (!(Number.isInteger(n) && n >= 1 && n <= TWO_TO_THE_32)) {
+    assert(
+      false,
+      `randomIndex needs an integer n from 1 to 2³², not ${String(n)}`,
+    );
+  }
   const size = Math.floor(TWO_TO_THE_32 / n);
   for (let rejections = 0; rejections < MAX_REJECTIONS; rejections++) {
     const value: unknown = random();
