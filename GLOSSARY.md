@@ -18,7 +18,7 @@ A card that has a suit.
 A card that has a colour.
 
 **Standard card**:
-One of the 52 cards of the standard deck: ranked, suited and coloured, with its colour fixed by its suit.
+One of the 52 cards with a French suit and a rank from A to K: ranked, suited and coloured, with its colour fixed by its suit.
 _Avoid_: normal card, regular card
 
 **Rank**:
@@ -72,6 +72,14 @@ _Avoid_: multi-deck
 **Preset**:
 A ready-made deck with a documented list of cards in a documented order. Some presets depend on a choice, such as the 500 deck's player count, with a fixed list for each.
 _Avoid_: template, variant, deck type, generator
+
+**Standard 52**:
+The preset holding each standard card once, in new deck order.
+_Avoid_: standard deck, full deck
+
+**New deck order**:
+The order a new standard 52 comes in from the box: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace, so the ace of spades is on the bottom.
+_Avoid_: NDO, factory order
 
 **Stripped deck**:
 A preset made by removing ranks from the standard 52, such as Piquet or Euchre.
