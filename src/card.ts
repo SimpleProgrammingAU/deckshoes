@@ -16,7 +16,7 @@ import { display } from "./internal/display.ts";
  * card(ten, "S"); // => { rank: "10", suit: "S", color: "black" }
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type Rank =
   "A" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "J" | "Q" | "K";
@@ -34,7 +34,7 @@ export type Rank =
  * colors; // => ["black", "red", "red", "black"]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type Suit = "S" | "H" | "D" | "C";
 
@@ -53,7 +53,7 @@ export type Suit = "S" | "H" | "D" | "C";
  * color; // => "red"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type Color = "red" | "black";
 
@@ -96,7 +96,7 @@ declare class CardBrand {
  * hand[1] === card("10", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface Card extends CardBrand {
   /** The card's rank, such as `"A"` or `"10"`. */
@@ -141,7 +141,7 @@ export interface Card extends CardBrand {
  * fromText("11", "S"); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function card(rank: Rank, suit: Suit): Card {
   const bySuit = CARD_TABLE.get(rank);
@@ -179,7 +179,7 @@ export function card(rank: Rank, suit: Suit): Card {
  * isCard("QC"); // => false
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function isCard(value: unknown): value is Card {
   return CARDS.has(value);
