@@ -22,3 +22,4 @@ export {
   isDeckshoesError,
 } from "./errors.ts";
 export { type RandomSource, seededRandom } from "./random.ts";
+export { type CardStack } from "./stack.ts";
