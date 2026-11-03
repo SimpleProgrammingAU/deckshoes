@@ -40,6 +40,7 @@
     "dist"
   ],
   "scripts": {
+    "bench": "vitest bench --run --reporter=default",
     "build": "tsdown",
     "changeset": "changeset",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm coverage && pnpm docs:build && pnpm build && pnpm check:package && pnpm size && pnpm smoke && pnpm knip",
