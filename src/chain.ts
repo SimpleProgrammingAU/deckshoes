@@ -9,8 +9,15 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * pipeline and then unwrapped with {@link Chain.value | value()}.
  *
  * Each method has the same name as a stack operation, calls that function and
- * returns a new chain holding the result. A chain never changes: the chain a
- * method was called on still holds the stack it held before.
+ * returns a new chain holding the result. A method never changes the chain it's
+ * called on, which still holds the stack it held before.
+ *
+ * A chain holds the stack passed to {@link chain} itself, not a copy. Every
+ * stack deckshoes returns is frozen, but if you pass in an array of your own
+ * and then change it, the chain holds the changed array.
+ *
+ * Get a chain from {@link chain} rather than implementing `Chain` yourself,
+ * because each new stack operation adds a method to it in a minor release.
  *
  * @typeParam C - The type of card in the stack the chain holds: a standard
  * {@link Card} unless you say otherwise.
@@ -20,12 +27,12 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * import { card, chain, type Chain, seededRandom } from "deckshoes";
  * import { standard52 } from "deckshoes/presets";
  *
- * const deck: Chain = chain(standard52());
- * const shuffled = deck.shuffle({ random: seededRandom(42) });
+ * const chained: Chain = chain(standard52());
+ * const shuffled = chained.shuffle({ random: seededRandom(42) });
  * shuffled.value()[0] === card("7", "H"); // => true
  *
  * // The chain that shuffle was called on still holds the deck as it was.
- * deck.value()[0] === card("A", "H"); // => true
+ * chained.value()[0] === card("A", "H"); // => true
  * ```
  *
  * @since NEXT
@@ -35,7 +42,7 @@ export interface Chain<C = Card> {
    * Shuffles the stack the chain holds with {@link shuffle}, and returns a new
    * chain holding the result.
    *
-   * @param options - Settings for the shuffle, such as its random source.
+   * @param options - The options that {@link shuffle} takes.
    * @returns A new chain holding the shuffled stack.
    * @throws {@link InvalidArgumentError} When {@link shuffle} would.
    *
