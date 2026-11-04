@@ -84,9 +84,10 @@ Every public export needs a complete doc comment. ESLint enforces each of these:
 | `@since`      | `@since NEXT` on anything new; the release script replaces it with the version number.               |
 | `@deprecated` | When something is superseded: name the replacement with `{@link …}` and say when it will be removed. |
 
-Three things ESLint can't fully check:
+Four things ESLint can't fully check:
 
 - `@throws` is only detected for `throw` written directly in the function body. Validate inputs in the public function itself, so the `throw` is visible there, and document any error that a function you call can throw.
+- A chain method's doc comment covers only what the chain adds, links to its function with `{@link …}` for the rest, and has its own `@since NEXT`. Don't use `{@inheritDoc}`: TypeDoc would copy the function's `@returns` and describe the wrong parameters ([ADR 0001](./docs/adr/0001-functional-core-with-a-chain.md)).
 - Deprecating something is a `minor` changeset; removing it is a `major` one.
 - Prose, including doc comments and error messages, is Australian English; identifiers are US English. A doc comment talks about a card's colour, and the property is `color`.
 

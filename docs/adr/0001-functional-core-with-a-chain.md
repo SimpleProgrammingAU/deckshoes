@@ -26,4 +26,5 @@ const same = chain(standard52())
 - `.value()` keeps the name chaining libraries use for unwrapping, even though the glossary's Value is the number a game gives a card.
 - Importing `chain` bundles every stack operation, because methods can't be tree-shaken. Users who care about bundle size use the functions.
 - An operation that splits a stack returns a frozen object naming each part, never a tuple: `{ cards, rest }` from `draw`, `{ hands, rest }` from `deal`. The function and the chain give the same shape, and a new field can be added without breaking anyone.
-- A chain holding a split result offers only `.value()`. To carry on with the remainder, wrap it again with `chain(result.rest)`.
+- A chain holding a split result offers only `.value()`, through a type of its own, so `Chain` always holds a stack and has every stack operation. To carry on with the remainder, wrap it again with `chain(result.rest)`.
+- A chain method's doc comment says what the chain does, links to its function for everything else, and shares the function's options type, rather than using `{@inheritDoc}`. TypeDoc copies an inherited comment's `@returns`, and its parameter descriptions by position, and a method that drops the stack parameter and returns a chain matches neither.

@@ -140,7 +140,7 @@ Where every random operation gets its randomness: secure by default, reproducibl
 _Avoid_: RNG, PRNG, generator, randomiser
 
 **Chain**:
-A stack wrapped so that operations can be written as a pipeline and then unwrapped.
+A stack wrapped so that operations can be written as a pipeline and then unwrapped. Once an operation gives something other than a stack, such as drawn cards and the rest, the chain can only be unwrapped.
 _Avoid_: wrapper, fluent API, builder
 
 **Install**:
