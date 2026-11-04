@@ -14,6 +14,7 @@ export {
   type Rank,
   type Suit,
 } from "./card.ts";
+export { chain, type Chain } from "./chain.ts";
 export {
   DeckshoesError,
   type DeckshoesErrorCode,
