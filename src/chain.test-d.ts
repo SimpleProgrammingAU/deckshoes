@@ -44,8 +44,10 @@ describe("Chain.shuffle", () => {
   });
 
   it("takes the function's parameters after the stack", () => {
+    // The function for the same kind of card as Chain's, so that a parameter
+    // that mentions the card type matches too.
     expectTypeOf<Parameters<Chain["shuffle"]>>().toEqualTypeOf<
-      AfterStack<typeof shuffle>
+      AfterStack<typeof shuffle<Card>>
     >();
     expectTypeOf<Parameters<Chain["shuffle"]>>().toEqualTypeOf<
       // An optional parameter also takes undefined, under exactOptionalPropertyTypes.
