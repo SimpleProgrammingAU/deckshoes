@@ -22,7 +22,7 @@ pnpm add deckshoes@alpha
 ## Quick start
 
 ```ts
-import { card, seededRandom, shuffle } from "deckshoes";
+import { card, chain, seededRandom, shuffle } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 
 // A deck in new deck order, the order a new deck comes out of the box in.
@@ -34,11 +34,18 @@ deck[0] === card("A", "H"); // => true
 const shuffled = shuffle(deck, { random: seededRandom(42) });
 shuffled.slice(0, 3); // => [card("7", "H"), card("6", "C"), card("10", "D")]
 
+// The same thing written as a chain, unwrapped with .value().
+chain(deck)
+  .shuffle({ random: seededRandom(42) })
+  .value(); // => shuffled
+
 // Shuffling returns a new stack and leaves the deck as it was.
 deck[0] === card("A", "H"); // => true
 ```
 
-A stack, such as a deck or a hand, is a frozen array of cards with the top card first. In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure random source. See [Random sources](#random-sources).
+A stack, such as a deck or a hand, is a frozen array of cards with the top card first. Every operation is a function that returns new data, and `chain()` writes the same operations as a pipeline, with the same results. Importing `chain` brings every stack operation into your bundle, even the ones you don't call, so use the functions if bundle size matters.
+
+In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure random source. See [Random sources](#random-sources).
 
 ## What's coming in 1.0
 
@@ -113,11 +120,11 @@ Anyone who sees enough of a seeded source's results can work out what comes next
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
 
-| Code                 | Class                    | Thrown when                                                                   |
-| -------------------- | ------------------------ | ----------------------------------------------------------------------------- |
-| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, index, seed or option is out of range, or a random source misbehaves |
-| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit or card string can't be recognised                               |
-| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                    |
+| Code                 | Class                    | Thrown when                                                                                           |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, index, seed or option is out of range, a stack isn't an array, or a random source misbehaves |
+| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit or card string can't be recognised                                                       |
+| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                            |
 
 Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
 
