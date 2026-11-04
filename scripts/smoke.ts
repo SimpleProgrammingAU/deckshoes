@@ -32,6 +32,13 @@ if (shuffled.length !== 52 || shuffled[0] !== card("7", "H")) {
 if (deck[0] !== card("A", "H")) {
   throw new Error("shuffle() changed its input");
 }
+const chained = chain(deck).shuffle({ random: seededRandom(42) }).value();
+if (chained.length !== 52 || chained[0] !== card("7", "H")) {
+  throw new Error("chain().shuffle() with seededRandom(42) gave a different order from shuffle()");
+}
+if (chain(deck).value() !== deck || deck[0] !== card("A", "H")) {
+  throw new Error("chain() didn't give back the stack it was given, unchanged");
+}
 `;
 
 /**
@@ -39,12 +46,14 @@ if (deck[0] !== card("A", "H")) {
  * copy of the branded Card type, the two wouldn't be assignable or comparable.
  */
 const TYPES = `
-import { type Card, card, type CardStack, seededRandom, shuffle } from "deckshoes";
+import { type Card, card, type CardStack, chain, type Chain, seededRandom, shuffle } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 
 const deck: CardStack<Card> = shuffle(standard52(), { random: seededRandom(1) });
 const top: Card | undefined = deck[0];
 export const same: boolean = top === card("A", "H");
+const chained: Chain<Card> = chain(standard52()).shuffle({ random: seededRandom(1) });
+export const unwrapped: CardStack<Card> = chained.value();
 `;
 
 /** Strict settings for TYPES, checking the published .d.ts files too. */
@@ -86,7 +95,7 @@ try {
     path.join(dir, "esm.mjs"),
     [
       `import * as root from "deckshoes";`,
-      `import { card, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
+      `import { card, chain, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
       `import { standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -95,7 +104,7 @@ try {
     path.join(dir, "cjs.cjs"),
     [
       `const root = require("deckshoes");`,
-      `const { card, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
+      `const { card, chain, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
       `const { standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),
