@@ -12,6 +12,12 @@
     "limit": "1 kB"
   },
   {
+    "name": "deckshoes (shuffle only, no chain)",
+    "path": "dist/index.js",
+    "import": "{ shuffle }",
+    "limit": "800 B"
+  },
+  {
     "name": "deckshoes/presets (standard52 only)",
     "path": "dist/presets.js",
     "import": "{ standard52 }",
