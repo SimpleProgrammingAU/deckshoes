@@ -97,22 +97,22 @@ describe("chain", () => {
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    it("throws what the shuffle function throws", () => {
-      const deck = chain(standard52());
-      expect(thrownBy(() => deck.shuffle({ random: () => 1 }))).toMatchObject({
-        code: "INVALID_ARGUMENT",
-      });
-      expect(
-        thrownBy(() => deck.shuffle(asOptions(seededRandom(42)))),
-      ).toMatchObject({ code: "INVALID_ARGUMENT" });
-      expect(deck.value()).toBe(standard52());
+    it.each([
+      ["a random source that returns 1", { random: () => 1 }],
+      ["a random source as the options", asOptions(seededRandom(42))],
+    ])("throws what the shuffle function throws for %s", (_label, options) => {
+      const chained = chain(standard52());
+      expect(thrownBy(() => chained.shuffle(options))).toStrictEqual(
+        thrownBy(() => shuffle(standard52(), options)),
+      );
+      expect(chained.value()).toBe(standard52());
     });
   });
 
   it("returns a frozen chain, before and after an operation", () => {
-    const deck = chain(standard52());
-    expect(Object.isFrozen(deck)).toBe(true);
-    expect(Object.isFrozen(deck.shuffle({ random: seededRandom(1) }))).toBe(
+    const chained = chain(standard52());
+    expect(Object.isFrozen(chained)).toBe(true);
+    expect(Object.isFrozen(chained.shuffle({ random: seededRandom(1) }))).toBe(
       true,
     );
   });
