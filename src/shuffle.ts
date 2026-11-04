@@ -4,6 +4,7 @@ import type { CardStack } from "./stack.ts";
 import { InvalidArgumentError } from "./errors.ts";
 import { display } from "./internal/display.ts";
 import { randomIndex, secureRandom } from "./internal/random.ts";
+import { invalidStack } from "./internal/stack.ts";
 
 /**
  * Settings for {@link shuffle}.
@@ -87,11 +88,7 @@ export function shuffle<C>(
 ): CardStack<C> {
   // Read as `unknown`: JavaScript callers can pass anything.
   const given: unknown = stack;
-  if (!Array.isArray(given)) {
-    throw new InvalidArgumentError(
-      `Invalid stack ${display(given)}: expected an array of cards`,
-    );
-  }
+  if (!Array.isArray(given)) throw invalidStack(given);
   const settings: unknown = options;
   if (typeof settings !== "object" || settings === null) {
     throw new InvalidArgumentError(
