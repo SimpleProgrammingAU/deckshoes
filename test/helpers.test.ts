@@ -75,15 +75,26 @@ describe("nonArrays", () => {
   });
 });
 
+/** What `copy` returns, or what it throws. */
+function attempted(copy: () => unknown): unknown {
+  try {
+    return copy();
+  } catch (error) {
+    return error;
+  }
+}
+
 // A subclass that stopped misbehaving would still pass every operation's test,
 // so this is what notices the tests no longer test anything.
 describe("arraySubclasses", () => {
   it("has each kind of subclass", () => {
     expect(arraySubclasses().map(([label]) => label)).toStrictEqual([
-      "a subclass whose constructor takes cards",
+      "a subclass whose constructor takes a stack",
       "a bare subclass",
       "a subclass with Object as its species",
       "a subclass whose slice loses the cards",
+      "a subclass whose iterator loses the cards",
+      "a subclass with no iterator",
     ]);
   });
 
@@ -102,14 +113,15 @@ describe("arraySubclasses", () => {
     "%s doesn't give a plain copy from slice",
     (_label, make) => {
       const stack = make(["a", "b"]);
-      const sliced = (): unknown => {
-        try {
-          return stack.slice();
-        } catch (error) {
-          return error;
-        }
-      };
-      expect(sliced()).not.toStrictEqual(["a", "b"]);
+      expect(attempted(() => stack.slice())).not.toStrictEqual(["a", "b"]);
+    },
+  );
+
+  it.each(arraySubclasses().filter(([label]) => label.includes("iterator")))(
+    "%s doesn't give the cards from a spread",
+    (_label, make) => {
+      const stack = make(["a", "b"]);
+      expect(attempted(() => [...stack])).not.toStrictEqual(["a", "b"]);
     },
   );
 });

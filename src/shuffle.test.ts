@@ -82,13 +82,12 @@ describe("shuffle", () => {
     });
 
     it.each(arraySubclasses())(
-      "gives a plain frozen stack in the same order as a plain array for %s",
+      "gives a plain frozen stack in the same order as a plain array for %s, frozen or not",
       (_label, make) => {
         fc.assert(
-          fc.property(stacks(), seeds, (stack, seed) => {
-            const shuffled = shuffle(make(stack), {
-              random: seededRandom(seed),
-            });
+          fc.property(stacks(), seeds, fc.boolean(), (stack, seed, frozen) => {
+            const given = frozen ? Object.freeze(make(stack)) : make(stack);
+            const shuffled = shuffle(given, { random: seededRandom(seed) });
             expect(shuffled).toStrictEqual(
               shuffle(stack, { random: seededRandom(seed) }),
             );
