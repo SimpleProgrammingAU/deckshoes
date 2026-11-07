@@ -10,6 +10,7 @@ import {
   nonArrays,
   seeds,
   short,
+  sparseStacks,
   stacks,
   thrownBy,
 } from "../test/helpers.ts";
@@ -96,6 +97,17 @@ describe("shuffle", () => {
         );
       },
     );
+
+    it("reads a hole as undefined", () => {
+      fc.assert(
+        fc.property(sparseStacks(), seeds, (stack, seed) => {
+          // Spreading turns each hole into undefined, and toStrictEqual tells them apart.
+          expect(shuffle(stack, { random: seededRandom(seed) })).toStrictEqual(
+            shuffle([...stack], { random: seededRandom(seed) }),
+          );
+        }),
+      );
+    });
 
     it("draws once for each card but the top one", () => {
       fc.assert(

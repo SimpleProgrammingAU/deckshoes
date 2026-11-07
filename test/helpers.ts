@@ -148,6 +148,12 @@ export function stacks(): Arbitrary<Card[]> {
   });
 }
 
+/** Stacks of standard cards with holes in them, up to two decks' worth of slots. */
+export function sparseStacks(): Arbitrary<Card[]> {
+  // Without `maxLength`, fast-check can make arrays too big to copy.
+  return fc.sparseArray(fc.constantFrom(...standard52()), { maxLength: 104 });
+}
+
 /** A stack and a count from 0 up to its size. The stacks come from {@link stacks} unless `from` gives others. */
 export function stacksWithCounts(): Arbitrary<{ count: number; stack: Card[] }>;
 export function stacksWithCounts<C>(
