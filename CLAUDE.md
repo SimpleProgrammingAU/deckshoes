@@ -4,7 +4,7 @@ A TypeScript library for playing cards, partway through a rewrite to 1.0 (Change
 
 ## Architecture
 
-A pure functional core over frozen, immutable data (cards, stacks), plus `chain()`, which only delegates to those functions. The public API is exported from `src/index.ts`; presets ship from the `deckshoes/presets` subpath, and game helpers (poker, blackjack) will follow as their own subpaths. Helpers that aren't public API live in `src/internal/`. Name things with `GLOSSARY.md`'s terms, in code, docs and issues; read the ADRs in `docs/adr/` that touch what you're changing. Prose is Australian English, identifiers US English.
+A pure functional core over frozen, immutable data (cards, stacks), plus `chain()`, which only delegates to those functions. The public API is exported from `src/index.ts`; presets ship from the `deckshoes/presets` subpath, and game helpers (poker, blackjack) will follow as their own subpaths. Library helpers that aren't public API live in `src/internal/`. Name things with `GLOSSARY.md`'s terms, in code, docs and issues; read the ADRs in `docs/adr/` that touch what you're changing. Prose is Australian English, identifiers US English.
 
 ## Working in src/
 
@@ -14,6 +14,7 @@ Read `CONTRIBUTING.md` (Code rules, Documentation rules, Errors, Tests) before w
 - `@throws` is only detected for a `throw` in the function's own body, so public functions validate their own inputs and `throw` right there.
 - Examples are doctests: `expr; // => value` and `expr; // throws CODE`. Pass a seeded random source to every shuffle.
 - A failing doctest's title names the source file and line. Fix the example there; `.doctest/` is regenerated on every run.
+- A test helper stays in its test file until a second test file needs it; that change moves it to `test/helpers.ts`, with a test if it has logic.
 - Every change to the published package gets a changeset (`pnpm changeset`).
 
 Work is done when `pnpm check` is green; it runs everything CI runs.
