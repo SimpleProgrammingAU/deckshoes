@@ -22,7 +22,7 @@ import { invalidCount, invalidStack } from "./internal/stack.ts";
  * Object.isFrozen(result); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface DrawResult<C = Card> {
   /** The cards drawn, in the order they had in the stack, top first. */
@@ -72,7 +72,7 @@ export interface DrawResult<C = Card> {
  * draw(hand, -1); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
   // Read as `unknown`: JavaScript callers can pass anything.
@@ -132,7 +132,7 @@ export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
  * drawBottom(hand, -1); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
   // Read as `unknown`: JavaScript callers can pass anything.
@@ -189,7 +189,7 @@ export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
  * peek(hand, -1); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function peek<C>(stack: CardStack<C>, count = 1): CardStack<C> {
   // Read as `unknown`: JavaScript callers can pass anything.
@@ -244,7 +244,7 @@ export function peek<C>(stack: CardStack<C>, count = 1): CardStack<C> {
  * peekBottom(hand, -1); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function peekBottom<C>(stack: CardStack<C>, count = 1): CardStack<C> {
   // Read as `unknown`: JavaScript callers can pass anything.
