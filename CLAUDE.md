@@ -14,7 +14,7 @@ Read `CONTRIBUTING.md` (Code rules, Documentation rules, Errors, Tests) before w
 - `@throws` is only detected for a `throw` in the function's own body, so public functions validate their own inputs and `throw` right there.
 - Examples are doctests: `expr; // => value` and `expr; // throws CODE`. Pass a seeded random source to every shuffle.
 - A failing doctest's title names the source file and line. Fix the example there; `.doctest/` is regenerated on every run.
-- A test helper stays in its test file until a second test file needs it; that change moves it to `test/helpers.ts`, with a test if it has logic.
+- A test helper stays in its test file until a second test file needs it; that change moves it to `test/helpers.ts`, with a test if it has branches or state.
 - Every change to the published package gets a changeset (`pnpm changeset`).
 
 Work is done when `pnpm check` is green; it runs everything CI runs.

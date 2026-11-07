@@ -122,7 +122,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 - Unit tests live next to the code: `src/thing.ts` and `src/thing.test.ts`.
 - Type-level tests go in `src/thing.test-d.ts`, using `expectTypeOf`.
 - Benchmarks go in `src/thing.bench.ts`, using Vitest's `bench` fixture. They run in their own Vitest project without Vite's module runner, whose export getters would otherwise be timed along with the library.
-- Helpers that more than one test file needs live in `test/helpers.ts`, which isn't published. Import them instead of copying them. A helper stays in its test file until a second test file needs it, and the change that adds the second use moves it. A helper with logic gets a test in `test/helpers.test.ts` when it moves.
+- Helpers that more than one test file needs live in `test/helpers.ts`, which isn't published. Import them instead of copying them. A helper stays in its test file until a second test file needs it, and the change that adds the second use moves it. A helper with branches or state gets a test in `test/helpers.test.ts` when it moves.
 - Use [fast-check](https://fast-check.dev/) property tests for stack operations. For example: a shuffle keeps every card exactly once, and dealing loses no cards.
 - Shuffles and anything else that takes a deckshoes random source get a seeded one, so results repeat. fast-check property tests stay unseeded: each run explores new cases, and a failure prints the seed that reproduces it.
 - Coverage must stay at or above the thresholds in `vitest.config.ts`.
