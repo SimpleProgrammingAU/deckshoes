@@ -6,7 +6,9 @@ import {
   asStack,
   counted,
   nonArrays,
+  seeds,
   short,
+  stacks,
   thrownBy,
 } from "../test/helpers.ts";
 import { card } from "./card.ts";
@@ -20,11 +22,6 @@ function tally(values: readonly unknown[]): Map<unknown, number> {
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
   return counts;
 }
-
-const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });
-
-/** Stacks of standard cards, copies allowed, from none up to two decks' worth. */
-const stacks = fc.array(fc.constantFrom(...standard52()), { maxLength: 104 });
 
 describe("shuffle", () => {
   afterEach(() => {
