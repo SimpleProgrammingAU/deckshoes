@@ -76,3 +76,16 @@ export function stacks(): Arbitrary<Card[]> {
     size: "max",
   });
 }
+
+/** A stack from {@link stacks}, and a count from 0 up to its size. */
+export function stacksWithCounts(): Arbitrary<{
+  count: number;
+  stack: Card[];
+}> {
+  return stacks().chain((stack) =>
+    fc.record({
+      count: fc.nat({ max: stack.length }),
+      stack: fc.constant(stack),
+    }),
+  );
+}
