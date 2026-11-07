@@ -31,7 +31,7 @@ describe("shuffle", () => {
   describe("with a seeded source", () => {
     it("keeps every card, copies included", () => {
       fc.assert(
-        fc.property(stacks, seeds, (stack, seed) => {
+        fc.property(stacks(), seeds, (stack, seed) => {
           const shuffled = shuffle(stack, { random: seededRandom(seed) });
           expect(tally(shuffled)).toStrictEqual(tally(stack));
         }),
@@ -49,7 +49,7 @@ describe("shuffle", () => {
 
     it("leaves the input unchanged, frozen or not", () => {
       fc.assert(
-        fc.property(stacks, fc.boolean(), seeds, (original, frozen, seed) => {
+        fc.property(stacks(), fc.boolean(), seeds, (original, frozen, seed) => {
           const stack = frozen ? Object.freeze([...original]) : [...original];
           shuffle(stack, { random: seededRandom(seed) });
           expect(stack).toHaveLength(original.length);
@@ -61,7 +61,7 @@ describe("shuffle", () => {
 
     it("gives the same order for the same seed", () => {
       fc.assert(
-        fc.property(stacks, seeds, (stack, seed) => {
+        fc.property(stacks(), seeds, (stack, seed) => {
           expect(shuffle(stack, { random: seededRandom(seed) })).toStrictEqual(
             shuffle(stack, { random: seededRandom(seed) }),
           );
@@ -71,7 +71,7 @@ describe("shuffle", () => {
 
     it("returns a new frozen stack, even with too few cards to move", () => {
       fc.assert(
-        fc.property(stacks, seeds, (stack, seed) => {
+        fc.property(stacks(), seeds, (stack, seed) => {
           const shuffled = shuffle(stack, { random: seededRandom(seed) });
           expect(shuffled).not.toBe(stack);
           expect(Object.isFrozen(shuffled)).toBe(true);
@@ -81,7 +81,7 @@ describe("shuffle", () => {
 
     it("draws once for each card but the top one", () => {
       fc.assert(
-        fc.property(stacks, (stack) => {
+        fc.property(stacks(), (stack) => {
           // 0 is never rejected, so each pick draws exactly once.
           const random = counted(() => 0);
           shuffle(stack, { random });
@@ -170,7 +170,7 @@ describe("shuffle", () => {
       expect(spy).not.toHaveBeenCalled();
     });
 
-    it.each(nonArrays)("rejects %s as the stack", (_label, stack) => {
+    it.each(nonArrays())("rejects %s as the stack", (_label, stack) => {
       const random = counted(() => 0);
       expect(thrownBy(() => shuffle(asStack(stack), { random }))).toMatchObject(
         { code: "INVALID_ARGUMENT" },
