@@ -20,6 +20,10 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * stack deckshoes returns is frozen, but if you pass in an array of your own
  * and then change it, the chain holds the changed array.
  *
+ * Call a method on the chain itself: one taken off it, as in
+ * `const { draw } = chained`, loses the chain and throws the runtime's own
+ * `TypeError`.
+ *
  * Get a chain from {@link chain} rather than implementing `Chain` yourself,
  * because each new stack operation adds a method to it in a minor release.
  *
