@@ -44,10 +44,10 @@ export interface DrawResult<C = Card> {
  *
  * @typeParam C - The type of card in the stack.
  * @param stack - The stack to draw from, top first.
- * @param count - How many cards to draw, an integer of 0 or more: 1 if it's left
- * out or `undefined`.
- * @returns A frozen object holding the `cards` drawn and the `remainder`, each a
- * new frozen stack, top first.
+ * @param count - How many cards to draw, an integer of 0 or more: 1 if it's
+ * left out or `undefined`.
+ * @returns A frozen object holding the `cards` drawn and the `remainder`, each
+ * a new frozen stack, top first.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, or `count`
  * isn't an integer of 0 or more.
  * @throws {@link InsufficientCardsError} When `count` is more than the stack
@@ -104,10 +104,10 @@ export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
  *
  * @typeParam C - The type of card in the stack.
  * @param stack - The stack to draw from, top first.
- * @param count - How many cards to draw, an integer of 0 or more: 1 if it's left
- * out or `undefined`.
- * @returns A frozen object holding the `cards` drawn and the `remainder`, each a
- * new frozen stack, top first.
+ * @param count - How many cards to draw, an integer of 0 or more: 1 if it's
+ * left out or `undefined`.
+ * @returns A frozen object holding the `cards` drawn and the `remainder`, each
+ * a new frozen stack, top first.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, or `count`
  * isn't an integer of 0 or more.
  * @throws {@link InsufficientCardsError} When `count` is more than the stack
@@ -122,7 +122,8 @@ export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
  * cards; // => [card("K", "H"), card("10", "D")]
  * remainder; // => [card("A", "S")]
  *
- * // Leave the count out to draw one card. One at a time, the bottom card is first.
+ * // Leave the count out to draw one card. One at a time, the bottom card
+ * // comes first.
  * const first = drawBottom(hand);
  * first.cards; // => [card("10", "D")]
  * drawBottom(first.remainder).cards; // => [card("K", "H")]
@@ -152,8 +153,8 @@ export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
 /**
  * Looks at cards from the top of a stack without drawing them.
  *
- * The stack is left untouched, frozen or not, and the cards are still in it. The
- * cards come back as a new frozen stack, even when that's every card in the
+ * The stack is left untouched, frozen or not, and the cards are still in it.
+ * The cards come back as a new frozen stack, even when that's every card in the
  * stack. Any stack works, including one with copies or with cards that aren't
  * standard cards.
  *
@@ -207,8 +208,8 @@ export function peek<C>(stack: CardStack<C>, count = 1): CardStack<C> {
  * The cards stay in stack order, top first, so the card on the bottom comes
  * last.
  *
- * The stack is left untouched, frozen or not, and the cards are still in it. The
- * cards come back as a new frozen stack, even when that's every card in the
+ * The stack is left untouched, frozen or not, and the cards are still in it.
+ * The cards come back as a new frozen stack, even when that's every card in the
  * stack. Any stack works, including one with copies or with cards that aren't
  * standard cards.
  *

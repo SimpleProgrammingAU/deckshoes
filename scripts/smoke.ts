@@ -39,6 +39,14 @@ if (chained.length !== 52 || chained[0] !== card("7", "H")) {
 if (chain(deck).value() !== deck || deck[0] !== card("A", "H")) {
   throw new Error("chain() didn't give back the stack it was given, unchanged");
 }
+const drawn = draw(deck, 2);
+if (drawn.cards[0] !== card("A", "H") || drawn.remainder.length !== 50 || deck.length !== 52) {
+  throw new Error("draw() gave the wrong cards or remainder, or changed its input");
+}
+const chainedDraw = chain(deck).draw(2).value();
+if (chainedDraw.cards[0] !== drawn.cards[0] || chainedDraw.remainder[0] !== drawn.remainder[0]) {
+  throw new Error("chain().draw() gave a different result from draw()");
+}
 `;
 
 /**
@@ -46,7 +54,7 @@ if (chain(deck).value() !== deck || deck[0] !== card("A", "H")) {
  * copy of the branded Card type, the two wouldn't be assignable or comparable.
  */
 const TYPES = `
-import { type Card, card, type CardStack, chain, type Chain, seededRandom, shuffle } from "deckshoes";
+import { type Card, card, type CardStack, chain, type Chain, draw, type DrawResult, seededRandom, shuffle, type TerminatedChain } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 
 const deck: CardStack<Card> = shuffle(standard52(), { random: seededRandom(1) });
@@ -54,6 +62,10 @@ const top: Card | undefined = deck[0];
 export const same: boolean = top === card("A", "H");
 const chained: Chain<Card> = chain(standard52()).shuffle({ random: seededRandom(1) });
 export const unwrapped: CardStack<Card> = chained.value();
+const drawn: DrawResult<Card> = draw(standard52(), 2);
+export const remainder: CardStack<Card> = drawn.remainder;
+const terminated: TerminatedChain<DrawResult<Card>> = chain(standard52()).draw(2);
+export const drawnCards: CardStack<Card> = terminated.value().cards;
 `;
 
 /** Strict settings for TYPES, checking the published .d.ts files too. */
@@ -95,7 +107,7 @@ try {
     path.join(dir, "esm.mjs"),
     [
       `import * as root from "deckshoes";`,
-      `import { card, chain, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
+      `import { card, chain, draw, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
       `import { standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -104,7 +116,7 @@ try {
     path.join(dir, "cjs.cjs"),
     [
       `const root = require("deckshoes");`,
-      `const { card, chain, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
+      `const { card, chain, draw, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
       `const { standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),
