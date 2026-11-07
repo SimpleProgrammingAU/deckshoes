@@ -176,15 +176,20 @@ describe.each<
   });
 
   it.each(arraySubclasses())(
-    "gives plain frozen stacks holding the right cards for %s",
+    "gives plain frozen stacks holding the right cards for %s, frozen or not",
     (_label, make) => {
       fc.assert(
-        fc.property(stacksWithCounts(), ({ count, stack }) => {
-          const result = drawFrom(make(stack), count);
-          expect(result).toStrictEqual(drawFrom(stack, count));
-          expect(isPlainFrozen(result.cards)).toBe(true);
-          expect(isPlainFrozen(result.remainder)).toBe(true);
-        }),
+        fc.property(
+          stacksWithCounts(),
+          fc.boolean(),
+          ({ count, stack }, frozen) => {
+            const given = frozen ? Object.freeze(make(stack)) : make(stack);
+            const result = drawFrom(given, count);
+            expect(result).toStrictEqual(drawFrom(stack, count));
+            expect(isPlainFrozen(result.cards)).toBe(true);
+            expect(isPlainFrozen(result.remainder)).toBe(true);
+          },
+        ),
       );
     },
   );
@@ -241,14 +246,19 @@ describe.each([
   });
 
   it.each(arraySubclasses())(
-    "gives a plain frozen stack holding the right cards for %s",
+    "gives a plain frozen stack holding the right cards for %s, frozen or not",
     (_label, make) => {
       fc.assert(
-        fc.property(stacksWithCounts(), ({ count, stack }) => {
-          const looked = look(make(stack), count);
-          expect(looked).toStrictEqual(look(stack, count));
-          expect(isPlainFrozen(looked)).toBe(true);
-        }),
+        fc.property(
+          stacksWithCounts(),
+          fc.boolean(),
+          ({ count, stack }, frozen) => {
+            const given = frozen ? Object.freeze(make(stack)) : make(stack);
+            const looked = look(given, count);
+            expect(looked).toStrictEqual(look(stack, count));
+            expect(isPlainFrozen(looked)).toBe(true);
+          },
+        ),
       );
     },
   );

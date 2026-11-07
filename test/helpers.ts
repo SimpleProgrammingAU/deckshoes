@@ -62,11 +62,11 @@ export function nonArrays(): readonly (readonly [
   ];
 }
 
-/** A subclass whose constructor takes cards, so the `new Hand(length)` that `slice()` makes throws. */
+/** A subclass whose constructor takes a stack, so the `new Hand(length)` that `slice()` makes throws. */
 class Hand<C> extends Array<C> {
-  constructor(cards: readonly C[]) {
+  constructor(stack: CardStack<C>) {
     super();
-    this.push(...cards);
+    this.push(...stack);
   }
 }
 
@@ -87,22 +87,40 @@ class NoCardsSliced<C> extends Array<C> {
   }
 }
 
-/** Labelled ways to build an array, for `it.each`, whose `slice()` doesn't give a plain copy. A stack operation must still give plain frozen arrays holding the right cards. */
+/** A subclass whose iterator yields nothing, so spreading it silently loses the cards. */
+class NoCardsIterated<C> extends Array<C> {
+  override [Symbol.iterator](): ArrayIterator<C> {
+    return ([] as C[])[Symbol.iterator]();
+  }
+}
+
+/** A subclass with no iterator, so spreading it throws. */
+class NoIterator<C> extends Array<C> {}
+Object.defineProperty(NoIterator.prototype, Symbol.iterator, {
+  value: undefined,
+});
+
+/** Labelled ways to build an array, for `it.each`, that copying with `slice()` or a spread gets wrong. A stack operation must still give plain frozen arrays holding the right cards. */
 export function arraySubclasses(): readonly (readonly [
   label: string,
-  make: <C>(cards: readonly C[]) => CardStack<C>,
+  make: <C>(stack: CardStack<C>) => CardStack<C>,
 ])[] {
   return [
-    ["a subclass whose constructor takes cards", (cards) => new Hand(cards)],
-    ["a bare subclass", (cards) => Pile.from(cards)],
+    ["a subclass whose constructor takes a stack", (stack) => new Hand(stack)],
+    ["a bare subclass", (stack) => Pile.from(stack)],
     [
       "a subclass with Object as its species",
-      (cards) => ObjectSpecies.from(cards),
+      (stack) => ObjectSpecies.from(stack),
     ],
     [
       "a subclass whose slice loses the cards",
-      (cards) => NoCardsSliced.from(cards),
+      (stack) => NoCardsSliced.from(stack),
     ],
+    [
+      "a subclass whose iterator loses the cards",
+      (stack) => NoCardsIterated.from(stack),
+    ],
+    ["a subclass with no iterator", (stack) => NoIterator.from(stack)],
   ];
 }
 

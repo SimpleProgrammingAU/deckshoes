@@ -142,7 +142,6 @@ export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
   if (count > stack.length) {
     throw new InsufficientCardsError(count, stack.length);
   }
-  // Not `copyStack(stack, -count)`: -0 gives the whole stack.
   const split = stack.length - count;
   return Object.freeze({
     cards: Object.freeze(copyStack(stack, split)),
@@ -254,6 +253,5 @@ export function peekBottom<C>(stack: CardStack<C>, count = 1): CardStack<C> {
   if (count > stack.length) {
     throw new InsufficientCardsError(count, stack.length);
   }
-  // Not `copyStack(stack, -count)`: -0 gives the whole stack.
   return Object.freeze(copyStack(stack, stack.length - count));
 }
