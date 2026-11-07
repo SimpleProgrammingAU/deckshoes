@@ -6,11 +6,12 @@ import type { CardStack } from "./stack.ts";
 import {
   asStack,
   nonArrays,
+  stacks,
   stacksWithCounts,
   thrownBy,
 } from "../test/helpers.ts";
 import { card } from "./card.ts";
-import { draw, drawBottom, peek, peekBottom } from "./draw.ts";
+import { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
 
 const ACE = card("A", "S");
 const KING = card("K", "H");
@@ -66,9 +67,9 @@ describe.each<
   it("throws with both counts when asked for more cards than the stack holds", () => {
     fc.assert(
       fc.property(
-        stacksWithCounts(),
+        stacks(),
         fc.integer({ max: 1000, min: 1 }),
-        ({ stack }, extra) => {
+        (stack, extra) => {
           const count = stack.length + extra;
           expect(thrownBy(() => operation(stack, count))).toMatchObject({
             available: stack.length,
@@ -121,13 +122,26 @@ describe.each<
   });
 });
 
-describe("draw", () => {
-  it("gives the count asked for from the top, and what's left as the remainder", () => {
+describe.each<
+  readonly [
+    name: string,
+    drawFrom: <C>(stack: CardStack<C>, count?: number) => DrawResult<C>,
+    rejoined: (result: DrawResult<unknown>) => readonly unknown[],
+  ]
+>([
+  ["draw", draw, ({ cards, remainder }) => [...cards, ...remainder]],
+  [
+    "drawBottom",
+    drawBottom,
+    ({ cards, remainder }) => [...remainder, ...cards],
+  ],
+])("%s", (_name, drawFrom, rejoined) => {
+  it("gives the count asked for, and what's left as the remainder", () => {
     fc.assert(
       fc.property(stacksWithCounts(), ({ count, stack }) => {
-        const { cards, remainder } = draw(stack, count);
-        expect(cards).toHaveLength(count);
-        expect(sameValues([...cards, ...remainder], stack)).toBe(true);
+        const result = drawFrom(stack, count);
+        expect(result.cards).toHaveLength(count);
+        expect(sameValues(rejoined(result), stack)).toBe(true);
       }),
     );
   });
@@ -137,18 +151,12 @@ describe("draw", () => {
       fc.property(
         stacksWithCounts(fc.array(fc.anything())),
         ({ count, stack }) => {
-          const { cards, remainder } = draw(stack, count);
-          expect(cards).toHaveLength(count);
-          expect(sameValues([...cards, ...remainder], stack)).toBe(true);
+          const result = drawFrom(stack, count);
+          expect(result.cards).toHaveLength(count);
+          expect(sameValues(rejoined(result), stack)).toBe(true);
         },
       ),
     );
-  });
-
-  it("draws only the topmost of several copies", () => {
-    const { cards, remainder } = draw([ACE, ACE, KING], 1);
-    expect(cards).toStrictEqual([ACE]);
-    expect(remainder).toStrictEqual([ACE, KING]);
   });
 
   it.each([
@@ -157,12 +165,20 @@ describe("draw", () => {
     ["every card", 3],
   ])("returns new frozen stacks in a frozen object for %s", (_label, count) => {
     const stack = Object.freeze([ACE, KING, TEN]);
-    const result = draw(stack, count);
+    const result = drawFrom(stack, count);
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.cards)).toBe(true);
     expect(Object.isFrozen(result.remainder)).toBe(true);
     expect(result.cards).not.toBe(stack);
     expect(result.remainder).not.toBe(stack);
+  });
+});
+
+describe("draw", () => {
+  it("draws only the topmost of several copies", () => {
+    const { cards, remainder } = draw([ACE, ACE, KING], 1);
+    expect(cards).toStrictEqual([ACE]);
+    expect(remainder).toStrictEqual([ACE, KING]);
   });
 
   it("gives no cards and an empty remainder for no cards from an empty stack", () => {
@@ -171,29 +187,6 @@ describe("draw", () => {
 });
 
 describe("drawBottom", () => {
-  it("gives the count asked for from the bottom, and what's left as the remainder", () => {
-    fc.assert(
-      fc.property(stacksWithCounts(), ({ count, stack }) => {
-        const { cards, remainder } = drawBottom(stack, count);
-        expect(cards).toHaveLength(count);
-        expect(sameValues([...remainder, ...cards], stack)).toBe(true);
-      }),
-    );
-  });
-
-  it("keeps every value of a stack of anything, in order", () => {
-    fc.assert(
-      fc.property(
-        stacksWithCounts(fc.array(fc.anything())),
-        ({ count, stack }) => {
-          const { cards, remainder } = drawBottom(stack, count);
-          expect(cards).toHaveLength(count);
-          expect(sameValues([...remainder, ...cards], stack)).toBe(true);
-        },
-      ),
-    );
-  });
-
   it("keeps the cards in stack order, so one at a time gives the opposite order", () => {
     expect(drawBottom(hand, 2).cards).toStrictEqual([KING, TEN]);
     const first = drawBottom(hand);
@@ -203,20 +196,6 @@ describe("drawBottom", () => {
 
   it("gives no cards and the whole stack as the remainder for a count of 0", () => {
     expect(drawBottom(hand, 0)).toStrictEqual({ cards: [], remainder: hand });
-  });
-
-  it.each([
-    ["no cards", 0],
-    ["one card", 1],
-    ["every card", 3],
-  ])("returns new frozen stacks in a frozen object for %s", (_label, count) => {
-    const stack = Object.freeze([ACE, KING, TEN]);
-    const result = drawBottom(stack, count);
-    expect(Object.isFrozen(result)).toBe(true);
-    expect(Object.isFrozen(result.cards)).toBe(true);
-    expect(Object.isFrozen(result.remainder)).toBe(true);
-    expect(result.cards).not.toBe(stack);
-    expect(result.remainder).not.toBe(stack);
   });
 });
 
