@@ -6,6 +6,7 @@ import {
   counted,
   isPlainFrozen,
   nonArrays,
+  sparseStacks,
   stacks,
   stacksWithCounts,
   thrownBy,
@@ -155,6 +156,23 @@ describe("stacks", () => {
     expect(Math.max(...lengths)).toBeGreaterThan(52);
     expect(Math.max(...lengths)).toBeLessThanOrEqual(104);
     expect(new Set(samples.flat()).size).toBe(52);
+  });
+});
+
+describe("sparseStacks", () => {
+  it("gives stacks with a hole, including at the top, and none too big to copy", () => {
+    // Seeded, because this checks what the arbitrary gives, not a property.
+    const samples = fc.sample(sparseStacks(), { numRuns: 1000, seed: 42 });
+    expect(
+      samples.some((stack) => Object.keys(stack).length < stack.length),
+    ).toBe(true);
+    // A shuffle writes to every slot but the top, so only this hole can survive one.
+    expect(samples.some((stack) => stack.length > 1 && !(0 in stack))).toBe(
+      true,
+    );
+    expect(
+      Math.max(...samples.map((stack) => stack.length)),
+    ).toBeLessThanOrEqual(104);
   });
 });
 

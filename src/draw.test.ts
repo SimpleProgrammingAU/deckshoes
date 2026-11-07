@@ -8,6 +8,7 @@ import {
   asStack,
   isPlainFrozen,
   nonArrays,
+  sparseStacks,
   stacks,
   stacksWithCounts,
   thrownBy,
@@ -193,6 +194,17 @@ describe.each<
       );
     },
   );
+
+  it("reads a hole as undefined", () => {
+    fc.assert(
+      fc.property(stacksWithCounts(sparseStacks()), ({ count, stack }) => {
+        // Spreading turns each hole into undefined, and toStrictEqual tells them apart.
+        expect(drawFrom(stack, count)).toStrictEqual(
+          drawFrom([...stack], count),
+        );
+      }),
+    );
+  });
 });
 
 describe("draw", () => {
@@ -262,6 +274,15 @@ describe.each([
       );
     },
   );
+
+  it("reads a hole as undefined", () => {
+    fc.assert(
+      fc.property(stacksWithCounts(sparseStacks()), ({ count, stack }) => {
+        // Spreading turns each hole into undefined, and toStrictEqual tells them apart.
+        expect(look(stack, count)).toStrictEqual(look([...stack], count));
+      }),
+    );
+  });
 });
 
 describe("peek", () => {
