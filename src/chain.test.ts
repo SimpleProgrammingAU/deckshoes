@@ -1,22 +1,17 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { thrownBy } from "../test/helpers.ts";
-import { type Card, card } from "./card.ts";
+import {
+  asShuffleOptions,
+  asStack,
+  nonArrays,
+  thrownBy,
+} from "../test/helpers.ts";
+import { card } from "./card.ts";
 import { chain } from "./chain.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
-import { shuffle, type ShuffleOptions } from "./shuffle.ts";
-
-/** Lets a test pass a stack that isn't an array, as untyped callers can. */
-function asStack(value: unknown): readonly Card[] {
-  return value as readonly Card[];
-}
-
-/** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
-function asOptions(value: unknown): ShuffleOptions {
-  return value as ShuffleOptions;
-}
+import { shuffle } from "./shuffle.ts";
 
 const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });
 
@@ -90,7 +85,7 @@ describe("chain", () => {
 
     it.each([
       ["a random source that returns 1", { random: () => 1 }],
-      ["a random source as the options", asOptions(seededRandom(42))],
+      ["a random source as the options", asShuffleOptions(seededRandom(42))],
     ])("throws what the shuffle function throws for %s", (_label, options) => {
       const chained = chain(standard52());
       expect(thrownBy(() => chained.shuffle(options))).toStrictEqual(
@@ -108,14 +103,7 @@ describe("chain", () => {
     );
   });
 
-  it.each([
-    ["undefined", undefined],
-    ["null", null],
-    ["a string", "AS KH"],
-    ["a one-character string", "A"],
-    ["a Set", new Set(standard52())],
-    ["an array-like object", { 0: card("A", "S"), length: 1 }],
-  ])("rejects %s as the stack", (_label, stack) => {
+  it.each(nonArrays)("rejects %s as the stack", (_label, stack) => {
     expect(thrownBy(() => chain(asStack(stack)))).toMatchObject({
       code: "INVALID_ARGUMENT",
     });

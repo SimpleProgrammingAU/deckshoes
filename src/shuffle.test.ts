@@ -1,27 +1,24 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { counted, short, thrownBy } from "../test/helpers.ts";
-import { type Card, card } from "./card.ts";
+import {
+  asShuffleOptions,
+  asStack,
+  counted,
+  nonArrays,
+  short,
+  thrownBy,
+} from "../test/helpers.ts";
+import { card } from "./card.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
-import { shuffle, type ShuffleOptions } from "./shuffle.ts";
+import { shuffle } from "./shuffle.ts";
 
 /** Counts how often each value appears, matching values the way `Map` keys do. */
 function tally(values: readonly unknown[]): Map<unknown, number> {
   const counts = new Map<unknown, number>();
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
   return counts;
-}
-
-/** Lets a test pass a stack that isn't an array, as untyped callers can. */
-function asStack(value: unknown): readonly Card[] {
-  return value as readonly Card[];
-}
-
-/** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
-function asOptions(value: unknown): ShuffleOptions {
-  return value as ShuffleOptions;
 }
 
 const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });
@@ -170,20 +167,13 @@ describe("shuffle", () => {
       ["an array", [0.5]],
     ])("rejects %s as the random option", (_label, random) => {
       const spy = vi.spyOn(crypto, "getRandomValues");
-      expect(thrownBy(() => shuffle([], asOptions({ random })))).toMatchObject({
-        code: "INVALID_ARGUMENT",
-      });
+      expect(
+        thrownBy(() => shuffle([], asShuffleOptions({ random }))),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
       expect(spy).not.toHaveBeenCalled();
     });
 
-    it.each([
-      ["undefined", undefined],
-      ["null", null],
-      ["a string", "AS KH"],
-      ["a one-character string", "A"],
-      ["a Set", new Set(standard52())],
-      ["an array-like object", { 0: card("A", "S"), length: 1 }],
-    ])("rejects %s as the stack", (_label, stack) => {
+    it.each(nonArrays)("rejects %s as the stack", (_label, stack) => {
       const random = counted(() => 0);
       expect(thrownBy(() => shuffle(asStack(stack), { random }))).toMatchObject(
         { code: "INVALID_ARGUMENT" },
@@ -198,7 +188,7 @@ describe("shuffle", () => {
       ["a string", "random"],
     ])("rejects %s in place of the options object", (_label, options) => {
       expect(
-        thrownBy(() => shuffle(standard52(), asOptions(options))),
+        thrownBy(() => shuffle(standard52(), asShuffleOptions(options))),
       ).toMatchObject({ code: "INVALID_ARGUMENT" });
     });
   });
