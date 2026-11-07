@@ -2,6 +2,7 @@ import fc, { type Arbitrary } from "fast-check";
 
 import type { RandomSource } from "../src/random.ts";
 import type { ShuffleOptions } from "../src/shuffle.ts";
+import type { CardStack } from "../src/stack.ts";
 
 import { type Card, card } from "../src/card.ts";
 import { standard52 } from "../src/presets/standard52.ts";
@@ -37,8 +38,8 @@ export function counted(next: () => unknown): RandomSource & { calls: number } {
 }
 
 /** Lets a test pass a value that isn't a stack, as untyped callers can. */
-export function asStack(value: unknown): readonly Card[] {
-  return value as readonly Card[];
+export function asStack(value: unknown): CardStack {
+  return value as CardStack;
 }
 
 /** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
