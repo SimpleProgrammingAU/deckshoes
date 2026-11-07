@@ -70,6 +70,34 @@ const DOCUMENTABLE = [
   "VariableDeclaration",
 ];
 
+/**
+ * What library code calls a stack: the glossary's words for the roles a stack
+ * plays, and `cards` for a stack an operation acts on. A selector has no type
+ * information, so the rules below find a stack by its name.
+ */
+const STACK_NAME = "/^(?:cards|deck|hand|pile|remainder|stack)$/";
+
+/** Array methods that make a new array, through `Symbol.species` or an override. */
+const COPYING_METHOD =
+  "/^(?:concat|filter|flat|flatMap|map|slice|splice|toReversed|toSorted|toSpliced|with)$/";
+
+/**
+ * Reading a stack through behaviour the array can override: a method that
+ * makes a new array, `Symbol.isConcatSpreadable`, or the iterator (ADR 0004).
+ */
+const UNSAFE_STACK_READS = [
+  `CallExpression[callee.object.name=${STACK_NAME}][callee.property.name=${COPYING_METHOD}]`,
+  `CallExpression[callee.property.name="concat"] > Identifier.arguments[name=${STACK_NAME}]`,
+  `SpreadElement[argument.name=${STACK_NAME}]`,
+  `CallExpression[callee.object.name="Array"][callee.property.name="from"] > Identifier.arguments[name=${STACK_NAME}]`,
+  `NewExpression[callee.name="Set"] > Identifier.arguments[name=${STACK_NAME}]`,
+  `ForOfStatement[right.name=${STACK_NAME}]`,
+  `VariableDeclarator[init.name=${STACK_NAME}] > ArrayPattern`,
+];
+
+/** A `CardStack` parameter with a name the rules above can't see. */
+const MISNAMED_STACK = `:function > Identifier.params[typeAnnotation.typeAnnotation.typeName.name="CardStack"]:not([name=${STACK_NAME}])`;
+
 const importSorting: Linter.RulesRecord = {
   "perfectionist/sort-exports": ["error", { type: "natural" }],
   "perfectionist/sort-imports": ["error", { type: "natural" }],
@@ -124,6 +152,9 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
     ignores: [EXAMPLES, ...TESTS],
     name: "deckshoes/library",
     rules: {
+      // A stack is read by index, not through its iterator (ADR 0004), so an
+      // index loop that only reads is the right loop for one.
+      "@typescript-eslint/prefer-for-of": "off",
       "no-restricted-imports": [
         "error",
         {
@@ -146,6 +177,16 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
           message:
             "Use named exports so the API is consistent and tree-shakeable.",
           selector: "ExportDefaultDeclaration",
+        },
+        ...UNSAFE_STACK_READS.map((selector) => ({
+          message:
+            "This goes through behaviour an array can override, so the array can throw, lose cards or change their order. Read a stack by index, or copy it with copyStack from src/internal/stack.ts (ADR 0004).",
+          selector,
+        })),
+        {
+          message:
+            "Name a stack parameter stack, deck, hand, pile, remainder or cards: lint finds a stack by its name, to keep copies going through copyStack (ADR 0004).",
+          selector: MISNAMED_STACK,
         },
       ],
     },
