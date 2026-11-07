@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { type Card, card, isCard } from "../card.ts";
+import { short } from "../../test/helpers.ts";
+import { card, isCard } from "../card.ts";
 import { standard52 } from "./standard52.ts";
-
-/** Writes a card as its rank and suit, such as "10H", to compare whole stacks. */
-function short({ rank, suit }: Card): string {
-  return `${rank}${suit}`;
-}
 
 describe("standard52", () => {
   // Fixed for 1.x (ADR 0008): every seeded shuffle of the deck starts here.

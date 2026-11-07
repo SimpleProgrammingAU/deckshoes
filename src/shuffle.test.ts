@@ -1,16 +1,11 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { thrownBy } from "../test/helpers.ts";
+import { short, thrownBy } from "../test/helpers.ts";
 import { type Card, card } from "./card.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { type RandomSource, seededRandom } from "./random.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
-
-/** Writes a card as its rank and suit, such as "10H", to compare whole stacks. */
-function short({ rank, suit }: Card): string {
-  return `${rank}${suit}`;
-}
 
 /** Counts how often each value appears, matching values the way `Map` keys do. */
 function tally(values: readonly unknown[]): Map<unknown, number> {
