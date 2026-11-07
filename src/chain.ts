@@ -251,7 +251,7 @@ export interface TerminatedChain<R> {
 }
 
 /** The chain that {@link TerminatedChain} describes: a frozen object holding a result. */
-class ResultChain<R> implements TerminatedChain<R> {
+class Terminated<R> implements TerminatedChain<R> {
   readonly #result: R;
 
   constructor(result: R) {
@@ -274,19 +274,19 @@ class StackChain<C> implements Chain<C> {
   }
 
   draw(count?: number): TerminatedChain<DrawResult<C>> {
-    return new ResultChain(draw(this.#stack, count));
+    return new Terminated(draw(this.#stack, count));
   }
 
   drawBottom(count?: number): TerminatedChain<DrawResult<C>> {
-    return new ResultChain(drawBottom(this.#stack, count));
+    return new Terminated(drawBottom(this.#stack, count));
   }
 
   peek(count?: number): TerminatedChain<CardStack<C>> {
-    return new ResultChain(peek(this.#stack, count));
+    return new Terminated(peek(this.#stack, count));
   }
 
   peekBottom(count?: number): TerminatedChain<CardStack<C>> {
-    return new ResultChain(peekBottom(this.#stack, count));
+    return new Terminated(peekBottom(this.#stack, count));
   }
 
   shuffle(options?: ShuffleOptions): Chain<C> {
