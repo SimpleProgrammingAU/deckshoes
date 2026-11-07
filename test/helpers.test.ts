@@ -2,7 +2,9 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
+  arraySubclasses,
   counted,
+  isPlainFrozen,
   nonArrays,
   stacks,
   stacksWithCounts,
@@ -70,6 +72,77 @@ describe("nonArrays", () => {
     expect(entries.filter(([, value]) => Array.isArray(value))).toStrictEqual(
       [],
     );
+  });
+});
+
+/** What `copy` returns, or what it throws. */
+function attempted(copy: () => unknown): unknown {
+  try {
+    return copy();
+  } catch (error) {
+    return error;
+  }
+}
+
+// A subclass that stopped misbehaving would still pass every operation's test,
+// so this is what notices the tests no longer test anything.
+describe("arraySubclasses", () => {
+  it("has each kind of subclass", () => {
+    expect(arraySubclasses().map(([label]) => label)).toStrictEqual([
+      "a subclass whose constructor takes a stack",
+      "a bare subclass",
+      "a subclass with Object as its species",
+      "a subclass whose slice loses the cards",
+      "a subclass whose iterator loses the cards",
+      "a subclass with no iterator",
+    ]);
+  });
+
+  it.each(arraySubclasses())(
+    "%s is an array holding the cards",
+    (_label, make) => {
+      const stack = make(["a", "b"]);
+      expect(Array.isArray(stack)).toBe(true);
+      expect(stack).toHaveLength(2);
+      expect(stack[0]).toBe("a");
+      expect(stack[1]).toBe("b");
+    },
+  );
+
+  it.each(arraySubclasses())(
+    "%s doesn't give a plain copy from slice",
+    (_label, make) => {
+      const stack = make(["a", "b"]);
+      expect(attempted(() => stack.slice())).not.toStrictEqual(["a", "b"]);
+    },
+  );
+
+  it.each(arraySubclasses().filter(([label]) => label.includes("iterator")))(
+    "%s doesn't give the cards from a spread",
+    (_label, make) => {
+      const stack = make(["a", "b"]);
+      expect(attempted(() => [...stack])).not.toStrictEqual(["a", "b"]);
+    },
+  );
+});
+
+describe("isPlainFrozen", () => {
+  it("accepts a frozen array", () => {
+    expect(isPlainFrozen(Object.freeze(["a"]))).toBe(true);
+    expect(isPlainFrozen(Object.freeze([]))).toBe(true);
+  });
+
+  it.each([
+    ["an unfrozen array", ["a"]],
+    ["a frozen subclass", Object.freeze(new (class extends Array {})())],
+    [
+      "a frozen non-array on the array prototype",
+      Object.freeze(Object.create(Array.prototype)),
+    ],
+    ["a frozen object", Object.freeze({})],
+    ["undefined", undefined],
+  ])("rejects %s", (_label, value) => {
+    expect(isPlainFrozen(value)).toBe(false);
   });
 });
 

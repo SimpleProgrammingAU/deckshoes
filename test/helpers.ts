@@ -62,6 +62,77 @@ export function nonArrays(): readonly (readonly [
   ];
 }
 
+/** A subclass whose constructor takes a stack, so the `new Hand(length)` that `slice()` makes throws. */
+class Hand<C> extends Array<C> {
+  constructor(stack: CardStack<C>) {
+    super();
+    this.push(...stack);
+  }
+}
+
+/** A subclass with nothing added, so `slice()` gives another `Pile`. */
+class Pile<C> extends Array<C> {}
+
+/** A subclass that has `slice()` make an `Object`, which isn't an array. */
+class ObjectSpecies<C> extends Array<C> {
+  static override get [Symbol.species](): ArrayConstructor {
+    return Object as unknown as ArrayConstructor;
+  }
+}
+
+/** A subclass whose `slice()` silently loses the cards. */
+class NoCardsSliced<C> extends Array<C> {
+  override slice(): C[] {
+    return [];
+  }
+}
+
+/** A subclass whose iterator yields nothing, so spreading it silently loses the cards. */
+class NoCardsIterated<C> extends Array<C> {
+  override [Symbol.iterator](): ArrayIterator<C> {
+    return ([] as C[])[Symbol.iterator]();
+  }
+}
+
+/** A subclass with no iterator, so spreading it throws. */
+class NoIterator<C> extends Array<C> {}
+Object.defineProperty(NoIterator.prototype, Symbol.iterator, {
+  value: undefined,
+});
+
+/** Labelled ways to build an array, for `it.each`, that copying with `slice()` or a spread gets wrong. A stack operation must still give plain frozen arrays holding the right cards. */
+export function arraySubclasses(): readonly (readonly [
+  label: string,
+  make: <C>(stack: CardStack<C>) => CardStack<C>,
+])[] {
+  return [
+    ["a subclass whose constructor takes a stack", (stack) => new Hand(stack)],
+    ["a bare subclass", (stack) => Pile.from(stack)],
+    [
+      "a subclass with Object as its species",
+      (stack) => ObjectSpecies.from(stack),
+    ],
+    [
+      "a subclass whose slice loses the cards",
+      (stack) => NoCardsSliced.from(stack),
+    ],
+    [
+      "a subclass whose iterator loses the cards",
+      (stack) => NoCardsIterated.from(stack),
+    ],
+    ["a subclass with no iterator", (stack) => NoIterator.from(stack)],
+  ];
+}
+
+/** Whether a value is a frozen array with nothing between it and `Array.prototype`. */
+export function isPlainFrozen(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    Object.getPrototypeOf(value) === Array.prototype &&
+    Object.isFrozen(value)
+  );
+}
+
 /** Every seed a seeded random source takes. */
 export const seeds: Arbitrary<number> = fc.integer({
   max: 0xff_ff_ff_ff,
