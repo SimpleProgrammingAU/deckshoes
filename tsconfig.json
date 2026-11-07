@@ -35,5 +35,5 @@
       "deckshoes/presets": ["./src/presets/index.ts"]
     }
   },
-  "include": ["src", "scripts", ".doctest/**/*.ts", "*.ts"]
+  "include": ["src", "scripts", "test", ".doctest/**/*.ts", "*.ts"]
 }

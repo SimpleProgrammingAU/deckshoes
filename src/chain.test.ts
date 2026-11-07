@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { thrownBy } from "../test/helpers.ts";
 import { type Card, card } from "./card.ts";
 import { chain } from "./chain.ts";
 import { standard52 } from "./presets/standard52.ts";
@@ -15,16 +16,6 @@ function asStack(value: unknown): readonly Card[] {
 /** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
 function asOptions(value: unknown): ShuffleOptions {
   return value as ShuffleOptions;
-}
-
-/** Returns what `run` throws, failing the test if it doesn't throw. */
-function thrownBy(run: () => unknown): unknown {
-  try {
-    run();
-  } catch (error) {
-    return error;
-  }
-  throw new Error("Expected a throw, but nothing was thrown");
 }
 
 const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });
