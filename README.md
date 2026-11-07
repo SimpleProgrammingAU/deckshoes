@@ -116,6 +116,58 @@ shuffle(standard52(), { random: seededRandom(7) }); // => first
 
 Anyone who sees enough of a seeded source's results can work out what comes next, so don't use one where a player could gain from guessing the next card. A source that returns anything but a number from 0 up to 1, such as `1` or `NaN`, makes the operation throw `InvalidArgumentError`.
 
+## Drawing
+
+`draw(stack, count)` draws cards from the top of a stack, and `drawBottom(stack, count)` draws them from the bottom. Both return a frozen `{ cards, remainder }`: the cards drawn, and the stack left after drawing them. The stack you passed in doesn't change, so carry on with `remainder`.
+
+`peek(stack, count)` and `peekBottom(stack, count)` look at the same cards without drawing them, so they return only those cards, as a frozen array.
+
+The count is 1 if you leave it out or pass `undefined`. You still get a stack holding that one card, not the card itself.
+
+```ts
+import { card, draw, drawBottom, peek, peekBottom } from "deckshoes";
+
+const stack = [card("A", "S"), card("K", "H"), card("10", "D")];
+
+// Draw from the top. The stack you passed in doesn't change.
+const { cards, remainder } = draw(stack, 2);
+cards; // => [card("A", "S"), card("K", "H")]
+remainder; // => [card("10", "D")]
+stack.length; // => 3
+
+// Leave the count out to draw one card.
+draw(stack).cards; // => [card("A", "S")]
+
+// Cards from the bottom stay in stack order, top first, so the bottom card is
+// last. Drawing them one at a time gives the opposite order.
+drawBottom(stack, 2).cards; // => [card("K", "H"), card("10", "D")]
+
+// Look without drawing.
+peek(stack, 2); // => [card("A", "S"), card("K", "H")]
+peekBottom(stack, 2); // => [card("K", "H"), card("10", "D")]
+
+// Too many cards, or a count that isn't an integer of 0 or more, throws.
+draw(stack, 4); // throws INSUFFICIENT_CARDS
+draw(stack, -1); // throws INVALID_ARGUMENT
+```
+
+In a chain, these operations end the pipeline: all that's left is `.value()`, which gives what the function gives. A draw leaves two stacks, so carry on by wrapping the remainder in a new chain. Peeked cards are still in the stack, so carry on from the chain you peeked from, which still holds the whole stack.
+
+```ts
+import { card, chain, seededRandom } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const shuffled = chain(standard52()).shuffle({ random: seededRandom(42) });
+
+// Look at the top card, then carry on from the same chain.
+shuffled.peek().value(); // => [card("7", "H")]
+
+// Draw two cards, then carry on from the remainder.
+const { cards, remainder } = shuffled.draw(2).value();
+cards; // => [card("7", "H"), card("6", "C")]
+chain(remainder).draw().value().cards; // => [card("10", "D")]
+```
+
 ## Error handling
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
