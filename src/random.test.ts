@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import { thrownBy } from "../test/helpers.ts";
+import { seeds, thrownBy } from "../test/helpers.ts";
 import { type RandomSource, seededRandom } from "./random.ts";
 
 /** Returns the next `count` values from `random`, as the 32-bit integers they come from. */
@@ -13,8 +13,6 @@ function take(random: RandomSource, count: number): number[] {
 function asSeed(value: unknown): number {
   return value as number;
 }
-
-const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });
 
 describe("seededRandom", () => {
   // Checked against the reference C code for xoshiro128** 1.1, seeded with

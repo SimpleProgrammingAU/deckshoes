@@ -5,6 +5,8 @@ import {
   asShuffleOptions,
   asStack,
   nonArrays,
+  seeds,
+  stacks,
   thrownBy,
 } from "../test/helpers.ts";
 import { card } from "./card.ts";
@@ -12,11 +14,6 @@ import { chain } from "./chain.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
 import { shuffle } from "./shuffle.ts";
-
-const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });
-
-/** Stacks of standard cards, copies allowed, from none up to two decks' worth. */
-const stacks = fc.array(fc.constantFrom(...standard52()), { maxLength: 104 });
 
 describe("chain", () => {
   afterEach(() => {

@@ -1,3 +1,5 @@
+import fc, { type Arbitrary } from "fast-check";
+
 import type { RandomSource } from "../src/random.ts";
 import type { ShuffleOptions } from "../src/shuffle.ts";
 
@@ -63,3 +65,15 @@ export const nonArrays: readonly (readonly [label: string, value: unknown])[] =
     ["a Set", new Set(standard52())],
     ["an array-like object", { 0: card("A", "S"), length: 1 }],
   ];
+
+/** Every seed a seeded random source takes. */
+export const seeds: Arbitrary<number> = fc.integer({
+  max: 0xff_ff_ff_ff,
+  min: 0,
+});
+
+/** Stacks of standard cards, copies allowed, from none up to two decks' worth. */
+export const stacks: Arbitrary<Card[]> = fc.array(
+  fc.constantFrom(...standard52()),
+  { maxLength: 104 },
+);
