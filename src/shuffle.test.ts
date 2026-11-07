@@ -2,9 +2,11 @@ import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  arraySubclasses,
   asShuffleOptions,
   asStack,
   counted,
+  isPlainFrozen,
   nonArrays,
   seeds,
   short,
@@ -78,6 +80,23 @@ describe("shuffle", () => {
         }),
       );
     });
+
+    it.each(arraySubclasses())(
+      "gives a plain frozen stack in the same order as a plain array for %s",
+      (_label, make) => {
+        fc.assert(
+          fc.property(stacks(), seeds, (stack, seed) => {
+            const shuffled = shuffle(make(stack), {
+              random: seededRandom(seed),
+            });
+            expect(shuffled).toStrictEqual(
+              shuffle(stack, { random: seededRandom(seed) }),
+            );
+            expect(isPlainFrozen(shuffled)).toBe(true);
+          }),
+        );
+      },
+    );
 
     it("draws once for each card but the top one", () => {
       fc.assert(

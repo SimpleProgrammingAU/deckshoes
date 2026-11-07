@@ -4,7 +4,7 @@ import type { CardStack } from "./stack.ts";
 import { InvalidArgumentError } from "./errors.ts";
 import { display } from "./internal/display.ts";
 import { randomIndex, secureRandom } from "./internal/random.ts";
-import { invalidStack } from "./internal/stack.ts";
+import { copyStack, invalidStack } from "./internal/stack.ts";
 
 /**
  * Settings for {@link shuffle}.
@@ -105,7 +105,7 @@ export function shuffle<C>(
 
   // Durstenfeld's Fisher–Yates, from the bottom of the stack up. This order
   // is fixed for 1.x (ADR 0006): changing it changes every seeded shuffle.
-  const shuffled = stack.slice();
+  const shuffled = copyStack(stack);
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = randomIndex(i + 1, source);
     const held = shuffled[i] as C;

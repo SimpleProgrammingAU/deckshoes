@@ -62,6 +62,59 @@ export function nonArrays(): readonly (readonly [
   ];
 }
 
+/** A subclass whose constructor takes cards, so the `new Hand(length)` that `slice()` makes throws. */
+class Hand<C> extends Array<C> {
+  constructor(cards: readonly C[]) {
+    super();
+    this.push(...cards);
+  }
+}
+
+/** A subclass with nothing added, so `slice()` gives another `Pile`. */
+class Pile<C> extends Array<C> {}
+
+/** A subclass that has `slice()` make an `Object`, which isn't an array. */
+class ObjectSpecies<C> extends Array<C> {
+  static override get [Symbol.species](): ArrayConstructor {
+    return Object as unknown as ArrayConstructor;
+  }
+}
+
+/** A subclass whose `slice()` silently loses the cards. */
+class NoCardsSliced<C> extends Array<C> {
+  override slice(): C[] {
+    return [];
+  }
+}
+
+/** Labelled ways to build an array, for `it.each`, whose `slice()` doesn't give a plain copy. A stack operation must still give plain frozen arrays holding the right cards. */
+export function arraySubclasses(): readonly (readonly [
+  label: string,
+  make: <C>(cards: readonly C[]) => CardStack<C>,
+])[] {
+  return [
+    ["a subclass whose constructor takes cards", (cards) => new Hand(cards)],
+    ["a bare subclass", (cards) => Pile.from(cards)],
+    [
+      "a subclass with Object as its species",
+      (cards) => ObjectSpecies.from(cards),
+    ],
+    [
+      "a subclass whose slice loses the cards",
+      (cards) => NoCardsSliced.from(cards),
+    ],
+  ];
+}
+
+/** Whether a value is a frozen array with nothing between it and `Array.prototype`. */
+export function isPlainFrozen(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    Object.getPrototypeOf(value) === Array.prototype &&
+    Object.isFrozen(value)
+  );
+}
+
 /** Every seed a seeded random source takes. */
 export const seeds: Arbitrary<number> = fc.integer({
   max: 0xff_ff_ff_ff,

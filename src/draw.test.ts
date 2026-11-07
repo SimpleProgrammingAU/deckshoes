@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 import type { CardStack } from "./stack.ts";
 
 import {
+  arraySubclasses,
   asStack,
+  isPlainFrozen,
   nonArrays,
   stacks,
   stacksWithCounts,
@@ -172,6 +174,20 @@ describe.each<
     expect(result.cards).not.toBe(stack);
     expect(result.remainder).not.toBe(stack);
   });
+
+  it.each(arraySubclasses())(
+    "gives plain frozen stacks holding the right cards for %s",
+    (_label, make) => {
+      fc.assert(
+        fc.property(stacksWithCounts(), ({ count, stack }) => {
+          const result = drawFrom(make(stack), count);
+          expect(result).toStrictEqual(drawFrom(stack, count));
+          expect(isPlainFrozen(result.cards)).toBe(true);
+          expect(isPlainFrozen(result.remainder)).toBe(true);
+        }),
+      );
+    },
+  );
 });
 
 describe("draw", () => {
@@ -223,6 +239,19 @@ describe.each([
     expect(Object.isFrozen(looked)).toBe(true);
     expect(looked).not.toBe(stack);
   });
+
+  it.each(arraySubclasses())(
+    "gives a plain frozen stack holding the right cards for %s",
+    (_label, make) => {
+      fc.assert(
+        fc.property(stacksWithCounts(), ({ count, stack }) => {
+          const looked = look(make(stack), count);
+          expect(looked).toStrictEqual(look(stack, count));
+          expect(isPlainFrozen(looked)).toBe(true);
+        }),
+      );
+    },
+  );
 });
 
 describe("peek", () => {

@@ -2,7 +2,7 @@ import type { Card } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
 import { InsufficientCardsError } from "./errors.ts";
-import { invalidCount, invalidStack } from "./internal/stack.ts";
+import { copyStack, invalidCount, invalidStack } from "./internal/stack.ts";
 
 /**
  * What {@link draw} and {@link drawBottom} give: the cards drawn and the
@@ -83,8 +83,8 @@ export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
     throw new InsufficientCardsError(count, stack.length);
   }
   return Object.freeze({
-    cards: Object.freeze(stack.slice(0, count)),
-    remainder: Object.freeze(stack.slice(count)),
+    cards: Object.freeze(copyStack(stack, 0, count)),
+    remainder: Object.freeze(copyStack(stack, count)),
   });
 }
 
@@ -142,11 +142,11 @@ export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
   if (count > stack.length) {
     throw new InsufficientCardsError(count, stack.length);
   }
-  // Not `slice(-count)`: `slice(-0)` is the whole stack.
+  // Not `copyStack(stack, -count)`: -0 gives the whole stack.
   const split = stack.length - count;
   return Object.freeze({
-    cards: Object.freeze(stack.slice(split)),
-    remainder: Object.freeze(stack.slice(0, split)),
+    cards: Object.freeze(copyStack(stack, split)),
+    remainder: Object.freeze(copyStack(stack, 0, split)),
   });
 }
 
@@ -199,7 +199,7 @@ export function peek<C>(stack: CardStack<C>, count = 1): CardStack<C> {
   if (count > stack.length) {
     throw new InsufficientCardsError(count, stack.length);
   }
-  return Object.freeze(stack.slice(0, count));
+  return Object.freeze(copyStack(stack, 0, count));
 }
 
 /**
@@ -254,6 +254,6 @@ export function peekBottom<C>(stack: CardStack<C>, count = 1): CardStack<C> {
   if (count > stack.length) {
     throw new InsufficientCardsError(count, stack.length);
   }
-  // Not `slice(-count)`: `slice(-0)` is the whole stack.
-  return Object.freeze(stack.slice(stack.length - count));
+  // Not `copyStack(stack, -count)`: -0 gives the whole stack.
+  return Object.freeze(copyStack(stack, stack.length - count));
 }
