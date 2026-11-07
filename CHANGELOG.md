@@ -1,5 +1,15 @@
 # deckshoes
 
+## 1.0.0-alpha.2
+
+### Minor Changes
+
+- [#50](https://github.com/SimpleProgrammingAU/deckshoes/pull/50) [`e5df658`](https://github.com/SimpleProgrammingAU/deckshoes/commit/e5df658617623274cdff4d2a447dadb1da16fefb) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add `chain(stack)`. It wraps a stack so that stack operations can be written as a pipeline, such as `chain(standard52()).shuffle({ random }).value()`. Its methods have the same names as the functions and give the same results, and `.value()` returns the stack. A stack that isn't an array throws `InvalidArgumentError`. Importing `chain` brings in every stack operation, so call the functions when bundle size matters.
+  
+  The docs for `InvalidArgumentError` now mention a stack that isn't an array.
+
+- [#53](https://github.com/SimpleProgrammingAU/deckshoes/pull/53) [`47d7f1d`](https://github.com/SimpleProgrammingAU/deckshoes/commit/47d7f1d09fcbf772ba5399f5cc860988856f3327) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add `draw` and `drawBottom`, which draw cards from the top or bottom of a stack and return a frozen `{ cards, remainder }`, and `peek` and `peekBottom`, which look at those cards without drawing them. The chain has the same operations, and each ends it with a `TerminatedChain`, which only offers `.value()`.
+
 ## 1.0.0-alpha.1
 
 ### Minor Changes
