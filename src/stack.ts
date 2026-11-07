@@ -35,7 +35,8 @@ import type { Card } from "./card.ts";
  *
  * // They're plain arrays, even when the stack is an Array subclass.
  * class Pile extends Array<Card> {}
- * shuffle(Pile.from(hand), { random: seededRandom(42) }) instanceof Pile; // => false
+ * const fromPile = shuffle(Pile.from(hand), { random: seededRandom(42) });
+ * Object.getPrototypeOf(fromPile) === Array.prototype; // => true
  * ```
  *
  * @since 1.0.0
