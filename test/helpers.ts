@@ -77,12 +77,15 @@ export function stacks(): Arbitrary<Card[]> {
   });
 }
 
-/** A stack from {@link stacks}, and a count from 0 up to its size. */
-export function stacksWithCounts(): Arbitrary<{
-  count: number;
-  stack: Card[];
-}> {
-  return stacks().chain((stack) =>
+/** A stack and a count from 0 up to its size. The stacks come from {@link stacks} unless `from` gives others. */
+export function stacksWithCounts(): Arbitrary<{ count: number; stack: Card[] }>;
+export function stacksWithCounts<C>(
+  from: Arbitrary<C[]>,
+): Arbitrary<{ count: number; stack: C[] }>;
+export function stacksWithCounts(
+  from: Arbitrary<unknown[]> = stacks(),
+): Arbitrary<{ count: number; stack: unknown[] }> {
+  return from.chain((stack) =>
     fc.record({
       count: fc.nat({ max: stack.length }),
       stack: fc.constant(stack),

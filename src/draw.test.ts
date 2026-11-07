@@ -17,14 +17,6 @@ const KING = card("K", "H");
 const TEN = card("10", "D");
 const hand = [ACE, KING, TEN];
 
-/** A stack of anything, and a count from 0 up to its size. */
-const stacksOfAnything = fc.array(fc.anything()).chain((stack) =>
-  fc.record({
-    count: fc.nat({ max: stack.length }),
-    stack: fc.constant(stack),
-  }),
-);
-
 /** Whether two arrays hold the very same values in the same order. */
 function sameValues(
   actual: readonly unknown[],
@@ -142,11 +134,14 @@ describe("draw", () => {
 
   it("keeps every value of a stack of anything, in order", () => {
     fc.assert(
-      fc.property(stacksOfAnything, ({ count, stack }) => {
-        const { cards, remainder } = draw(stack, count);
-        expect(cards).toHaveLength(count);
-        expect(sameValues([...cards, ...remainder], stack)).toBe(true);
-      }),
+      fc.property(
+        stacksWithCounts(fc.array(fc.anything())),
+        ({ count, stack }) => {
+          const { cards, remainder } = draw(stack, count);
+          expect(cards).toHaveLength(count);
+          expect(sameValues([...cards, ...remainder], stack)).toBe(true);
+        },
+      ),
     );
   });
 
@@ -188,11 +183,14 @@ describe("drawBottom", () => {
 
   it("keeps every value of a stack of anything, in order", () => {
     fc.assert(
-      fc.property(stacksOfAnything, ({ count, stack }) => {
-        const { cards, remainder } = drawBottom(stack, count);
-        expect(cards).toHaveLength(count);
-        expect(sameValues([...remainder, ...cards], stack)).toBe(true);
-      }),
+      fc.property(
+        stacksWithCounts(fc.array(fc.anything())),
+        ({ count, stack }) => {
+          const { cards, remainder } = drawBottom(stack, count);
+          expect(cards).toHaveLength(count);
+          expect(sameValues([...remainder, ...cards], stack)).toBe(true);
+        },
+      ),
     );
   });
 

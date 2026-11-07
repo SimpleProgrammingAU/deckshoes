@@ -1,7 +1,13 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import { counted, nonArrays, stacks, thrownBy } from "./helpers.ts";
+import {
+  counted,
+  nonArrays,
+  stacks,
+  stacksWithCounts,
+  thrownBy,
+} from "./helpers.ts";
 
 describe("thrownBy", () => {
   it("returns what the function throws", () => {
@@ -48,7 +54,8 @@ describe("counted", () => {
 });
 
 // `it.each(nonArrays())` runs nothing for a missing entry, and a narrower
-// `stacks()` still passes, so these are what notice either one.
+// `stacks()` or `stacksWithCounts()` still passes, so these are what notice
+// any of them.
 describe("nonArrays", () => {
   it("has each kind of value, and none is an array", () => {
     const entries = nonArrays();
@@ -75,5 +82,35 @@ describe("stacks", () => {
     expect(Math.max(...lengths)).toBeGreaterThan(52);
     expect(Math.max(...lengths)).toBeLessThanOrEqual(104);
     expect(new Set(samples.flat()).size).toBe(52);
+  });
+});
+
+describe("stacksWithCounts", () => {
+  it("gives counts of none, of every card and in between, but never past the stack", () => {
+    // Seeded, because this checks what the arbitrary gives, not a property.
+    const samples = fc.sample(stacksWithCounts(), { numRuns: 1000, seed: 42 });
+    expect(
+      samples.filter(({ count, stack }) => count < 0 || count > stack.length),
+    ).toStrictEqual([]);
+    expect(
+      samples.some(({ count, stack }) => count === 0 && stack.length > 0),
+    ).toBe(true);
+    expect(
+      samples.some(({ count, stack }) => count > 0 && count === stack.length),
+    ).toBe(true);
+    expect(
+      samples.some(({ count, stack }) => count > 0 && count < stack.length),
+    ).toBe(true);
+  });
+
+  it("takes its stacks from the arbitrary it's given", () => {
+    const samples = fc.sample(stacksWithCounts(fc.constant(["a", "b"])), {
+      numRuns: 100,
+      seed: 42,
+    });
+    expect(samples.every(({ stack }) => stack.length === 2)).toBe(true);
+    expect(new Set(samples.map(({ count }) => count))).toStrictEqual(
+      new Set([0, 1, 2]),
+    );
   });
 });
