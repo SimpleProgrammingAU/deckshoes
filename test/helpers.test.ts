@@ -1,6 +1,7 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import { counted, thrownBy } from "./helpers.ts";
+import { counted, nonArrays, stacks, thrownBy } from "./helpers.ts";
 
 describe("thrownBy", () => {
   it("returns what the function throws", () => {
@@ -43,5 +44,36 @@ describe("counted", () => {
     });
     expect(() => random()).toThrow("thrown");
     expect(random.calls).toBe(1);
+  });
+});
+
+// `it.each(nonArrays())` runs nothing for a missing entry, and a narrower
+// `stacks()` still passes, so these are what notice either one.
+describe("nonArrays", () => {
+  it("has each kind of value, and none is an array", () => {
+    const entries = nonArrays();
+    expect(entries.map(([label]) => label)).toStrictEqual([
+      "undefined",
+      "null",
+      "a string",
+      "a one-character string",
+      "a Set",
+      "an array-like object",
+    ]);
+    expect(entries.filter(([, value]) => Array.isArray(value))).toStrictEqual(
+      [],
+    );
+  });
+});
+
+describe("stacks", () => {
+  it("gives empty stacks, stacks longer than a deck, and every standard card", () => {
+    // Seeded, because this checks what the arbitrary gives, not a property.
+    const samples = fc.sample(stacks(), { numRuns: 1000, seed: 42 });
+    const lengths = samples.map((stack) => stack.length);
+    expect(Math.min(...lengths)).toBe(0);
+    expect(Math.max(...lengths)).toBeGreaterThan(52);
+    expect(Math.max(...lengths)).toBeLessThanOrEqual(104);
+    expect(new Set(samples.flat()).size).toBe(52);
   });
 });
