@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { counted, integerSource, thrownBy } from "./helpers.ts";
+import { counted, thrownBy } from "./helpers.ts";
 
 describe("thrownBy", () => {
   it("returns what the function throws", () => {
@@ -43,31 +43,5 @@ describe("counted", () => {
     });
     expect(() => random()).toThrow("thrown");
     expect(random.calls).toBe(1);
-  });
-});
-
-describe("integerSource", () => {
-  it("returns each integer in turn as a value from 0 up to 1", () => {
-    const random = integerSource(0, 2 ** 31, 2 ** 32 - 1);
-    expect([random(), random(), random()]).toStrictEqual([
-      0,
-      0.5,
-      1 - 2 ** -32,
-    ]);
-  });
-
-  it("fails the test when it's called too often", () => {
-    const random = integerSource(0);
-    random();
-    expect(() => random()).toThrow("The source was called too often");
-    expect(() => integerSource()()).toThrow("The source was called too often");
-  });
-
-  it("works inside counted, which counts the call that fails too", () => {
-    const random = counted(integerSource(0));
-    random();
-    expect(random.calls).toBe(1);
-    expect(() => random()).toThrow("The source was called too often");
-    expect(random.calls).toBe(2);
   });
 });

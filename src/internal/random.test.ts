@@ -1,10 +1,22 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { counted, integerSource, thrownBy } from "../../test/helpers.ts";
+import { counted, thrownBy } from "../../test/helpers.ts";
 import { isDeckshoesError } from "../errors.ts";
-import { seededRandom } from "../random.ts";
+import { type RandomSource, seededRandom } from "../random.ts";
 import { randomIndex, secureRandom } from "./random.ts";
+
+/** A random source that returns each 32-bit integer in turn as a value from 0 up to 1, and throws if it's called too often. */
+function integerSource(...integers: number[]): RandomSource {
+  let calls = 0;
+  return () => {
+    const integer = integers[calls];
+    calls += 1;
+    if (integer === undefined)
+      throw new Error("The source was called too often");
+    return integer / 2 ** 32;
+  };
+}
 
 /** A count from 1 to 2³², and an index below it. */
 const countAndIndex = fc

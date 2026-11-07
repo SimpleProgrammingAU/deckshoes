@@ -36,18 +36,6 @@ export function counted(next: () => unknown): RandomSource & { calls: number } {
   return wrapped;
 }
 
-/** A random source that returns each 32-bit integer in turn as a value from 0 up to 1, and fails the test if it's called too often. */
-export function integerSource(...integers: number[]): RandomSource {
-  let calls = 0;
-  return () => {
-    const integer = integers[calls];
-    calls += 1;
-    if (integer === undefined)
-      throw new Error("The source was called too often");
-    return integer / 2 ** 32;
-  };
-}
-
 /** Lets a test pass a value that isn't a stack, as untyped callers can. */
 export function asStack(value: unknown): readonly Card[] {
   return value as readonly Card[];
