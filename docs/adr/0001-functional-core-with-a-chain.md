@@ -5,7 +5,7 @@ deckshoes is a set of pure functions over frozen data: every stack operation ret
 ```ts no-test
 // Functions
 const deck = shuffle(standard52(), { random: seededRandom(42) });
-const { hands, rest } = deal(deck, 4, 5);
+const { hands, remainder } = deal(deck, 4, 5);
 
 // The same thing as a chain
 const same = chain(standard52())
@@ -25,6 +25,6 @@ const same = chain(standard52())
 - "Deck" is a role a stack plays (see the glossary), and what `chain()` returns is always a chain, never a deck.
 - `.value()` keeps the name chaining libraries use for unwrapping, even though the glossary's Value is the number a game gives a card.
 - Importing `chain` bundles every stack operation, because methods can't be tree-shaken. Users who care about bundle size use the functions.
-- An operation that splits a stack returns a frozen object naming each part, never a tuple: `{ cards, rest }` from `draw`, `{ hands, rest }` from `deal`. The function and the chain give the same shape, and a new field can be added without breaking anyone.
-- A chain holding a split result offers only `.value()`, through a type of its own, so `Chain` always holds a stack and has every stack operation. To carry on with the remainder, wrap it again with `chain(result.rest)`.
+- An operation that splits a stack returns a frozen object naming each part, never a tuple: `{ cards, remainder }` from `draw`, `{ hands, remainder }` from `deal`. The function and the chain give the same shape, and a new field can be added without breaking anyone.
+- A chain holding anything a pipeline can't carry on from is a `TerminatedChain`, which offers only `.value()`, so `Chain` always holds a stack and has every stack operation. That covers a split result, which has no single stack to carry on with, and peeked cards, which are still in the stack they were peeked from. To carry on with the remainder, wrap it again with `chain(result.remainder)`.
 - A chain method's doc comment says what the chain does, links to its function for everything else, and shares the function's options type, rather than using `{@inheritDoc}`. TypeDoc copies an inherited comment's `@returns`, and its parameter descriptions by position, and a method that drops the stack parameter and returns a chain matches neither.
