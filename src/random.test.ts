@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
+import { thrownBy } from "../test/helpers.ts";
 import { type RandomSource, seededRandom } from "./random.ts";
 
 /** Returns the next `count` values from `random`, as the 32-bit integers they come from. */
@@ -11,16 +12,6 @@ function take(random: RandomSource, count: number): number[] {
 /** Lets a test pass a seed that isn't a number, as untyped callers can. */
 function asSeed(value: unknown): number {
   return value as number;
-}
-
-/** Returns what `run` throws, failing the test if it doesn't throw. */
-function thrownBy(run: () => unknown): unknown {
-  try {
-    run();
-  } catch (error) {
-    return error;
-  }
-  throw new Error("Expected a throw, but nothing was thrown");
 }
 
 const seeds = fc.integer({ max: 0xff_ff_ff_ff, min: 0 });

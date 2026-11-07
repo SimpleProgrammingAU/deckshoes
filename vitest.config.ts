@@ -68,7 +68,7 @@ const config: ViteUserConfig = defineConfig({
         extends: true,
         test: {
           name: "unit",
-          include: ["src/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "test/**/*.test.ts"],
           typecheck: {
             enabled: true,
             include: ["src/**/*.test-d.ts"],

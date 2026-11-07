@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { thrownBy } from "../../test/helpers.ts";
 import { isDeckshoesError } from "../errors.ts";
 import { type RandomSource, seededRandom } from "../random.ts";
 import { randomIndex, secureRandom } from "./random.ts";
@@ -23,16 +24,6 @@ function source(...integers: number[]): RandomSource & { calls: number } {
 /** Lets a test return a value that isn't a number, as untyped sources can. */
 function returning(value: unknown): RandomSource {
   return () => value as number;
-}
-
-/** Returns what `run` throws, failing the test if it doesn't throw. */
-function thrownBy(run: () => unknown): unknown {
-  try {
-    run();
-  } catch (error) {
-    return error;
-  }
-  throw new Error("Expected a throw, but nothing was thrown");
 }
 
 /** A count from 1 to 2³², and an index below it. */

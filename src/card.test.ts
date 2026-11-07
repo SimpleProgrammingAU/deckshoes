@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
+import { thrownBy } from "../test/helpers.ts";
 import { card, type Color, isCard, type Rank, type Suit } from "./card.ts";
 
 // Written out here rather than imported, so the tests don't share the
@@ -41,16 +42,6 @@ function asRank(value: unknown): Rank {
 /** Lets a test pass a value that isn't a suit, as untyped callers can. */
 function asSuit(value: unknown): Suit {
   return value as Suit;
-}
-
-/** Returns what `run` throws, failing the test if it doesn't throw. */
-function thrownBy(run: () => unknown): unknown {
-  try {
-    run();
-  } catch (error) {
-    return error;
-  }
-  throw new Error("Expected a throw, but nothing was thrown");
 }
 
 describe("card", () => {

@@ -15,7 +15,12 @@ import tseslint from "typescript-eslint";
 /** Virtual files that eslint-plugin-jsdoc's processor creates for `@example` code. */
 const EXAMPLES = "**/*.ts/*.ts";
 const BENCHMARKS = ["src/**/*.bench.ts"];
-const TESTS = ["src/**/*.test.ts", "src/**/*.test-d.ts", ...BENCHMARKS];
+const TESTS = [
+  "src/**/*.test.ts",
+  "src/**/*.test-d.ts",
+  "test/**/*.test.ts",
+  ...BENCHMARKS,
+];
 
 /**
  * Declarations that make up the public API and need full documentation.
