@@ -6,6 +6,9 @@ import type { ShuffleOptions } from "../src/shuffle.ts";
 import { type Card, card } from "../src/card.ts";
 import { standard52 } from "../src/presets/standard52.ts";
 
+// Most test files import this module, so nothing here makes a card as it loads.
+// A broken deck then fails only the tests that use one, and the rest still report.
+
 /** Returns what `run` throws, failing the test if it doesn't throw. */
 export function thrownBy(run: () => unknown): unknown {
   try {
@@ -56,8 +59,11 @@ export function asShuffleOptions(value: unknown): ShuffleOptions {
 }
 
 /** Labelled values for `it.each` that a stack operation must reject as its stack, because they aren't arrays. */
-export const nonArrays: readonly (readonly [label: string, value: unknown])[] =
-  [
+export function nonArrays(): readonly (readonly [
+  label: string,
+  value: unknown,
+])[] {
+  return [
     ["undefined", undefined],
     ["null", null],
     ["a string", "AS KH"],
@@ -65,6 +71,7 @@ export const nonArrays: readonly (readonly [label: string, value: unknown])[] =
     ["a Set", new Set(standard52())],
     ["an array-like object", { 0: card("A", "S"), length: 1 }],
   ];
+}
 
 /** Every seed a seeded random source takes. */
 export const seeds: Arbitrary<number> = fc.integer({
@@ -73,7 +80,6 @@ export const seeds: Arbitrary<number> = fc.integer({
 });
 
 /** Stacks of standard cards, copies allowed, from none up to two decks' worth. */
-export const stacks: Arbitrary<Card[]> = fc.array(
-  fc.constantFrom(...standard52()),
-  { maxLength: 104 },
-);
+export function stacks(): Arbitrary<Card[]> {
+  return fc.array(fc.constantFrom(...standard52()), { maxLength: 104 });
+}

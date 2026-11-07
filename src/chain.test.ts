@@ -23,7 +23,7 @@ describe("chain", () => {
   describe("value", () => {
     it("returns the stack itself, frozen or not, and leaves it unchanged", () => {
       fc.assert(
-        fc.property(stacks, fc.boolean(), (original, frozen) => {
+        fc.property(stacks(), fc.boolean(), (original, frozen) => {
           const stack = frozen ? Object.freeze([...original]) : [...original];
           expect(chain(stack).value()).toBe(stack);
           expect(stack).toStrictEqual(original);
@@ -36,7 +36,7 @@ describe("chain", () => {
   describe("shuffle", () => {
     it("gives what the shuffle function gives", () => {
       fc.assert(
-        fc.property(stacks, seeds, (stack, seed) => {
+        fc.property(stacks(), seeds, (stack, seed) => {
           expect(
             chain(stack)
               .shuffle({ random: seededRandom(seed) })
@@ -48,7 +48,7 @@ describe("chain", () => {
 
     it("passes the same random source on to each shuffle", () => {
       fc.assert(
-        fc.property(stacks, seeds, (stack, seed) => {
+        fc.property(stacks(), seeds, (stack, seed) => {
           const chained = seededRandom(seed);
           const called = seededRandom(seed);
           expect(
@@ -100,7 +100,7 @@ describe("chain", () => {
     );
   });
 
-  it.each(nonArrays)("rejects %s as the stack", (_label, stack) => {
+  it.each(nonArrays())("rejects %s as the stack", (_label, stack) => {
     expect(thrownBy(() => chain(asStack(stack)))).toMatchObject({
       code: "INVALID_ARGUMENT",
     });
