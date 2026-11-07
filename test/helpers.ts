@@ -1,5 +1,8 @@
-import type { Card } from "../src/card.ts";
 import type { RandomSource } from "../src/random.ts";
+import type { ShuffleOptions } from "../src/shuffle.ts";
+
+import { type Card, card } from "../src/card.ts";
+import { standard52 } from "../src/presets/standard52.ts";
 
 /** Returns what `run` throws, failing the test if it doesn't throw. */
 export function thrownBy(run: () => unknown): unknown {
@@ -39,3 +42,24 @@ export function integerSource(...integers: number[]): RandomSource {
     return integer / 2 ** 32;
   };
 }
+
+/** Lets a test pass a value that isn't a stack, as untyped callers can. */
+export function asStack(value: unknown): readonly Card[] {
+  return value as readonly Card[];
+}
+
+/** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
+export function asShuffleOptions(value: unknown): ShuffleOptions {
+  return value as ShuffleOptions;
+}
+
+/** Labelled values for `it.each` that a stack operation must reject as its stack, because they aren't arrays. */
+export const nonArrays: readonly (readonly [label: string, value: unknown])[] =
+  [
+    ["undefined", undefined],
+    ["null", null],
+    ["a string", "AS KH"],
+    ["a one-character string", "A"],
+    ["a Set", new Set(standard52())],
+    ["an array-like object", { 0: card("A", "S"), length: 1 }],
+  ];
