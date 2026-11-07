@@ -69,5 +69,9 @@ export const seeds: Arbitrary<number> = fc.integer({
 
 /** Stacks of standard cards, copies allowed, from none up to two decks' worth. */
 export function stacks(): Arbitrary<Card[]> {
-  return fc.array(fc.constantFrom(...standard52()), { maxLength: 104 });
+  // Without `size`, fast-check stops at 10 cards, whatever `maxLength` says.
+  return fc.array(fc.constantFrom(...standard52()), {
+    maxLength: 104,
+    size: "max",
+  });
 }
