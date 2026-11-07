@@ -1,10 +1,11 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { Card } from "./card.ts";
+import type { draw, drawBottom, DrawResult, peek, peekBottom } from "./draw.ts";
 import type { shuffle, ShuffleOptions } from "./shuffle.ts";
 import type { CardStack } from "./stack.ts";
 
-import { chain, type Chain } from "./chain.ts";
+import { chain, type Chain, type TerminatedChain } from "./chain.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
 
@@ -30,6 +31,96 @@ describe("chain", () => {
     expectTypeOf(chain(standard52()).value()).toEqualTypeOf<CardStack>();
     expectTypeOf(chain([1, 2, 3]).value()).toEqualTypeOf<CardStack<number>>();
     expectTypeOf(chain(standard52()).value()).not.toHaveProperty("push");
+  });
+});
+
+describe("TerminatedChain", () => {
+  it("can only be unwrapped, to what it holds", () => {
+    expectTypeOf<keyof TerminatedChain<unknown>>().toEqualTypeOf<"value">();
+    expectTypeOf<TerminatedChain<boolean>["value"]>().toEqualTypeOf<
+      () => boolean
+    >();
+  });
+});
+
+describe("Chain.draw and Chain.drawBottom", () => {
+  it("end the chain, keeping the kind of card", () => {
+    expectTypeOf(chain(standard52()).draw()).toEqualTypeOf<
+      TerminatedChain<DrawResult>
+    >();
+    expectTypeOf(chain(standard52()).drawBottom()).toEqualTypeOf<
+      TerminatedChain<DrawResult>
+    >();
+    expectTypeOf(chain(["a", "b"] as const).draw()).toEqualTypeOf<
+      TerminatedChain<DrawResult<"a" | "b">>
+    >();
+    expectTypeOf(chain(["a", "b"] as const).drawBottom()).toEqualTypeOf<
+      TerminatedChain<DrawResult<"a" | "b">>
+    >();
+  });
+
+  it("unwrap to what the functions return", () => {
+    expectTypeOf(chain(standard52()).draw().value()).toEqualTypeOf<
+      ReturnType<typeof draw<Card>>
+    >();
+    expectTypeOf(chain(standard52()).drawBottom().value()).toEqualTypeOf<
+      ReturnType<typeof drawBottom<Card>>
+    >();
+  });
+
+  it("take the functions' parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["draw"]>>().toEqualTypeOf<
+      AfterStack<typeof draw<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["drawBottom"]>>().toEqualTypeOf<
+      AfterStack<typeof drawBottom<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["draw"]>>().toEqualTypeOf<
+      // An optional parameter also takes undefined, under exactOptionalPropertyTypes.
+      [count?: number | undefined]
+    >();
+  });
+});
+
+describe("Chain.peek and Chain.peekBottom", () => {
+  it("end the chain, keeping the kind of card", () => {
+    expectTypeOf(chain(standard52()).peek()).toEqualTypeOf<
+      TerminatedChain<CardStack>
+    >();
+    expectTypeOf(chain(standard52()).peekBottom()).toEqualTypeOf<
+      TerminatedChain<CardStack>
+    >();
+    expectTypeOf(chain(["a", "b"] as const).peek()).toEqualTypeOf<
+      TerminatedChain<CardStack<"a" | "b">>
+    >();
+    expectTypeOf(chain(["a", "b"] as const).peekBottom()).toEqualTypeOf<
+      TerminatedChain<CardStack<"a" | "b">>
+    >();
+  });
+
+  it("unwrap to what the functions return", () => {
+    expectTypeOf(chain(standard52()).peek().value()).toEqualTypeOf<
+      ReturnType<typeof peek<Card>>
+    >();
+    expectTypeOf(chain(standard52()).peekBottom().value()).toEqualTypeOf<
+      ReturnType<typeof peekBottom<Card>>
+    >();
+  });
+
+  it("take the functions' parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["peek"]>>().toEqualTypeOf<
+      AfterStack<typeof peek<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["peekBottom"]>>().toEqualTypeOf<
+      AfterStack<typeof peekBottom<Card>>
+    >();
+  });
+
+  it("can't be carried on from, as the peeked cards are still in the stack", () => {
+    // @ts-expect-error A pipeline can't carry on from peeked cards.
+    expectTypeOf(chain(standard52()).peek(2)).toHaveProperty("shuffle");
+    // @ts-expect-error A pipeline can't carry on from peeked cards.
+    expectTypeOf(chain(standard52()).peekBottom(2)).toHaveProperty("shuffle");
   });
 });
 

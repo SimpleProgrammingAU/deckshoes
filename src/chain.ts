@@ -1,6 +1,7 @@
 import type { Card } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
+import { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
 import { invalidStack } from "./internal/stack.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
 
@@ -9,8 +10,11 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * pipeline and then unwrapped with {@link Chain.value | value()}.
  *
  * Each method has the same name as a stack operation, calls that function and
- * returns a new chain holding the result. A method never changes the chain it's
- * called on, which still holds the stack it held before.
+ * returns a new chain holding the result. If a pipeline can't carry on from the
+ * result, as with drawn cards and the remainder or with peeked cards, that new
+ * chain is a {@link TerminatedChain}, which can only be unwrapped. A method
+ * never changes the chain it's called on, which still holds the stack it held
+ * before.
  *
  * A chain holds the stack passed to {@link chain} itself, not a copy. Every
  * stack deckshoes returns is frozen, but if you pass in an array of your own
@@ -38,6 +42,129 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * @since NEXT
  */
 export interface Chain<C = Card> {
+  /**
+   * Draws cards from the top of the stack the chain holds with {@link draw},
+   * and ends the chain, because a pipeline can't carry on from two stacks.
+   *
+   * To carry on with the remainder, wrap it again with
+   * `chain(result.remainder)`.
+   *
+   * @param count - The count that {@link draw} takes.
+   * @returns A terminated chain holding what {@link draw} returns.
+   * @throws {@link InvalidArgumentError} When {@link draw} would.
+   * @throws {@link InsufficientCardsError} When {@link draw} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const hand = [card("A", "S"), card("K", "H"), card("10", "D")];
+   * const { cards, remainder } = chain(hand).draw(2).value();
+   * cards; // => [card("A", "S"), card("K", "H")]
+   *
+   * // To carry on, wrap the remainder again.
+   * chain(remainder).draw().value().cards; // => [card("10", "D")]
+   *
+   * // The chain throws whatever draw throws.
+   * chain(hand).draw(4); // throws INSUFFICIENT_CARDS
+   * ```
+   *
+   * @since NEXT
+   */
+  draw(count?: number): TerminatedChain<DrawResult<C>>;
+
+  /**
+   * Draws cards from the bottom of the stack the chain holds with
+   * {@link drawBottom}, and ends the chain, because a pipeline can't carry on
+   * from two stacks.
+   *
+   * To carry on with the remainder, wrap it again with
+   * `chain(result.remainder)`.
+   *
+   * @param count - The count that {@link drawBottom} takes.
+   * @returns A terminated chain holding what {@link drawBottom} returns.
+   * @throws {@link InvalidArgumentError} When {@link drawBottom} would.
+   * @throws {@link InsufficientCardsError} When {@link drawBottom} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const hand = [card("A", "S"), card("K", "H"), card("10", "D")];
+   * const { cards, remainder } = chain(hand).drawBottom(2).value();
+   * cards; // => [card("K", "H"), card("10", "D")]
+   * remainder; // => [card("A", "S")]
+   *
+   * // The chain throws whatever drawBottom throws.
+   * chain(hand).drawBottom(4); // throws INSUFFICIENT_CARDS
+   * ```
+   *
+   * @since NEXT
+   */
+  drawBottom(count?: number): TerminatedChain<DrawResult<C>>;
+
+  /**
+   * Looks at cards from the top of the stack the chain holds with {@link peek},
+   * and ends the chain, because those cards are still in the stack, so a
+   * pipeline can't carry on from them.
+   *
+   * To carry on with the whole stack, call the next method on this chain, not
+   * on what `peek` returns: this chain still holds the stack.
+   *
+   * @param count - The count that {@link peek} takes.
+   * @returns A terminated chain holding what {@link peek} returns.
+   * @throws {@link InvalidArgumentError} When {@link peek} would.
+   * @throws {@link InsufficientCardsError} When {@link peek} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const chained = chain([card("A", "S"), card("K", "H"), card("10", "D")]);
+   * chained.peek(2).value(); // => [card("A", "S"), card("K", "H")]
+   *
+   * // To carry on, use the chain that peek was called on.
+   * chained.draw(2).value().cards; // => [card("A", "S"), card("K", "H")]
+   *
+   * // The chain throws whatever peek throws.
+   * chained.peek(4); // throws INSUFFICIENT_CARDS
+   * ```
+   *
+   * @since NEXT
+   */
+  peek(count?: number): TerminatedChain<CardStack<C>>;
+
+  /**
+   * Looks at cards from the bottom of the stack the chain holds with
+   * {@link peekBottom}, and ends the chain, because those cards are still in
+   * the stack, so a pipeline can't carry on from them.
+   *
+   * To carry on with the whole stack, call the next method on this chain, not
+   * on what `peekBottom` returns: this chain still holds the stack.
+   *
+   * @param count - The count that {@link peekBottom} takes.
+   * @returns A terminated chain holding what {@link peekBottom} returns.
+   * @throws {@link InvalidArgumentError} When {@link peekBottom} would.
+   * @throws {@link InsufficientCardsError} When {@link peekBottom} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const chained = chain([card("A", "S"), card("K", "H"), card("10", "D")]);
+   * chained.peekBottom(2).value(); // => [card("K", "H"), card("10", "D")]
+   *
+   * // To carry on, use the chain that peekBottom was called on.
+   * chained.value().length; // => 3
+   *
+   * // The chain throws whatever peekBottom throws.
+   * chained.peekBottom(4); // throws INSUFFICIENT_CARDS
+   * ```
+   *
+   * @since NEXT
+   */
+  peekBottom(count?: number): TerminatedChain<CardStack<C>>;
+
   /**
    * Shuffles the stack the chain holds with {@link shuffle}, and returns a new
    * chain holding the result.
@@ -83,6 +210,60 @@ export interface Chain<C = Card> {
   value(): CardStack<C>;
 }
 
+/**
+ * A chain holding something a pipeline can't carry on from, such as drawn cards
+ * and the remainder, or peeked cards. It has no stack operations and can only
+ * be unwrapped with {@link TerminatedChain.value | value()}.
+ *
+ * @typeParam R - What the chain holds: what the last operation returned.
+ *
+ * @example
+ * ```ts
+ * import { card, chain, type DrawResult, type TerminatedChain } from "deckshoes";
+ *
+ * const hand = [card("A", "S"), card("K", "H")];
+ * const terminated: TerminatedChain<DrawResult> = chain(hand).draw();
+ * terminated.value().cards; // => [card("A", "S")]
+ * ```
+ *
+ * @since NEXT
+ */
+export interface TerminatedChain<R> {
+  /**
+   * Unwraps the chain, returning what the last operation returned.
+   *
+   * That's the result itself, not a copy, so the function and the chain give
+   * the same shape.
+   *
+   * @returns What the chain holds.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const hand = [card("A", "S"), card("K", "H")];
+   * chain(hand).draw().value(); // => { cards: [card("A", "S")], remainder: [card("K", "H")] }
+   * ```
+   *
+   * @since NEXT
+   */
+  value(): R;
+}
+
+/** The chain that {@link TerminatedChain} describes: a frozen object holding a result. */
+class ResultChain<R> implements TerminatedChain<R> {
+  readonly #result: R;
+
+  constructor(result: R) {
+    this.#result = result;
+    Object.freeze(this);
+  }
+
+  value(): R {
+    return this.#result;
+  }
+}
+
 /** The chain that {@link chain} returns: a frozen object holding a stack. */
 class StackChain<C> implements Chain<C> {
   readonly #stack: CardStack<C>;
@@ -90,6 +271,22 @@ class StackChain<C> implements Chain<C> {
   constructor(stack: CardStack<C>) {
     this.#stack = stack;
     Object.freeze(this);
+  }
+
+  draw(count?: number): TerminatedChain<DrawResult<C>> {
+    return new ResultChain(draw(this.#stack, count));
+  }
+
+  drawBottom(count?: number): TerminatedChain<DrawResult<C>> {
+    return new ResultChain(drawBottom(this.#stack, count));
+  }
+
+  peek(count?: number): TerminatedChain<CardStack<C>> {
+    return new ResultChain(peek(this.#stack, count));
+  }
+
+  peekBottom(count?: number): TerminatedChain<CardStack<C>> {
+    return new ResultChain(peekBottom(this.#stack, count));
   }
 
   shuffle(options?: ShuffleOptions): Chain<C> {
@@ -107,7 +304,9 @@ class StackChain<C> implements Chain<C> {
  *
  * Each of the chain's methods calls the stack operation with the same name and
  * returns a new chain holding the result, so a chain always gives what the
- * functions give. {@link Chain} lists the methods.
+ * functions give. {@link Chain} lists the methods. A chain holding something a
+ * pipeline can't carry on from is a {@link TerminatedChain}, which can only be
+ * unwrapped.
  *
  * Importing `chain` brings every stack operation into your bundle, even the
  * ones you don't call, because a bundler can't drop a method that isn't used.
