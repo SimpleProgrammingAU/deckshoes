@@ -1,10 +1,10 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { short, thrownBy } from "../test/helpers.ts";
+import { counted, short, thrownBy } from "../test/helpers.ts";
 import { type Card, card } from "./card.ts";
 import { standard52 } from "./presets/standard52.ts";
-import { type RandomSource, seededRandom } from "./random.ts";
+import { seededRandom } from "./random.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
 
 /** Counts how often each value appears, matching values the way `Map` keys do. */
@@ -12,18 +12,6 @@ function tally(values: readonly unknown[]): Map<unknown, number> {
   const counts = new Map<unknown, number>();
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
   return counts;
-}
-
-/** Wraps a random source so a test can count how often it's called. */
-function counted(random: () => unknown): RandomSource & { calls: number } {
-  const wrapped = Object.assign(
-    () => {
-      wrapped.calls += 1;
-      return random() as number;
-    },
-    { calls: 0 },
-  );
-  return wrapped;
 }
 
 /** Lets a test pass a stack that isn't an array, as untyped callers can. */

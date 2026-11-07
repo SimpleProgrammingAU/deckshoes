@@ -1,30 +1,10 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { thrownBy } from "../../test/helpers.ts";
+import { counted, integerSource, thrownBy } from "../../test/helpers.ts";
 import { isDeckshoesError } from "../errors.ts";
-import { type RandomSource, seededRandom } from "../random.ts";
+import { seededRandom } from "../random.ts";
 import { randomIndex, secureRandom } from "./random.ts";
-
-/** A random source that returns each 32-bit integer as a value from 0 up to 1, and counts its calls. */
-function source(...integers: number[]): RandomSource & { calls: number } {
-  const random = Object.assign(
-    () => {
-      const integer = integers[random.calls];
-      random.calls += 1;
-      if (integer === undefined)
-        throw new Error("The source was called too often");
-      return integer / 2 ** 32;
-    },
-    { calls: 0 },
-  );
-  return random;
-}
-
-/** Lets a test return a value that isn't a number, as untyped sources can. */
-function returning(value: unknown): RandomSource {
-  return () => value as number;
-}
 
 /** A count from 1 to 2³², and an index below it. */
 const countAndIndex = fc
@@ -46,18 +26,18 @@ describe("randomIndex", () => {
     fc.assert(
       fc.property(countAndIndex, ([n, i]) => {
         const size = Math.floor(2 ** 32 / n);
-        expect(randomIndex(n, source(i * size))).toBe(i);
-        expect(randomIndex(n, source((i + 1) * size - 1))).toBe(i);
+        expect(randomIndex(n, integerSource(i * size))).toBe(i);
+        expect(randomIndex(n, integerSource((i + 1) * size - 1))).toBe(i);
       }),
     );
   });
 
   it("puts the buckets for 52 cards where they should be", () => {
     const size = 82_595_524; // floor(2³² / 52)
-    expect(randomIndex(52, source(0))).toBe(0);
-    expect(randomIndex(52, source(size - 1))).toBe(0);
-    expect(randomIndex(52, source(size))).toBe(1);
-    expect(randomIndex(52, source(52 * size - 1))).toBe(51);
+    expect(randomIndex(52, integerSource(0))).toBe(0);
+    expect(randomIndex(52, integerSource(size - 1))).toBe(0);
+    expect(randomIndex(52, integerSource(size))).toBe(1);
+    expect(randomIndex(52, integerSource(52 * size - 1))).toBe(51);
   });
 
   it("draws again when a value lands in the incomplete last bucket", () => {
@@ -65,7 +45,7 @@ describe("randomIndex", () => {
       fc.property(countAndIndex, ([n, i]) => {
         const size = Math.floor(2 ** 32 / n);
         fc.pre(n * size < 2 ** 32);
-        const random = source(n * size, 2 ** 32 - 1, i * size);
+        const random = counted(integerSource(n * size, 2 ** 32 - 1, i * size));
         expect(randomIndex(n, random)).toBe(i);
         expect(random.calls).toBe(3);
       }),
@@ -79,7 +59,7 @@ describe("randomIndex", () => {
         fc.double({ max: 1, maxExcluded: true, min: 0, noNaN: true }),
         (n, value) => {
           // If `value` lands in the last bucket, 0 is drawn next.
-          const random = source((value * 2 ** 32) >>> 0, 0);
+          const random = integerSource((value * 2 ** 32) >>> 0, 0);
           const result = randomIndex(n, random);
           expect(Number.isInteger(result)).toBe(true);
           expect(result).toBeGreaterThanOrEqual(0);
@@ -95,7 +75,7 @@ describe("randomIndex", () => {
     ["more than 2³²", 2 ** 32 + 1],
     ["NaN", NaN],
   ])("treats %s as n as a bug, without drawing", (_label, n) => {
-    const random = source();
+    const random = counted(integerSource());
     const error = thrownBy(() => randomIndex(n, random));
     expect(isDeckshoesError(error)).toBe(false);
     expect(error).toBeInstanceOf(Error);
@@ -103,7 +83,7 @@ describe("randomIndex", () => {
   });
 
   it("draws once for a single card", () => {
-    const random = source(2 ** 32 - 1);
+    const random = counted(integerSource(2 ** 32 - 1));
     expect(randomIndex(1, random)).toBe(0);
     expect(random.calls).toBe(1);
   });
@@ -120,19 +100,17 @@ describe("randomIndex", () => {
   });
 
   it("gives up on a stuck source after 64 rejections in a row", () => {
-    let calls = 0;
-    const stuck = () => {
-      calls += 1;
-      return 1 - Number.EPSILON;
-    };
+    const stuck = counted(() => 1 - Number.EPSILON);
     expect(thrownBy(() => randomIndex(52, stuck))).toMatchObject({
       code: "INVALID_ARGUMENT",
     });
-    expect(calls).toBe(64);
+    expect(stuck.calls).toBe(64);
   });
 
   it("accepts a value after 63 rejections in a row", () => {
-    const random = source(...Array.from({ length: 63 }, () => 2 ** 32 - 1), 0);
+    const random = counted(
+      integerSource(...Array.from({ length: 63 }, () => 2 ** 32 - 1), 0),
+    );
     expect(randomIndex(52, random)).toBe(0);
     expect(random.calls).toBe(64);
   });
@@ -150,7 +128,8 @@ describe("randomIndex", () => {
     ["a bigint", 0n],
     ["a Number object", new Object(0.5)],
   ])("rejects %s from the source", (_label, value) => {
-    expect(thrownBy(() => randomIndex(52, returning(value)))).toMatchObject({
+    const random = counted(() => value);
+    expect(thrownBy(() => randomIndex(52, random))).toMatchObject({
       code: "INVALID_ARGUMENT",
     });
   });
@@ -164,9 +143,10 @@ describe("randomIndex", () => {
             (value) => !(typeof value === "number" && value >= 0 && value < 1),
           ),
         (value) => {
-          expect(
-            thrownBy(() => randomIndex(52, returning(value))),
-          ).toMatchObject({ code: "INVALID_ARGUMENT" });
+          const random = counted(() => value);
+          expect(thrownBy(() => randomIndex(52, random))).toMatchObject({
+            code: "INVALID_ARGUMENT",
+          });
         },
       ),
     );
