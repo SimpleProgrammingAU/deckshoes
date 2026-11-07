@@ -57,9 +57,9 @@ import { standard52 } from "deckshoes/presets";
 
 // Functions: every call returns new data and leaves its input alone.
 const deck = shuffle(standard52(), { random: seededRandom(42) });
-const { hands, rest } = deal(deck, 4, 5);
+const { hands, remainder } = deal(deck, 4, 5);
 
-// Or the same thing as a chain, giving the same { hands, rest }.
+// Or the same thing as a chain, giving the same { hands, remainder }.
 const same = chain(standard52())
   .shuffle({ random: seededRandom(42) })
   .deal(4, 5)

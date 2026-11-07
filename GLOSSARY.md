@@ -65,6 +65,10 @@ The stack dealt to one player.
 A stack set aside during play, such as the discard pile.
 _Avoid_: heap, discards
 
+**Remainder**:
+The stack left after cards are drawn or dealt from it.
+_Avoid_: rest, remaining
+
 **Shoe**:
 Several decks combined and dealt from as one, with a cut card that marks when to reshuffle.
 _Avoid_: multi-deck
@@ -99,7 +103,7 @@ To take cards from the top of a stack, or from the bottom when said.
 _Avoid_: pop, take
 
 **Peek**:
-To look at cards from the top of a stack without taking them.
+To look at cards from the top of a stack, or from the bottom when said, without taking them.
 
 **Deal**:
 To draw cards from a deck into several hands, one at a time in turn (round-robin) unless dealt in blocks.
@@ -140,8 +144,12 @@ Where every random operation gets its randomness: secure by default, reproducibl
 _Avoid_: RNG, PRNG, generator, randomiser
 
 **Chain**:
-A stack wrapped so that operations can be written as a pipeline and then unwrapped. Once an operation gives something other than a stack, such as drawn cards and the rest, the chain can only be unwrapped.
+A stack wrapped so that operations can be written as a pipeline and then unwrapped. Once an operation gives something a pipeline can't carry on from, the result is a terminated chain.
 _Avoid_: wrapper, fluent API, builder
+
+**Terminated chain**:
+A chain holding something a pipeline can't carry on from, such as drawn cards and the remainder, or peeked cards. It can only be unwrapped.
+_Avoid_: ended chain, split chain
 
 **Install**:
 One installation of the deckshoes package in an app, which can have more than one, such as when a dependency needs another major version.
