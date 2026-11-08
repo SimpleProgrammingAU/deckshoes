@@ -70,8 +70,8 @@ export function asSuit(value: unknown): Suit {
   return value as Suit;
 }
 
-/** Labelled values for `it.each` that are neither a standard rank nor a standard suit. */
-export function nonRanks(): readonly (readonly [
+/** Labelled values that are neither a standard rank nor a standard suit. */
+function neitherRankNorSuit(): readonly (readonly [
   label: string,
   value: unknown,
 ])[] {
@@ -92,12 +92,20 @@ export function nonRanks(): readonly (readonly [
   ];
 }
 
-/** Labelled values for `it.each` that aren't standard suits: those in {@link nonRanks}, a rank and a lower-case suit. */
+/** Labelled values for `it.each` that aren't standard ranks: those in {@link neitherRankNorSuit}, and a suit. */
+export function nonRanks(): readonly (readonly [
+  label: string,
+  value: unknown,
+])[] {
+  return [...neitherRankNorSuit(), ["a suit", "S"]];
+}
+
+/** Labelled values for `it.each` that aren't standard suits: those in {@link neitherRankNorSuit}, a rank and a lower-case suit. */
 export function nonSuits(): readonly (readonly [
   label: string,
   value: unknown,
 ])[] {
-  return [...nonRanks(), ["a rank", "A"], ["a lower-case suit", "s"]];
+  return [...neitherRankNorSuit(), ["a rank", "A"], ["a lower-case suit", "s"]];
 }
 
 /** A random source that returns what `next` returns, as untyped sources can, and counts its calls. */
