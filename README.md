@@ -168,6 +168,69 @@ cards; // => [card("7", "H"), card("6", "C")]
 chain(remainder).draw().value().cards; // => [card("10", "D")]
 ```
 
+## Dealing
+
+`deal(deck, handCount, handSize)` deals cards from the top of a deck into hands and returns a frozen `{ hands, remainder }`: an array of hands, and the stack left after dealing. The deck you passed in doesn't change.
+
+Each hand in turn gets a packet of cards, round after round, until every hand has its cards. A packet is one card unless you say otherwise, so by default the cards go round-robin. The first card dealt to a hand is its top card, so each hand is in the order it was dealt. At a real table, the last card dealt would be on top of a face-down pile.
+
+Three settings change how the deal works. Their named values are constants holding strings, such as `RunOut.STOP` for `"stop"`:
+
+- **`packetSize`** sets how many cards each hand gets at a time. A hand's last packet is smaller if it needs fewer cards, so `{ packetSize: 3 }` deals hands of 5 as 3 then 2. `PacketSize.HAND` gives each hand all its cards at once.
+- **`HandSize.MAXIMIZE`**, in place of a hand size, deals out the whole deck as evenly as possible, with any extra cards going to the first hands.
+- **`runOut: RunOut.STOP`** deals until the deck runs out, instead of throwing when it holds too few cards. Hands the deck runs out on are short.
+
+```ts
+import { card, deal, HandSize, PacketSize, RunOut } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const ranks = ["A", "2", "3", "4", "5", "6", "7"] as const;
+const deck = ranks.map((rank) => card(rank, "S"));
+
+// One card to each hand in turn, the first card dealt on top.
+const { hands, remainder } = deal(deck, 2, 3);
+hands[0]; // => [card("A", "S"), card("3", "S"), card("5", "S")]
+hands[1]; // => [card("2", "S"), card("4", "S"), card("6", "S")]
+remainder; // => [card("7", "S")]
+deck.length; // => 7
+
+// Packets of 3, then 2, as in Euchre.
+const euchre = deal(standard52(), 4, 5, { packetSize: 3 });
+euchre.hands[0]; // => [card("A", "H"), card("2", "H"), card("3", "H"), card("K", "H"), card("A", "C")]
+
+// Each hand's cards all at once.
+deal(deck, 2, 3, { packetSize: PacketSize.HAND }).hands[0]; // => [card("A", "S"), card("2", "S"), card("3", "S")]
+
+// The whole deck, as evenly as possible.
+const all = deal(standard52(), 3, HandSize.MAXIMIZE);
+all.hands.map((hand) => hand.length); // => [18, 17, 17]
+
+// Too few cards throws, unless the deal stops when the deck runs out.
+deal(standard52(), 5, 11); // throws INSUFFICIENT_CARDS
+const short = deal(standard52(), 5, 11, { runOut: RunOut.STOP });
+short.hands.map((hand) => hand.length); // => [11, 11, 10, 10, 10]
+
+// So does a count that isn't an integer of 1 or more.
+deal(deck, 0, 3); // throws INVALID_ARGUMENT
+```
+
+In a chain, `deal` ends the pipeline, as `draw` does: all that's left is `.value()`. To carry on, wrap the remainder in a new chain.
+
+```ts
+import { card, chain, seededRandom } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const { hands, remainder } = chain(standard52())
+  .shuffle({ random: seededRandom(42) })
+  .deal(4, 5)
+  .value();
+
+// The top card of each hand.
+hands.map((hand) => hand[0]); // => [card("7", "H"), card("6", "C"), card("10", "D"), card("J", "C")]
+
+chain(remainder).draw().value().cards; // => [card("2", "C")]
+```
+
 ## Error handling
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
