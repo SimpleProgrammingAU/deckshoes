@@ -61,6 +61,10 @@ _Avoid_: pack
 **Hand**:
 The stack dealt to one player.
 
+**Short hand**:
+A hand dealt fewer cards than the deal asked for, because the deck ran out.
+_Avoid_: partial hand
+
 **Pile**:
 A stack set aside during play, such as the discard pile.
 _Avoid_: heap, discards
@@ -106,8 +110,12 @@ _Avoid_: pop, take
 To look at cards from the top of a stack, or from the bottom when said, without taking them.
 
 **Deal**:
-To draw cards from a deck into several hands, one at a time in turn (round-robin) unless dealt in blocks.
+To draw cards from a deck into hands, giving each hand a packet in turn until every hand has its cards.
 _Avoid_: distribute
+
+**Packet**:
+The cards a hand gets at one time during a deal. Round-robin deals packets of one card. The largest packet is the same size as the hand.
+_Avoid_: batch, block
 
 **Burn**:
 To move cards from the top to the discard pile without using them.

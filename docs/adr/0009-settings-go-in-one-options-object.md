@@ -1,6 +1,6 @@
 # Settings go in one options object
 
-A stack operation takes the stack, and the counts or cards it acts on, as positional parameters. Everything that changes how it works goes in one options object, which is always the last parameter and always optional: the random source ([ADR 0006](./0006-randomness-is-an-injected-source.md)), dealing in blocks, a riffle's number of passes. Presets that take options follow the same rule ([ADR 0008](./0008-presets-ship-from-a-subpath.md)).
+A stack operation takes the stack, and the counts or cards it acts on, as positional parameters. Everything that changes how it works goes in one options object, which is always the last parameter and always optional: the random source ([ADR 0006](./0006-randomness-is-an-injected-source.md)), a deal's packet size, a riffle's number of passes. Presets that take options follow the same rule ([ADR 0008](./0008-presets-ship-from-a-subpath.md)).
 
 ```ts no-test
 shuffle(deck, { random: seededRandom(42) });
