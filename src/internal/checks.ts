@@ -53,6 +53,21 @@ export function shortfall(
     : undefined;
 }
 
+/** Returns the error for a size that isn't an integer of 1 or more or the `named` value, or `undefined` for one that is; `constant` names the value in the message. */
+export function sizeProblem(
+  value: unknown,
+  name: string,
+  named: string,
+  constant: string,
+): InvalidArgumentError | undefined {
+  return value === named ||
+    (typeof value === "number" && Number.isInteger(value) && value >= 1)
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid ${name} ${display(value)}: expected an integer of 1 or more, or ${constant}`,
+      );
+}
+
 /** Returns the error for a stack that isn't an array, or `undefined` for one that is. */
 export function stackProblem(value: unknown): InvalidArgumentError | undefined {
   return Array.isArray(value)
