@@ -2,9 +2,10 @@ import type { RandomSource } from "./random.ts";
 import type { CardStack } from "./stack.ts";
 
 import { InvalidArgumentError } from "./errors.ts";
+import { optionsProblem, stackProblem } from "./internal/checks.ts";
 import { display } from "./internal/display.ts";
 import { randomIndex, secureRandom } from "./internal/random.ts";
-import { copyStack, invalidStack } from "./internal/stack.ts";
+import { copyStack } from "./internal/stack.ts";
 
 /**
  * Settings for {@link shuffle}.
@@ -86,15 +87,10 @@ export function shuffle<C>(
   stack: CardStack<C>,
   options: ShuffleOptions = {},
 ): CardStack<C> {
-  // Read as `unknown`: JavaScript callers can pass anything.
-  const given: unknown = stack;
-  if (!Array.isArray(given)) throw invalidStack(given);
-  const settings: unknown = options;
-  if (typeof settings !== "object" || settings === null) {
-    throw new InvalidArgumentError(
-      `Invalid options ${display(settings)}: expected an object, such as { random: seededRandom(42) }`,
-    );
-  }
+  const problem =
+    stackProblem(stack) ??
+    optionsProblem(options, "{ random: seededRandom(42) }");
+  if (problem !== undefined) throw problem;
   const random: unknown = options.random;
   if (random !== undefined && typeof random !== "function") {
     throw new InvalidArgumentError(

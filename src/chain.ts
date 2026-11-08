@@ -2,7 +2,7 @@ import type { Card } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
 import { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
-import { invalidStack } from "./internal/stack.ts";
+import { stackProblem } from "./internal/checks.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
 
 /**
@@ -342,8 +342,7 @@ class StackChain<C> implements Chain<C> {
  * @since NEXT
  */
 export function chain<C>(stack: CardStack<C>): Chain<C> {
-  // Read as `unknown`: JavaScript callers can pass anything.
-  const given: unknown = stack;
-  if (!Array.isArray(given)) throw invalidStack(given);
+  const problem = stackProblem(stack);
+  if (problem !== undefined) throw problem;
   return new StackChain(stack);
 }
