@@ -1,11 +1,17 @@
 import type { CardStack } from "../stack.ts";
 
-import { InsufficientCardsError, InvalidArgumentError } from "../errors.ts";
+import {
+  InsufficientCardsError,
+  InvalidArgumentError,
+  InvalidCardError,
+} from "../errors.ts";
 import { display } from "./display.ts";
 
 // Each check returns the error for a public function to throw itself, so that
 // `jsdoc/require-throws` sees the `throw`, or `undefined` when the value is
 // fine. Chain them with `??` to run them in order and throw the first problem.
+// The `unknown…` functions only build the error, for a value a lookup has
+// already failed to find.
 
 /** Whether a value is an integer from `min` to `max`, the one test behind every count and size check. */
 function isInteger(value: unknown, min: number, max = Infinity): boolean {
@@ -77,4 +83,18 @@ export function stackProblem(value: unknown): InvalidArgumentError | undefined {
     : new InvalidArgumentError(
         `Invalid stack ${display(value)}: expected an array of cards`,
       );
+}
+
+/** Returns the error for a rank that isn't a standard rank. */
+export function unknownRank(value: unknown): InvalidCardError {
+  return new InvalidCardError(
+    `Unknown rank ${display(value)}: expected "A", "2" to "10", "J", "Q" or "K"`,
+  );
+}
+
+/** Returns the error for a suit that isn't a standard suit. */
+export function unknownSuit(value: unknown): InvalidCardError {
+  return new InvalidCardError(
+    `Unknown suit ${display(value)}: expected "S", "H", "D" or "C"`,
+  );
 }
