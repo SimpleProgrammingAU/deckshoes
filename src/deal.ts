@@ -254,7 +254,9 @@ export interface DealResult<C = Card> {
  *
  * When the deck holds too few cards, `deal` throws before dealing anything. Set
  * `runOut` to `RunOut.STOP` to deal until the deck runs out instead, leaving
- * short hands, and empty ones if there are more hands than cards.
+ * short hands, and empty ones if there are more hands than cards. Every hand is
+ * made before the deal starts, even from an empty deck, so with `RunOut.STOP` a
+ * huge hand count can run out of memory.
  *
  * The deck is left untouched, frozen or not. Every stack in the result is new
  * and frozen, as are `hands` and the result itself. Any stack works, including
