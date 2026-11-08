@@ -262,9 +262,10 @@ export interface Chain<C = Card> {
 }
 
 /**
- * A chain holding something a pipeline can't carry on from, such as drawn cards
- * and the remainder, or peeked cards. It has no stack operations and can only
- * be unwrapped with {@link TerminatedChain.value | value()}.
+ * A chain holding something a pipeline can't carry on from, such as dealt
+ * hands, drawn cards and the remainder, or peeked cards. It has no stack
+ * operations and can only be unwrapped with
+ * {@link TerminatedChain.value | value()}.
  *
  * @typeParam R - What the chain holds: what the last operation returned.
  *
