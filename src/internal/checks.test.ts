@@ -4,6 +4,7 @@ import {
   countProblem,
   optionsProblem,
   shortfall,
+  sizeProblem,
   stackProblem,
 } from "./checks.ts";
 
@@ -45,6 +46,34 @@ describe("shortfall", () => {
       requested: 3,
     });
     expect(shortfall(2, [1, 2])).toBeUndefined();
+  });
+});
+
+describe("sizeProblem", () => {
+  it("accepts an integer of 1 or more, or the named value", () => {
+    expect(
+      sizeProblem(1, "hand size", "maximize", "HandSize.MAXIMIZE"),
+    ).toBeUndefined();
+    expect(
+      sizeProblem(2 ** 53, "hand size", "maximize", "HandSize.MAXIMIZE"),
+    ).toBeUndefined();
+    expect(
+      sizeProblem("maximize", "hand size", "maximize", "HandSize.MAXIMIZE"),
+    ).toBeUndefined();
+  });
+
+  it("names the size and offers the constant", () => {
+    expect(
+      sizeProblem(0, "hand size", "maximize", "HandSize.MAXIMIZE")?.message,
+    ).toBe(
+      "Invalid hand size 0: expected an integer of 1 or more, or HandSize.MAXIMIZE",
+    );
+    expect(
+      sizeProblem("hand", "hand size", "maximize", "HandSize.MAXIMIZE")
+        ?.message,
+    ).toBe(
+      'Invalid hand size "hand": expected an integer of 1 or more, or HandSize.MAXIMIZE',
+    );
   });
 });
 
