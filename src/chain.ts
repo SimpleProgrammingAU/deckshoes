@@ -49,7 +49,7 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * chained.value()[0] === card("A", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface Chain<C = Card> {
   /**
@@ -85,7 +85,7 @@ export interface Chain<C = Card> {
    * chain(standard52()).deal(4, 14); // throws INSUFFICIENT_CARDS
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   deal(
     handCount: number,
@@ -120,7 +120,7 @@ export interface Chain<C = Card> {
    * chain(hand).draw(4); // throws INSUFFICIENT_CARDS
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   draw(count?: number): TerminatedChain<DrawResult<C>>;
 
@@ -150,7 +150,7 @@ export interface Chain<C = Card> {
    * chain(hand).drawBottom(4); // throws INSUFFICIENT_CARDS
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   drawBottom(count?: number): TerminatedChain<DrawResult<C>>;
 
@@ -181,7 +181,7 @@ export interface Chain<C = Card> {
    * chained.peek(4); // throws INSUFFICIENT_CARDS
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   peek(count?: number): TerminatedChain<CardStack<C>>;
 
@@ -212,7 +212,7 @@ export interface Chain<C = Card> {
    * chained.peekBottom(4); // throws INSUFFICIENT_CARDS
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   peekBottom(count?: number): TerminatedChain<CardStack<C>>;
 
@@ -236,7 +236,7 @@ export interface Chain<C = Card> {
    * chain(standard52()).shuffle({ random: () => 1 }); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   shuffle(options?: ShuffleOptions): Chain<C>;
 
@@ -256,7 +256,7 @@ export interface Chain<C = Card> {
    * chain(hand).value() === hand; // => true
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   value(): CardStack<C>;
 }
@@ -278,7 +278,7 @@ export interface Chain<C = Card> {
  * terminated.value().cards; // => [card("A", "S")]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface TerminatedChain<R> {
   /**
@@ -297,7 +297,7 @@ export interface TerminatedChain<R> {
    * chain(hand).draw().value(); // => { cards: [card("A", "S")], remainder: [card("K", "H")] }
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   value(): R;
 }
@@ -395,7 +395,7 @@ class StackChain<C> implements Chain<C> {
  * chain(hand).value() === hand; // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function chain<C>(stack: CardStack<C>): Chain<C> {
   const problem = stackProblem(stack);

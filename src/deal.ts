@@ -35,7 +35,7 @@ const MAX_HANDS = 2 ** 32 - 1;
  * HandSize.MAXIMIZE; // => "maximize"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const HandSize: {
   /** Deal out the whole deck as evenly as possible, extra cards first. */
@@ -59,7 +59,7 @@ export const HandSize: {
  * firstHandSize(HandSize.MAXIMIZE); // => 13
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type HandSize = number | (typeof HandSize)[keyof typeof HandSize];
 
@@ -82,7 +82,7 @@ export type HandSize = number | (typeof HandSize)[keyof typeof HandSize];
  * PacketSize.HAND; // => "hand"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const PacketSize: {
   /** Give each hand all its cards at once. */
@@ -107,7 +107,7 @@ export const PacketSize: {
  * firstHand(PacketSize.HAND)?.[1] === card("2", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type PacketSize = number | (typeof PacketSize)[keyof typeof PacketSize];
 
@@ -138,7 +138,7 @@ export type PacketSize = number | (typeof PacketSize)[keyof typeof PacketSize];
  * RunOut.STOP; // => "stop"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const RunOut: {
   /** Deal until the deck runs out, leaving short hands. */
@@ -160,7 +160,7 @@ export const RunOut: {
  * deal(standard52(), 2, 30, { runOut }).hands.map((hand) => hand.length); // => [26, 26]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type RunOut = (typeof RunOut)[keyof typeof RunOut];
 
@@ -181,7 +181,7 @@ export type RunOut = (typeof RunOut)[keyof typeof RunOut];
  * first?.[3] === card("K", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface DealOptions {
   /**
@@ -221,7 +221,7 @@ export interface DealOptions {
  * Object.isFrozen(result.hands); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface DealResult<C = Card> {
   /**
@@ -314,7 +314,7 @@ export interface DealResult<C = Card> {
  * deal(deck, 0, 3); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function deal<C>(
   deck: CardStack<C>,
