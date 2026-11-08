@@ -1,22 +1,23 @@
-import { Linter } from "eslint";
+import { ESLint, Linter } from "eslint";
+import path from "node:path";
 import tseslint from "typescript-eslint";
 import { describe, expect, it } from "vitest";
 
-import config from "../eslint.config.ts";
+const eslint = new ESLint({ cwd: path.join(import.meta.dirname, "..") });
 
-/** The `no-restricted-syntax` setting of the config block for library code, read from the real config so the test can't drift from it. */
-function libraryRestrictions(): Linter.RuleEntry {
-  const rule = config.find(({ name }) => name === "deckshoes/library")?.rules?.[
-    "no-restricted-syntax"
-  ];
-  if (rule === undefined) {
-    throw new Error("The deckshoes/library block has no no-restricted-syntax");
-  }
-  return rule;
+/** The rules ESLint applies to a file, after every config block that matches it. */
+async function rulesFor(file: string): Promise<Partial<Linter.RulesRecord>> {
+  const config = (await eslint.calculateConfigForFile(file)) as Linter.Config;
+  return config.rules ?? {};
+}
+
+const LIBRARY_FILE = "src/operation.ts";
+const restrictions = (await rulesFor(LIBRARY_FILE))["no-restricted-syntax"];
+if (restrictions === undefined) {
+  throw new Error(`ESLint applies no no-restricted-syntax to ${LIBRARY_FILE}`);
 }
 
 const linter = new Linter();
-const restrictions = libraryRestrictions();
 
 /** The messages the library's restricted syntax gives for some code, including any parse error. */
 function problems(code: string): string[] {
@@ -28,7 +29,7 @@ function problems(code: string): string[] {
         languageOptions: { parser: tseslint.parser },
         rules: { "no-restricted-syntax": restrictions },
       },
-      { filename: "src/operation.ts" },
+      { filename: LIBRARY_FILE },
     )
     .map(({ message }) => message);
 }
@@ -38,6 +39,21 @@ const UNSAFE_READ = /override.*copyStack.*\(ADR 0004\)/u;
 
 /** What a stack parameter with a name the rule can't see is told. */
 const MISNAMED = /^Name a stack parameter.*copyStack.*\(ADR 0004\)/u;
+
+describe("the rules ESLint applies to library code", () => {
+  it.each([
+    LIBRARY_FILE,
+    "src/internal/operation.ts",
+    "src/presets/operation.ts",
+  ])(
+    "restrict reading a stack in %s, and allow an index loop",
+    async (file) => {
+      const rules = await rulesFor(file);
+      expect(rules["no-restricted-syntax"]).toEqual(restrictions);
+      expect(rules["@typescript-eslint/prefer-for-of"]).toEqual([0]);
+    },
+  );
+});
 
 describe("reading a stack in library code", () => {
   it.each([
