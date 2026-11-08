@@ -6,37 +6,38 @@ import {
   unknownRank,
   unknownSuit,
 } from "./internal/checks.ts";
-
-// Maps rather than objects, so that a rank such as "constructor" finds nothing
-// and a value that isn't a string is never converted to one.
+import { lookup } from "./internal/lookup.ts";
 
 /** The English name of each standard rank. */
-const RANK_NAMES: ReadonlyMap<Rank, string> = /* @__PURE__ */ new Map([
-  ["A", "Ace"],
-  ["2", "Two"],
-  ["3", "Three"],
-  ["4", "Four"],
-  ["5", "Five"],
-  ["6", "Six"],
-  ["7", "Seven"],
-  ["8", "Eight"],
-  ["9", "Nine"],
-  ["10", "Ten"],
-  ["J", "Jack"],
-  ["Q", "Queen"],
-  ["K", "King"],
-]);
+const RANK_NAMES = /* @__PURE__ */ lookup<Rank, string>({
+  A: "Ace",
+  2: "Two",
+  3: "Three",
+  4: "Four",
+  5: "Five",
+  6: "Six",
+  7: "Seven",
+  8: "Eight",
+  9: "Nine",
+  10: "Ten",
+  J: "Jack",
+  Q: "Queen",
+  K: "King",
+});
 
-/** The English name of each standard suit, in the plural and the singular. */
-const SUIT_NAMES: ReadonlyMap<
-  Suit,
-  { readonly plural: string; readonly singular: string }
-> = /* @__PURE__ */ new Map([
-  ["S", { plural: "Spades", singular: "Spade" }],
-  ["H", { plural: "Hearts", singular: "Heart" }],
-  ["D", { plural: "Diamonds", singular: "Diamond" }],
-  ["C", { plural: "Clubs", singular: "Club" }],
-]);
+/** A suit's name in the plural and the singular. */
+interface SuitNames {
+  readonly plural: string;
+  readonly singular: string;
+}
+
+/** The English name of each standard suit. */
+const SUIT_NAMES = /* @__PURE__ */ lookup<Suit, SuitNames>({
+  S: { plural: "Spades", singular: "Spade" },
+  H: { plural: "Hearts", singular: "Heart" },
+  D: { plural: "Diamonds", singular: "Diamond" },
+  C: { plural: "Clubs", singular: "Club" },
+});
 
 /**
  * Settings for {@link rankName}.
