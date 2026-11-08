@@ -15,6 +15,14 @@ export {
   type Suit,
 } from "./card.ts";
 export { chain, type Chain, type TerminatedChain } from "./chain.ts";
+export {
+  deal,
+  type DealOptions,
+  type DealResult,
+  HandSize,
+  PacketSize,
+  RunOut,
+} from "./deal.ts";
 export { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
 export {
   DeckshoesError,
