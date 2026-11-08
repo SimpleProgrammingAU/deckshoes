@@ -93,6 +93,22 @@ isCard({ rank: "A", suit: "S", color: "black" }); // => false
 
 TypeScript rejects any other rank or suit. Values it can't check, such as user input, are checked when the card is made: a rank or suit that isn't standard throws `InvalidCardError`.
 
+Each rank and suit has an English name, for showing to players. `rankName` and `suitName` give it capitalised, and plural for a suit, unless you ask for lower case or the singular. They check what they're given the same way `card` does.
+
+```ts
+import { card, rankName, suitName } from "deckshoes";
+
+rankName("A"); // => "Ace"
+rankName("10"); // => "Ten"
+suitName("D"); // => "Diamonds"
+suitName("D", { singular: true }); // => "Diamond"
+
+const queen = card("Q", "H");
+const rank = rankName(queen.rank, { lowercase: true });
+const suit = suitName(queen.suit, { lowercase: true });
+`the ${rank} of ${suit}`; // => "the queen of hearts"
+```
+
 ## Random sources
 
 Anything random, such as a shuffle, takes a random source as its `random` option. A random source is a function that returns a number from 0 up to, but not including, 1: the same shape as `Math.random`.
