@@ -7,6 +7,16 @@ import { display } from "./display.ts";
 // `jsdoc/require-throws` sees the `throw`, or `undefined` when the value is
 // fine. Chain them with `??` to run them in order and throw the first problem.
 
+/** Whether a value is an integer from `min` to `max`, the one test behind every count and size check. */
+function isInteger(value: unknown, min: number, max = Infinity): boolean {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+  );
+}
+
 /** Returns the error for a count that isn't an integer from `min` to `max` (no limit if left out), or `undefined` for one that is. */
 export function countProblem(
   value: unknown,
@@ -14,14 +24,7 @@ export function countProblem(
   min = 0,
   max?: number,
 ): InvalidArgumentError | undefined {
-  if (
-    typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= min &&
-    (max === undefined || value <= max)
-  ) {
-    return undefined;
-  }
+  if (isInteger(value, min, max)) return undefined;
   const range =
     max === undefined
       ? `of ${String(min)} or more`
@@ -60,8 +63,7 @@ export function sizeProblem(
   named: string,
   constant: string,
 ): InvalidArgumentError | undefined {
-  return value === named ||
-    (typeof value === "number" && Number.isInteger(value) && value >= 1)
+  return value === named || isInteger(value, 1)
     ? undefined
     : new InvalidArgumentError(
         `Invalid ${name} ${display(value)}: expected an integer of 1 or more, or ${constant}`,
