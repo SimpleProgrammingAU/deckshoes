@@ -99,14 +99,9 @@ describe("stackProblem", () => {
 });
 
 describe("unknownRank and unknownSuit", () => {
-  it("name the value and list the standard ones", () => {
-    expect(unknownRank("11")).toMatchObject({
-      code: "INVALID_CARD",
-      message: 'Unknown rank "11": expected "A", "2" to "10", "J", "Q" or "K"',
-    });
-    expect(unknownSuit("X")).toMatchObject({
-      code: "INVALID_CARD",
-      message: 'Unknown suit "X": expected "S", "H", "D" or "C"',
-    });
+  // card.test.ts checks the messages, through card().
+  it("give an INVALID_CARD error", () => {
+    expect(unknownRank("11")).toMatchObject({ code: "INVALID_CARD" });
+    expect(unknownSuit("X")).toMatchObject({ code: "INVALID_CARD" });
   });
 });
