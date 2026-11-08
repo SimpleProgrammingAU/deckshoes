@@ -76,8 +76,19 @@ describe("reading a stack in library code", () => {
     "Array.from(stack);",
     "new Set(stack);",
     "for (const card of stack) f(card);",
+    "stack.entries();",
+    "stack.keys();",
+    "stack.values();",
+    "for (const [, card] of stack.entries()) f(card);",
     "const [top] = stack;",
     "const [top, ...rest] = stack;",
+    "[top] = stack;",
+    "function op<C>([top]: CardStack<C>) {}",
+    "const op = <C>([top, ...rest]: Readonly<CardStack<C>>) => top;",
+    "function op<C>([top]: CardStack<C> | undefined = []) {}",
+    "Object.values(stack);",
+    "Object.entries(stack);",
+    "Object.assign([], stack);",
     "deck.slice();",
     "[...hand];",
     "pile.map((card) => card);",
@@ -102,7 +113,9 @@ describe("reading a stack in library code", () => {
     "stack.reduce((count) => count + 1, 0);",
     "standard52().filter(Boolean);",
     "Object.freeze({ cards: copyStack(stack, 0, count) });",
+    "Object.entries(options);",
     "const given: unknown = stack;",
+    "function op([rank, suit]: readonly [Rank, Suit]) {}",
   ])("allows %s", (code) => {
     expect(problems(code)).toEqual([]);
   });
@@ -113,6 +126,11 @@ describe("naming a stack parameter in library code", () => {
     "function op<C>(from: CardStack<C>) {}",
     "const op = <C>(from: CardStack<C>) => from;",
     "class Op { run(from: CardStack) {} }",
+    "function op<C>(from?: CardStack<C>) {}",
+    "function op<C>(from: CardStack<C> = []) {}",
+    "function op<C>(from: CardStack<C> | undefined) {}",
+    "function op<C>(from: undefined | CardStack<C>) {}",
+    "function op<C>(from: Readonly<CardStack<C>>) {}",
   ])("rejects %s", (code) => {
     const found = problems(code);
     expect(found).toHaveLength(1);
@@ -123,7 +141,9 @@ describe("naming a stack parameter in library code", () => {
     "function op<C>(stack: CardStack<C>, cards: CardStack<C>) {}",
     "function op<C>(deck: CardStack<C>, hand: CardStack<C>) {}",
     "function op<C>(pile: CardStack<C>, remainder: CardStack<C>) {}",
+    "function op<C>(stack: CardStack<C> | undefined, cards: Readonly<CardStack<C>> = []) {}",
     "function op(order: readonly Rank[], count = 1) {}",
+    "function op<C>(hands: readonly CardStack<C>[]) {}",
   ])("allows %s", (code) => {
     expect(problems(code)).toEqual([]);
   });
