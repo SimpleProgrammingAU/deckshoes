@@ -1,8 +1,8 @@
 import type { Card } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
-import { InsufficientCardsError } from "./errors.ts";
-import { copyStack, invalidCount, invalidStack } from "./internal/stack.ts";
+import { countProblem, shortfall, stackProblem } from "./internal/checks.ts";
+import { copyStack } from "./internal/stack.ts";
 
 /**
  * What {@link draw} and {@link drawBottom} give: the cards drawn and the
@@ -75,13 +75,9 @@ export interface DrawResult<C = Card> {
  * @since NEXT
  */
 export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
-  // Read as `unknown`: JavaScript callers can pass anything.
-  const given: unknown = stack;
-  if (!Array.isArray(given)) throw invalidStack(given);
-  if (!Number.isInteger(count) || count < 0) throw invalidCount(count);
-  if (count > stack.length) {
-    throw new InsufficientCardsError(count, stack.length);
-  }
+  const problem =
+    stackProblem(stack) ?? countProblem(count) ?? shortfall(count, stack);
+  if (problem !== undefined) throw problem;
   return Object.freeze({
     cards: Object.freeze(copyStack(stack, 0, count)),
     remainder: Object.freeze(copyStack(stack, count)),
@@ -135,13 +131,9 @@ export function draw<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
  * @since NEXT
  */
 export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
-  // Read as `unknown`: JavaScript callers can pass anything.
-  const given: unknown = stack;
-  if (!Array.isArray(given)) throw invalidStack(given);
-  if (!Number.isInteger(count) || count < 0) throw invalidCount(count);
-  if (count > stack.length) {
-    throw new InsufficientCardsError(count, stack.length);
-  }
+  const problem =
+    stackProblem(stack) ?? countProblem(count) ?? shortfall(count, stack);
+  if (problem !== undefined) throw problem;
   const split = stack.length - count;
   return Object.freeze({
     cards: Object.freeze(copyStack(stack, split)),
@@ -191,13 +183,9 @@ export function drawBottom<C>(stack: CardStack<C>, count = 1): DrawResult<C> {
  * @since NEXT
  */
 export function peek<C>(stack: CardStack<C>, count = 1): CardStack<C> {
-  // Read as `unknown`: JavaScript callers can pass anything.
-  const given: unknown = stack;
-  if (!Array.isArray(given)) throw invalidStack(given);
-  if (!Number.isInteger(count) || count < 0) throw invalidCount(count);
-  if (count > stack.length) {
-    throw new InsufficientCardsError(count, stack.length);
-  }
+  const problem =
+    stackProblem(stack) ?? countProblem(count) ?? shortfall(count, stack);
+  if (problem !== undefined) throw problem;
   return Object.freeze(copyStack(stack, 0, count));
 }
 
@@ -246,12 +234,8 @@ export function peek<C>(stack: CardStack<C>, count = 1): CardStack<C> {
  * @since NEXT
  */
 export function peekBottom<C>(stack: CardStack<C>, count = 1): CardStack<C> {
-  // Read as `unknown`: JavaScript callers can pass anything.
-  const given: unknown = stack;
-  if (!Array.isArray(given)) throw invalidStack(given);
-  if (!Number.isInteger(count) || count < 0) throw invalidCount(count);
-  if (count > stack.length) {
-    throw new InsufficientCardsError(count, stack.length);
-  }
+  const problem =
+    stackProblem(stack) ?? countProblem(count) ?? shortfall(count, stack);
+  if (problem !== undefined) throw problem;
   return Object.freeze(copyStack(stack, stack.length - count));
 }
