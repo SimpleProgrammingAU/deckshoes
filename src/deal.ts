@@ -40,7 +40,7 @@ const MAX_HANDS = 2 ** 32 - 1;
 export const HandSize: {
   /** Deal out the whole deck as evenly as possible, extra cards first. */
   readonly MAXIMIZE: "maximize";
-} = Object.freeze({ MAXIMIZE: "maximize" });
+} = /* @__PURE__ */ Object.freeze({ MAXIMIZE: "maximize" });
 
 /**
  * A hand size that {@link deal} takes: a number of cards, or
@@ -87,7 +87,7 @@ export type HandSize = number | (typeof HandSize)[keyof typeof HandSize];
 export const PacketSize: {
   /** Give each hand all its cards at once. */
   readonly HAND: "hand";
-} = Object.freeze({ HAND: "hand" });
+} = /* @__PURE__ */ Object.freeze({ HAND: "hand" });
 
 /**
  * A packet size that {@link deal} takes: a number of cards, or
@@ -145,7 +145,7 @@ export const RunOut: {
   readonly STOP: "stop";
   /** Throw an {@link InsufficientCardsError} before dealing anything. */
   readonly THROW: "throw";
-} = Object.freeze({ STOP: "stop", THROW: "throw" });
+} = /* @__PURE__ */ Object.freeze({ STOP: "stop", THROW: "throw" });
 
 /**
  * What {@link deal} does when the deck holds too few cards: `RunOut.THROW` or
