@@ -1,6 +1,5 @@
-import { InvalidCardError } from "./errors.ts";
 import { CARD_TABLE, CARDS } from "./internal/card-table.ts";
-import { display } from "./internal/display.ts";
+import { unknownRank, unknownSuit } from "./internal/checks.ts";
 
 /**
  * The rank of a standard card: `"A"`, `"2"` to `"10"`, `"J"`, `"Q"` or `"K"`.
@@ -145,17 +144,9 @@ export interface Card extends CardBrand {
  */
 export function card(rank: Rank, suit: Suit): Card {
   const bySuit = CARD_TABLE.get(rank);
-  if (bySuit === undefined) {
-    throw new InvalidCardError(
-      `Unknown rank ${display(rank)}: expected "A", "2" to "10", "J", "Q" or "K"`,
-    );
-  }
+  if (bySuit === undefined) throw unknownRank(rank);
   const found = bySuit.get(suit);
-  if (found === undefined) {
-    throw new InvalidCardError(
-      `Unknown suit ${display(suit)}: expected "S", "H", "D" or "C"`,
-    );
-  }
+  if (found === undefined) throw unknownSuit(suit);
   return found;
 }
 
