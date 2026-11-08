@@ -4,7 +4,7 @@ import type { RandomSource } from "../src/random.ts";
 import type { ShuffleOptions } from "../src/shuffle.ts";
 import type { CardStack } from "../src/stack.ts";
 
-import { type Card, card } from "../src/card.ts";
+import { type Card, card, type Rank, type Suit } from "../src/card.ts";
 import { standard52 } from "../src/presets/standard52.ts";
 
 // Most test files import this module, so nothing here makes a card as it loads.
@@ -35,6 +35,69 @@ export function sameValues(
 /** Writes a card as its rank and suit, such as "10H", to compare whole stacks. */
 export function short({ rank, suit }: Card): string {
   return `${rank}${suit}`;
+}
+
+// The standard ranks and suits are written out here rather than imported, so
+// the tests don't share the implementation's lists.
+
+/** Every standard rank, from ace to king. */
+export const standardRanks: readonly unknown[] = [
+  "A",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "J",
+  "Q",
+  "K",
+];
+
+/** Every standard suit. */
+export const standardSuits: readonly unknown[] = ["S", "H", "D", "C"];
+
+/** Lets a test pass a value that isn't a rank, as untyped callers can. */
+export function asRank(value: unknown): Rank {
+  return value as Rank;
+}
+
+/** Lets a test pass a value that isn't a suit, as untyped callers can. */
+export function asSuit(value: unknown): Suit {
+  return value as Suit;
+}
+
+/** Labelled values for `it.each` that are neither a standard rank nor a standard suit. */
+export function nonRanks(): readonly (readonly [
+  label: string,
+  value: unknown,
+])[] {
+  return [
+    ["11", "11"],
+    ["1", "1"],
+    ["T", "T"],
+    ["lower case", "a"],
+    ["a suit symbol", "♠"],
+    ["an empty string", ""],
+    ["padding", " A"],
+    ["a number", 10],
+    ["null", null],
+    ["undefined", undefined],
+    ["an object without a prototype", Object.create(null)],
+    ["a prototype key", "constructor"],
+    ["__proto__", "__proto__"],
+  ];
+}
+
+/** Labelled values for `it.each` that aren't standard suits: those in {@link nonRanks}, a rank and a lower-case suit. */
+export function nonSuits(): readonly (readonly [
+  label: string,
+  value: unknown,
+])[] {
+  return [...nonRanks(), ["a rank", "A"], ["a lower-case suit", "s"]];
 }
 
 /** A random source that returns what `next` returns, as untyped sources can, and counts its calls. */
