@@ -6,6 +6,7 @@ import type { Card } from "./card.ts";
 import {
   arraySubclasses,
   asStack,
+  deals,
   isPlainFrozen,
   nonArrays,
   sparseStacks,
@@ -53,39 +54,6 @@ function rejoin<C>(hands: readonly (readonly C[])[], packet: number): C[] {
     for (const dealt of hands) cards.push(...dealt.slice(held, held + packet));
   }
   return cards;
-}
-
-/** A deck with a hand count and hand size it holds enough cards for, and a packet size that's sometimes left out and sometimes bigger than the hand. */
-function deals(): Arbitrary<Deal<Card>>;
-function deals<C>(from: Arbitrary<C[]>): Arbitrary<Deal<C>>;
-function deals(
-  from: Arbitrary<unknown[]> = stacks(),
-): Arbitrary<Deal<unknown>> {
-  return from
-    .filter((deck) => deck.length > 0)
-    .chain((deck) =>
-      fc.integer({ max: deck.length, min: 1 }).chain((handCount) =>
-        fc.record({
-          deck: fc.constant(deck),
-          handCount: fc.constant(handCount),
-          handSize: fc.integer({
-            max: Math.floor(deck.length / handCount),
-            min: 1,
-          }),
-          packetSize: fc.option(fc.integer({ max: 8, min: 1 }), {
-            nil: undefined,
-          }),
-        }),
-      ),
-    );
-}
-
-/** What {@link deals} gives. */
-interface Deal<C> {
-  deck: C[];
-  handCount: number;
-  handSize: number;
-  packetSize: number | undefined;
 }
 
 /** A deck with a hand count and hand size it holds too few cards for. */

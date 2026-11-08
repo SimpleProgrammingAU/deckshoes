@@ -6,6 +6,7 @@ import type { CardStack } from "./stack.ts";
 import {
   asShuffleOptions,
   asStack,
+  deals,
   nonArrays,
   seeds,
   stacks,
@@ -14,6 +15,7 @@ import {
 } from "../test/helpers.ts";
 import { card } from "./card.ts";
 import { chain } from "./chain.ts";
+import { deal, RunOut } from "./deal.ts";
 import { draw, drawBottom, peek, peekBottom } from "./draw.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
@@ -149,6 +151,7 @@ describe("chain", () => {
       expect(Object.isFrozen(terminated)).toBe(true);
       expect(terminated.value()).toBe(terminated.value());
       for (const method of [
+        "deal",
         "draw",
         "drawBottom",
         "peek",
@@ -158,6 +161,68 @@ describe("chain", () => {
         expect(terminated).not.toHaveProperty(method);
       }
     });
+  });
+
+  describe("deal", () => {
+    it("gives what the function gives", () => {
+      fc.assert(
+        fc.property(deals(), ({ deck, handCount, handSize, packetSize }) => {
+          expect(
+            chain(deck).deal(handCount, handSize, { packetSize }).value(),
+          ).toStrictEqual(deal(deck, handCount, handSize, { packetSize }));
+        }),
+      );
+    });
+
+    it("uses the function's defaults when the options are left out or undefined", () => {
+      const deck = standard52();
+      expect(chain(deck).deal(4, 13).value()).toStrictEqual(deal(deck, 4, 13));
+      expect(chain(deck).deal(4, 13, undefined).value()).toStrictEqual(
+        deal(deck, 4, 13),
+      );
+      expect(
+        chain(deck).deal(5, 11, { runOut: RunOut.STOP }).value(),
+      ).toStrictEqual(deal(deck, 5, 11, { runOut: RunOut.STOP }));
+    });
+
+    it.each([
+      ["more cards than the stack holds", 4, 14],
+      ["no hands", 0, 1],
+      ["a hand size of 0", 1, 0],
+    ])(
+      "throws what the function throws for %s",
+      (_label, handCount, handSize) => {
+        const chained = chain(standard52());
+        expect(thrownBy(() => chained.deal(handCount, handSize))).toStrictEqual(
+          thrownBy(() => deal(standard52(), handCount, handSize)),
+        );
+        expect(chained.value()).toBe(standard52());
+      },
+    );
+
+    it("leaves the chain it's called on holding its stack", () => {
+      const deck = standard52();
+      const before = chain(deck);
+      before.deal(4, 5);
+      expect(before.value()).toBe(deck);
+    });
+
+    it("returns a frozen chain that can only be unwrapped", () => {
+      const terminated = chain(standard52()).deal(4, 5);
+      expect(Object.isFrozen(terminated)).toBe(true);
+      expect(terminated.value()).toBe(terminated.value());
+      for (const method of ["deal", "draw", "peek", "shuffle"]) {
+        expect(terminated).not.toHaveProperty(method);
+      }
+    });
+  });
+
+  it("carries on after a deal by wrapping the remainder again", () => {
+    const deck = standard52();
+    const { remainder } = chain(deck).deal(4, 5).value();
+    expect(chain(remainder).draw().value()).toStrictEqual(
+      draw(deal(deck, 4, 5).remainder),
+    );
   });
 
   it("carries on after a draw by wrapping the remainder again", () => {

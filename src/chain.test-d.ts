@@ -1,6 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { Card } from "./card.ts";
+import type { deal, DealOptions, DealResult, HandSize } from "./deal.ts";
 import type { draw, drawBottom, DrawResult, peek, peekBottom } from "./draw.ts";
 import type { shuffle, ShuffleOptions } from "./shuffle.ts";
 import type { CardStack } from "./stack.ts";
@@ -40,6 +41,38 @@ describe("TerminatedChain", () => {
     expectTypeOf<TerminatedChain<boolean>["value"]>().toEqualTypeOf<
       () => boolean
     >();
+  });
+});
+
+describe("Chain.deal", () => {
+  it("ends the chain, keeping the kind of card", () => {
+    expectTypeOf(chain(standard52()).deal(4, 5)).toEqualTypeOf<
+      TerminatedChain<DealResult>
+    >();
+    expectTypeOf(chain(["a", "b"] as const).deal(2, 1)).toEqualTypeOf<
+      TerminatedChain<DealResult<"a" | "b">>
+    >();
+  });
+
+  it("unwraps to what the function returns", () => {
+    expectTypeOf(chain(standard52()).deal(4, 5).value()).toEqualTypeOf<
+      ReturnType<typeof deal<Card>>
+    >();
+  });
+
+  it("takes the function's parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["deal"]>>().toEqualTypeOf<
+      AfterStack<typeof deal<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["deal"]>>().toEqualTypeOf<
+      // An optional parameter also takes undefined, under exactOptionalPropertyTypes.
+      [handCount: number, handSize: HandSize, options?: DealOptions | undefined]
+    >();
+  });
+
+  it("can't be carried on from, as there are several stacks", () => {
+    // @ts-expect-error A pipeline can't carry on from dealt hands.
+    expectTypeOf(chain(standard52()).deal(4, 5)).toHaveProperty("shuffle");
   });
 });
 
