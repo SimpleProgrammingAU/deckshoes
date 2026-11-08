@@ -81,22 +81,52 @@ const STACK_NAME = "/^(?:cards|deck|hand|pile|remainder|stack)$/";
 const COPYING_METHOD =
   "/^(?:concat|filter|flat|flatMap|map|slice|splice|toReversed|toSorted|toSpliced|with)$/";
 
+/** Array methods that return an iterator. `values` is the iterator itself. */
+const ITERATOR_METHOD = "/^(?:entries|keys|values)$/";
+
+/** `Object` functions that read an array's own keys, which skip holes. */
+const OWN_KEYS_FUNCTION = "/^(?:assign|entries|values)$/";
+
+/** Where `CardStack` sits in a parameter's annotation: alone, in a union, or in `Readonly<…>`. */
+const STACK_ANNOTATION = [
+  "TSTypeAnnotation > TSTypeReference",
+  "TSTypeAnnotation > TSUnionType > TSTypeReference",
+  'TSTypeAnnotation > TSTypeReference[typeName.name="Readonly"] > TSTypeParameterInstantiation > TSTypeReference',
+].map((path) => `${path}[typeName.name="CardStack"]`);
+
+/** The `CardStack` in the annotation of a parameter that `pattern` matches, with or without a default value. */
+function stackParameter(pattern: string): string {
+  return [
+    `:function > ${pattern}.params`,
+    `:function > AssignmentPattern.params > ${pattern}.left`,
+  ]
+    .flatMap((parameter) =>
+      STACK_ANNOTATION.map((annotation) => `${parameter} > ${annotation}`),
+    )
+    .join(", ");
+}
+
 /**
  * Reading a stack through behaviour the array can override: a method that
- * makes a new array, `Symbol.isConcatSpreadable`, or the iterator (ADR 0004).
+ * makes a new array, `Symbol.isConcatSpreadable`, the iterator, or its own
+ * keys (ADR 0004).
  */
 const UNSAFE_STACK_READS = [
   `CallExpression[callee.object.name=${STACK_NAME}][callee.property.name=${COPYING_METHOD}]`,
   `CallExpression[callee.property.name="concat"] > Identifier.arguments[name=${STACK_NAME}]`,
+  `CallExpression[callee.object.name=${STACK_NAME}][callee.property.name=${ITERATOR_METHOD}]`,
   `SpreadElement[argument.name=${STACK_NAME}]`,
   `CallExpression[callee.object.name="Array"][callee.property.name="from"] > Identifier.arguments[name=${STACK_NAME}]`,
   `NewExpression[callee.name="Set"] > Identifier.arguments[name=${STACK_NAME}]`,
   `ForOfStatement[right.name=${STACK_NAME}]`,
   `VariableDeclarator[init.name=${STACK_NAME}] > ArrayPattern`,
+  `AssignmentExpression[right.name=${STACK_NAME}] > ArrayPattern`,
+  stackParameter("ArrayPattern"),
+  `CallExpression[callee.object.name="Object"][callee.property.name=${OWN_KEYS_FUNCTION}] > Identifier.arguments[name=${STACK_NAME}]`,
 ];
 
 /** A `CardStack` parameter with a name the rules above can't see. */
-const MISNAMED_STACK = `:function > Identifier.params[typeAnnotation.typeAnnotation.typeName.name="CardStack"]:not([name=${STACK_NAME}])`;
+const MISNAMED_STACK = stackParameter(`Identifier:not([name=${STACK_NAME}])`);
 
 const importSorting: Linter.RulesRecord = {
   "perfectionist/sort-exports": ["error", { type: "natural" }],
