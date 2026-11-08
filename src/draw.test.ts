@@ -8,6 +8,7 @@ import {
   asStack,
   isPlainFrozen,
   nonArrays,
+  sameValues,
   sparseStacks,
   stacks,
   stacksWithCounts,
@@ -20,17 +21,6 @@ const ACE = card("A", "S");
 const KING = card("K", "H");
 const TEN = card("10", "D");
 const hand = [ACE, KING, TEN];
-
-/** Whether two arrays hold the very same values in the same order. */
-function sameValues(
-  actual: readonly unknown[],
-  expected: readonly unknown[],
-): boolean {
-  return (
-    actual.length === expected.length &&
-    actual.every((value, i) => Object.is(value, expected[i]))
-  );
-}
 
 describe.each<
   readonly [

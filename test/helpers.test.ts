@@ -7,6 +7,7 @@ import {
   deals,
   isPlainFrozen,
   nonArrays,
+  sameValues,
   sparseStacks,
   stacks,
   stacksWithCounts,
@@ -27,6 +28,30 @@ describe("thrownBy", () => {
     expect(() => thrownBy(() => "returned")).toThrow(
       "Expected a throw, but nothing was thrown",
     );
+  });
+});
+
+describe("sameValues", () => {
+  it("accepts the very same values in the same order, NaN included", () => {
+    const ace = { rank: "A" };
+    expect(sameValues([ace, NaN], [ace, NaN])).toBe(true);
+    expect(sameValues([], [])).toBe(true);
+  });
+
+  it.each([
+    ["a different length", ["a"], ["a", "b"]],
+    ["a different order", ["a", "b"], ["b", "a"]],
+    ["an equal copy of an object", [{ rank: "A" }], [{ rank: "A" }]],
+    ["0 against -0", [0], [-0]],
+  ])("rejects %s", (_label, actual, expected) => {
+    expect(sameValues(actual, expected)).toBe(false);
+  });
+
+  it("reads a hole as undefined, rather than skipping it", () => {
+    const holey: unknown[] = [];
+    holey[1] = "a";
+    expect(sameValues(holey, [undefined, "a"])).toBe(true);
+    expect(sameValues(holey, ["b", "a"])).toBe(false);
   });
 });
 

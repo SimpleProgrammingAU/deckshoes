@@ -20,6 +20,18 @@ export function thrownBy(run: () => unknown): unknown {
   throw new Error("Expected a throw, but nothing was thrown");
 }
 
+/** Whether two arrays hold the very same values (`Object.is`) in the same order, reading a hole as `undefined`. */
+export function sameValues(
+  actual: readonly unknown[],
+  expected: readonly unknown[],
+): boolean {
+  if (actual.length !== expected.length) return false;
+  for (const [i, value] of actual.entries()) {
+    if (!Object.is(value, expected[i])) return false;
+  }
+  return true;
+}
+
 /** Writes a card as its rank and suit, such as "10H", to compare whole stacks. */
 export function short({ rank, suit }: Card): string {
   return `${rank}${suit}`;
