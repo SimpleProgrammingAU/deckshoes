@@ -380,7 +380,7 @@ export function deal<C>(
       position++;
       const take = Math.min(packet, target - held, available - next);
       for (let i = 0; i < take; i++) hand.push(deck[next + i] as C);
-      if (take > 0) next += take;
+      next += take;
       if (next === available) break;
     }
   }
