@@ -30,7 +30,7 @@ The set a suited card belongs to. The standard suits are spades, hearts, diamond
 _Avoid_: colour, type
 
 **Name**:
-The words for a rank, suit or card, such as Ace, Spades or Ace of Spades. A suit's name is plural unless it's used as a single item, as in a Diamond flush.
+The words for a rank, suit or card, such as Ace, Spades or Ace of Spades. A suit's name is plural unless it describes something, as in a Diamond flush.
 _Avoid_: label, title, display name, long name
 
 **Colour**:
