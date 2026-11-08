@@ -9,6 +9,7 @@ import {
   deals,
   isPlainFrozen,
   nonArrays,
+  sameValues,
   sparseStacks,
   stacks,
   thrownBy,
@@ -33,17 +34,6 @@ const hand = [ACE, KING, TEN];
 /** Lets a test pass options that the types rule out. */
 function asDealOptions(value: unknown): DealOptions {
   return value as DealOptions;
-}
-
-/** Whether two arrays hold the very same values in the same order. */
-function sameValues(
-  actual: readonly unknown[],
-  expected: readonly unknown[],
-): boolean {
-  return (
-    actual.length === expected.length &&
-    actual.every((value, i) => Object.is(value, expected[i]))
-  );
 }
 
 /** Puts dealt hands back in the order their cards were dealt, a packet from each hand in turn. */
