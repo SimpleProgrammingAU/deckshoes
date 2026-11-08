@@ -1,27 +1,19 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import { thrownBy } from "../test/helpers.ts";
+import {
+  asRank,
+  asSuit,
+  nonRanks,
+  nonSuits,
+  standardRanks,
+  standardSuits,
+  thrownBy,
+} from "../test/helpers.ts";
 import { card, type Color, isCard, type Rank, type Suit } from "./card.ts";
 
 // Written out here rather than imported, so the tests don't share the
-// implementation's lists.
-const RANKS: readonly unknown[] = [
-  "A",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-];
-const SUITS: readonly unknown[] = ["S", "H", "D", "C"];
+// implementation's table.
 const COLORS: Readonly<Record<Suit, Color>> = {
   C: "black",
   D: "red",
@@ -30,19 +22,9 @@ const COLORS: Readonly<Record<Suit, Color>> = {
 };
 
 /** Every rank and suit pair, as the test lists them. */
-const PAIRS: readonly (readonly [Rank, Suit])[] = RANKS.flatMap((rank) =>
-  SUITS.map((suit) => [rank as Rank, suit as Suit] as const),
+const PAIRS: readonly (readonly [Rank, Suit])[] = standardRanks.flatMap(
+  (rank) => standardSuits.map((suit) => [asRank(rank), asSuit(suit)] as const),
 );
-
-/** Lets a test pass a value that isn't a rank, as untyped callers can. */
-function asRank(value: unknown): Rank {
-  return value as Rank;
-}
-
-/** Lets a test pass a value that isn't a suit, as untyped callers can. */
-function asSuit(value: unknown): Suit {
-  return value as Suit;
-}
 
 describe("card", () => {
   it("creates every standard card with its rank, suit and colour", () => {
@@ -89,42 +71,20 @@ describe("card", () => {
     ["D", "red"],
     ["C", "black"],
   ] as const)("colours %s cards %s", (suit, color) => {
-    for (const rank of RANKS) {
+    for (const rank of standardRanks) {
       expect(card(asRank(rank), suit).color).toBe(color);
     }
   });
 });
 
 describe("card with input that isn't standard", () => {
-  const notStandard: readonly (readonly [string, unknown])[] = [
-    ["11", "11"],
-    ["1", "1"],
-    ["T", "T"],
-    ["lower case", "a"],
-    ["a suit symbol", "♠"],
-    ["an empty string", ""],
-    ["padding", " A"],
-    ["a number", 10],
-    ["null", null],
-    ["undefined", undefined],
-    ["an object without a prototype", Object.create(null)],
-    ["a prototype key", "constructor"],
-    ["__proto__", "__proto__"],
-  ];
-
-  it.each(notStandard)("rejects %s as a rank", (_label, rank) => {
+  it.each(nonRanks())("rejects %s as a rank", (_label, rank) => {
     expect(thrownBy(() => card(asRank(rank), "S"))).toMatchObject({
       code: "INVALID_CARD",
     });
   });
 
-  const notSuits: readonly (readonly [string, unknown])[] = [
-    ...notStandard,
-    ["a rank", "A"],
-    ["a lower-case suit", "s"],
-  ];
-
-  it.each(notSuits)("rejects %s as a suit", (_label, suit) => {
+  it.each(nonSuits())("rejects %s as a suit", (_label, suit) => {
     expect(thrownBy(() => card("A", asSuit(suit)))).toMatchObject({
       code: "INVALID_CARD",
     });
@@ -133,7 +93,7 @@ describe("card with input that isn't standard", () => {
   it("rejects any other value as a rank", () => {
     fc.assert(
       fc.property(
-        fc.anything().filter((value) => !RANKS.includes(value)),
+        fc.anything().filter((value) => !standardRanks.includes(value)),
         (rank) => {
           expect(thrownBy(() => card(asRank(rank), "S"))).toMatchObject({
             code: "INVALID_CARD",
@@ -146,7 +106,7 @@ describe("card with input that isn't standard", () => {
   it("rejects any other value as a suit", () => {
     fc.assert(
       fc.property(
-        fc.anything().filter((value) => !SUITS.includes(value)),
+        fc.anything().filter((value) => !standardSuits.includes(value)),
         (suit) => {
           expect(thrownBy(() => card("A", asSuit(suit)))).toMatchObject({
             code: "INVALID_CARD",
