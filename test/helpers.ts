@@ -169,3 +169,40 @@ export function stacksWithCounts(
     }),
   );
 }
+
+/** What {@link deals} gives: the arguments for one deal. */
+export interface DealArguments<C> {
+  deck: C[];
+  handCount: number;
+  handSize: number;
+  packetSize: number | undefined;
+}
+
+/**
+ * A deck with a hand count and hand size it holds enough cards for, both 1 or
+ * more, and a packet size that's sometimes left out and sometimes bigger than
+ * the hand. The decks come from {@link stacks} unless `from` gives others.
+ */
+export function deals(): Arbitrary<DealArguments<Card>>;
+export function deals<C>(from: Arbitrary<C[]>): Arbitrary<DealArguments<C>>;
+export function deals(
+  from: Arbitrary<unknown[]> = stacks(),
+): Arbitrary<DealArguments<unknown>> {
+  return from
+    .filter((deck) => deck.length > 0)
+    .chain((deck) =>
+      fc.integer({ max: deck.length, min: 1 }).chain((handCount) =>
+        fc.record({
+          deck: fc.constant(deck),
+          handCount: fc.constant(handCount),
+          handSize: fc.integer({
+            max: Math.floor(deck.length / handCount),
+            min: 1,
+          }),
+          packetSize: fc.option(fc.integer({ max: 8, min: 1 }), {
+            nil: undefined,
+          }),
+        }),
+      ),
+    );
+}

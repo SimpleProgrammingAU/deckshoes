@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   arraySubclasses,
   counted,
+  deals,
   isPlainFrozen,
   nonArrays,
   sparseStacks,
@@ -203,5 +204,62 @@ describe("stacksWithCounts", () => {
     expect(new Set(samples.map(({ count }) => count))).toStrictEqual(
       new Set([0, 1, 2]),
     );
+  });
+});
+
+describe("deals", () => {
+  it("gives one hand and several, every card dealt and some left, but never more than the deck holds", () => {
+    // Seeded, because this checks what the arbitrary gives, not a property.
+    const samples = fc.sample(deals(), { numRuns: 1000, seed: 42 });
+    expect(
+      samples.filter(
+        ({ deck, handCount, handSize }) =>
+          handCount < 1 || handSize < 1 || handCount * handSize > deck.length,
+      ),
+    ).toStrictEqual([]);
+    expect(samples.some(({ handCount }) => handCount === 1)).toBe(true);
+    expect(samples.some(({ handCount }) => handCount > 1)).toBe(true);
+    expect(
+      samples.some(
+        ({ deck, handCount, handSize }) => handCount * handSize === deck.length,
+      ),
+    ).toBe(true);
+    expect(
+      samples.some(
+        ({ deck, handCount, handSize }) => handCount * handSize < deck.length,
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves the packet size out, and gives ones smaller and bigger than the hand", () => {
+    const samples = fc.sample(deals(), { numRuns: 1000, seed: 42 });
+    expect(samples.some(({ packetSize }) => packetSize === undefined)).toBe(
+      true,
+    );
+    expect(
+      samples.some(
+        ({ handSize, packetSize }) =>
+          packetSize !== undefined && packetSize > 1 && packetSize < handSize,
+      ),
+    ).toBe(true);
+    expect(
+      samples.some(
+        ({ handSize, packetSize }) =>
+          packetSize !== undefined && packetSize > handSize,
+      ),
+    ).toBe(true);
+  });
+
+  it("takes its decks from the arbitrary it's given", () => {
+    const samples = fc.sample(deals(fc.constant(["a", "b"])), {
+      numRuns: 100,
+      seed: 42,
+    });
+    expect(samples.every(({ deck }) => deck.length === 2)).toBe(true);
+    expect(
+      new Set(
+        samples.map(({ handCount, handSize }) => String([handCount, handSize])),
+      ),
+    ).toStrictEqual(new Set(["1,1", "1,2", "2,1"]));
   });
 });

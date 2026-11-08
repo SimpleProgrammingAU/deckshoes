@@ -1,6 +1,12 @@
 import type { Card } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
+import {
+  deal,
+  type DealOptions,
+  type DealResult,
+  type HandSize,
+} from "./deal.ts";
 import { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
 import { stackProblem } from "./internal/checks.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
@@ -11,10 +17,10 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  *
  * Each method has the same name as a stack operation, calls that function and
  * returns a new chain holding the result. If a pipeline can't carry on from the
- * result, as with drawn cards and the remainder or with peeked cards, that new
- * chain is a {@link TerminatedChain}, which can only be unwrapped. A method
- * never changes the chain it's called on, which still holds the stack it held
- * before.
+ * result, as with dealt hands, drawn cards and the remainder, or peeked cards,
+ * that new chain is a {@link TerminatedChain}, which can only be unwrapped. A
+ * method never changes the chain it's called on, which still holds the stack it
+ * held before.
  *
  * A chain holds the stack passed to {@link chain} itself, not a copy. Every
  * stack deckshoes returns is frozen, but if you pass in an array of your own
@@ -46,6 +52,47 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * @since NEXT
  */
 export interface Chain<C = Card> {
+  /**
+   * Deals cards from the top of the stack the chain holds into hands with
+   * {@link deal}, and ends the chain, because a pipeline can't carry on from
+   * several stacks.
+   *
+   * To carry on with the remainder, wrap it again with
+   * `chain(result.remainder)`.
+   *
+   * @param handCount - The hand count that {@link deal} takes.
+   * @param handSize - The hand size that {@link deal} takes.
+   * @param options - The options that {@link deal} takes.
+   * @returns A terminated chain holding what {@link deal} returns.
+   * @throws {@link InvalidArgumentError} When {@link deal} would.
+   * @throws {@link InsufficientCardsError} When {@link deal} would.
+   *
+   * @example
+   * ```ts
+   * import { chain, seededRandom } from "deckshoes";
+   * import { standard52 } from "deckshoes/presets";
+   *
+   * const { hands, remainder } = chain(standard52())
+   *   .shuffle({ random: seededRandom(42) })
+   *   .deal(4, 5)
+   *   .value();
+   * hands.map((hand) => hand.length); // => [5, 5, 5, 5]
+   *
+   * // To carry on, wrap the remainder again.
+   * chain(remainder).draw(2).value().remainder.length; // => 30
+   *
+   * // The chain throws whatever deal throws.
+   * chain(standard52()).deal(4, 14); // throws INSUFFICIENT_CARDS
+   * ```
+   *
+   * @since NEXT
+   */
+  deal(
+    handCount: number,
+    handSize: HandSize,
+    options?: DealOptions,
+  ): TerminatedChain<DealResult<C>>;
+
   /**
    * Draws cards from the top of the stack the chain holds with {@link draw},
    * and ends the chain, because a pipeline can't carry on from two stacks.
@@ -275,6 +322,14 @@ class StackChain<C> implements Chain<C> {
   constructor(stack: CardStack<C>) {
     this.#stack = stack;
     Object.freeze(this);
+  }
+
+  deal(
+    handCount: number,
+    handSize: HandSize,
+    options?: DealOptions,
+  ): TerminatedChain<DealResult<C>> {
+    return new Terminated(deal(this.#stack, handCount, handSize, options));
   }
 
   draw(count?: number): TerminatedChain<DrawResult<C>> {
