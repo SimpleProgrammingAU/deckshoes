@@ -15,7 +15,7 @@ import {
 } from "../test/helpers.ts";
 import { card } from "./card.ts";
 import { chain } from "./chain.ts";
-import { deal, RunOut } from "./deal.ts";
+import { deal, HandSize, PacketSize, RunOut } from "./deal.ts";
 import { draw, drawBottom, peek, peekBottom } from "./draw.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
@@ -164,13 +164,29 @@ describe("chain", () => {
   });
 
   describe("deal", () => {
-    it("gives what the function gives", () => {
+    it("gives what the function gives, with named values and either runOut", () => {
       fc.assert(
-        fc.property(deals(), ({ deck, handCount, handSize, packetSize }) => {
-          expect(
-            chain(deck).deal(handCount, handSize, { packetSize }).value(),
-          ).toStrictEqual(deal(deck, handCount, handSize, { packetSize }));
-        }),
+        fc.property(
+          deals(),
+          fc.boolean(),
+          fc.boolean(),
+          fc.constantFrom(undefined, RunOut.STOP, RunOut.THROW),
+          fc.nat({ max: 3 }),
+          (dealt, maximize, wholeHands, runOut, extra) => {
+            const { deck, handCount } = dealt;
+            // Only RunOut.STOP can ask for more cards than the deck holds.
+            const handSize = maximize
+              ? HandSize.MAXIMIZE
+              : dealt.handSize + (runOut === RunOut.STOP ? extra : 0);
+            const options = {
+              packetSize: wholeHands ? PacketSize.HAND : dealt.packetSize,
+              runOut,
+            };
+            expect(
+              chain(deck).deal(handCount, handSize, options).value(),
+            ).toStrictEqual(deal(deck, handCount, handSize, options));
+          },
+        ),
       );
     });
 
