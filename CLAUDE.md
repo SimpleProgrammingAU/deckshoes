@@ -12,7 +12,7 @@ Read `CONTRIBUTING.md` (Code rules, Documentation rules, Errors, Tests) before w
 
 - New public exports get `@since NEXT`; the release script stamps the real version.
 - `@throws` is only detected for a `throw` in the function's own body, so public functions validate their own inputs and `throw` right there.
-- Lint finds a stack only by its name, so annotate a stack parameter `CardStack` and read or copy it under that name, never through an alias or a cast (ADR 0004).
+- Lint finds a stack only by its name, so annotate a stack parameter `CardStack` and read or copy it under that name. It can't see a stack reached through an alias, a cast, a generic bound (`<S extends CardStack<C>>`) or a collection (`hands[i]`), so read those by index or copy them with `copyStack` yourself (ADR 0004).
 - Examples are doctests: `expr; // => value` and `expr; // throws CODE`. Pass a seeded random source to every shuffle.
 - A failing doctest's title names the source file and line. Fix the example there; `.doctest/` is regenerated on every run.
 - A test helper stays in its test file until a second test file needs it; that change moves it to `test/helpers.ts`, with a test if it has branches or state.
