@@ -1,6 +1,6 @@
 # Named values are strings with a constant of the same name
 
-When a parameter or setting takes a named value, such as a deal's `runOut`, the value is a lowercase string, and deckshoes exports a frozen constant object and a type, both named after the parameter. Each key is its value in capitals. A parameter that also takes a number, such as a hand size, gets a type that includes `number`. A setting that's only ever on or off is a boolean instead, named for what it turns on and `false` by default, such as `{ lowercase: true }`. Docs and examples always use the constant.
+When a parameter or setting takes a named value, such as a deal's `runOut`, the value is a lowercase string, and deckshoes exports a frozen constant object and a type, both named after the parameter. Each key is its value in capitals. A parameter that also takes a number, such as a hand size, gets a type that includes `number`. Docs and examples always use the constant. A setting that's only ever on or off is a boolean instead, named for what it turns on and `false` by default, such as `{ lowercase: true }`.
 
 ```ts no-test
 export const RunOut: { readonly STOP: "stop"; readonly THROW: "throw" } =
