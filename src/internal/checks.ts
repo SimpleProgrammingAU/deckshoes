@@ -40,6 +40,18 @@ export function countProblem(
   );
 }
 
+/** Returns the error for an on/off option that isn't `true` or `false`, or `undefined` for one that is; `name` names the option in the message. */
+export function flagProblem(
+  value: unknown,
+  name: string,
+): InvalidArgumentError | undefined {
+  return value === true || value === false
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid ${name} option ${display(value)}: expected true or false`,
+      );
+}
+
 /** Returns the error for options that aren't an object, or `undefined` for options that are; `example` shows valid options in the message. */
 export function optionsProblem(
   value: unknown,

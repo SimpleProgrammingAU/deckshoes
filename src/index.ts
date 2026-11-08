@@ -33,6 +33,12 @@ export {
   InvalidCardError,
   isDeckshoesError,
 } from "./errors.ts";
+export {
+  rankName,
+  type RankNameOptions,
+  suitName,
+  type SuitNameOptions,
+} from "./names.ts";
 export { type RandomSource, seededRandom } from "./random.ts";
 export { shuffle, type ShuffleOptions } from "./shuffle.ts";
 export { type CardStack } from "./stack.ts";

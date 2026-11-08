@@ -1,6 +1,6 @@
 # Named values are strings with a constant of the same name
 
-When a parameter or setting takes a named value, such as a deal's `runOut`, the value is a lowercase string, and deckshoes exports a frozen constant object and a type, both named after the parameter. Each key is its value in capitals. A parameter that also takes a number, such as a hand size, gets a type that includes `number`. Docs and examples always use the constant.
+When a parameter or setting takes a named value, such as a deal's `runOut`, the value is a lowercase string, and deckshoes exports a frozen constant object and a type, both named after the parameter. Each key is its value in capitals. A parameter that also takes a number, such as a hand size, gets a type that includes `number`. A setting that's only ever on or off is a boolean instead, named for what it turns on and `false` by default, such as `{ lowercase: true }`. Docs and examples always use the constant.
 
 ```ts no-test
 export const RunOut: { readonly STOP: "stop"; readonly THROW: "throw" } =
@@ -17,6 +17,7 @@ deal(deck, 4, HandSize.MAXIMIZE, { packetSize: PacketSize.HAND });
 - **Plain string unions** (`runOut: "stop"`), as `Rank` and `Suit` are written. No extra exports, but callers have to know the strings. With a constant, they can find the values by typing its name.
 - **One shared object for a whole operation** (`Deal.MAXIMIZE`, `Deal.HAND`). One import, but its type would cover every value, so TypeScript couldn't catch `PacketSize.HAND` passed as a hand size. It also can't be called `Deal`, which differs from `deal` only in case.
 - **Constants and strings documented side by side.** Two ways to write the same thing, which [ADR 0009](./0009-settings-go-in-one-options-object.md) avoids for settings.
+- **Named values for on/off settings** (`{ letterCase: LetterCase.LOWER }`). Room for a third value, which most settings never need, at the cost of an import and a constant for every switch.
 
 ## Consequences
 
@@ -26,4 +27,5 @@ deal(deck, 4, HandSize.MAXIMIZE, { packetSize: PacketSize.HAND });
 - A bundler can't tell that a top-level `Object.freeze` call does nothing else, so it keeps every constant in every bundle, imported or not, unless the call is marked `/* @__PURE__ */`. Without the mark, deal's constants pushed the "shuffle only" bundle over its size budget.
 - The constant and the type share a name. The API reference files constants and types in separate directories, so their pages don't clash.
 - Adding a value to a constant is a minor change. Removing or renaming one is a major change.
+- Turning a boolean setting into a named value is a major change.
 - `Rank`, `Suit` and `Color` stay plain unions with no constants. `"A"`, `"S"` and `"red"` are the domain's own notation, as in `"AS"` and `"10H"`, rather than settings.

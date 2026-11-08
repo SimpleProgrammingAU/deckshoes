@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   countProblem,
+  flagProblem,
   optionsProblem,
   shortfall,
   sizeProblem,
@@ -28,6 +29,17 @@ describe("countProblem", () => {
     expect(countProblem(2 ** 32, "hand count", 1, 2 ** 32 - 1)?.message).toBe(
       "Invalid hand count 4294967296: expected an integer from 1 to 4294967295",
     );
+  });
+});
+
+describe("flagProblem", () => {
+  it("accepts true and false, and names any other value's option", () => {
+    expect(flagProblem(true, "lowercase")).toBeUndefined();
+    expect(flagProblem(false, "lowercase")).toBeUndefined();
+    expect(flagProblem("yes", "lowercase")).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message: 'Invalid lowercase option "yes": expected true or false',
+    });
   });
 });
 
