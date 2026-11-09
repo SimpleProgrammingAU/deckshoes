@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: cards that you can parse from and format to text such as `"AS"`, `"10h"` and `"A♠"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: Unicode playing-card characters such as `"🂡"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -107,6 +107,42 @@ const queen = card("Q", "H");
 const rank = rankName(queen.rank, { lowercase: true });
 const suit = suitName(queen.suit, { lowercase: true });
 `the ${rank} of ${suit}`; // => "the queen of hearts"
+```
+
+## Cards as text
+
+`parseCard` reads a card written as text and returns the one card object it names. It reads three notations, ignoring the case of A–Z:
+
+- **Short**: the rank and then the suit's letter, such as `"AS"`, `"10h"` or `"Th"`. Ten is `10` or `T`.
+- **Symbol**: the rank and then the suit's symbol, such as `"A♠"` or `"10♥"`. The outline symbols `♤ ♡ ♢ ♧` work too, and so do the emoji forms a phone's keyboard types.
+- **Name**: the card's name, such as `"Ace of Spades"`, made from `rankName` and `suitName`.
+
+`formatCard` writes a card in short notation, or in another notation you choose with `Notation.SYMBOL` or `Notation.NAME`. It always writes ten as `10`, and `parseCard` reads whatever it writes back to the same card.
+
+Text that isn't a card makes `parseCard` throw `InvalidCardError`, and `tryParseCard` return `undefined`. Only the card is read, not even spaces around it, so trim user input first.
+
+```ts
+import { card, formatCard, Notation, parseCard, tryParseCard } from "deckshoes";
+
+parseCard("AS") === card("A", "S"); // => true
+parseCard("10h"); // => card("10", "H")
+parseCard("Th"); // => card("10", "H")
+parseCard("Q♦"); // => card("Q", "D")
+parseCard("queen of hearts"); // => card("Q", "H")
+
+const ten = card("10", "H");
+formatCard(ten); // => "10H"
+formatCard(ten, { notation: Notation.SYMBOL }); // => "10♥"
+formatCard(ten, { notation: Notation.NAME }); // => "Ten of Hearts"
+
+// Text that isn't a card.
+parseCard("11S"); // throws INVALID_CARD
+tryParseCard("11S"); // => undefined
+
+// Spaces around the card aren't read, so trim user input first.
+const input = " as\n";
+tryParseCard(input); // => undefined
+parseCard(input.trim()); // => card("A", "S")
 ```
 
 ## Random sources
@@ -256,7 +292,7 @@ Every error deckshoes throws extends `DeckshoesError` and carries a stable `code
 | Code                 | Class                    | Thrown when                                                                                           |
 | -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------- |
 | `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, index, seed or option is out of range, a stack isn't an array, or a random source misbehaves |
-| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit or card string can't be recognised                                                       |
+| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised                                              |
 | `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                            |
 
 Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
