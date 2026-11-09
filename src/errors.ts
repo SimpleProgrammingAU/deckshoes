@@ -122,7 +122,7 @@ export class InvalidArgumentError extends DeckshoesError {
 
 /**
  * Thrown when a rank, suit, card, or a card's text can't be recognised, such
- * as `"11S"` passed to {@link parseCard}, or a copy of a card passed to
+ * as `"11S"` passed to {@link parseCard}, or a cloned card passed to
  * {@link formatCard}.
  *
  * @example
