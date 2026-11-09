@@ -34,7 +34,7 @@ The words for a rank, suit or card, such as Ace, Spades or Ace of Spades. A suit
 _Avoid_: label, title, display name, long name
 
 **Notation**:
-A way of writing a card as text: short, such as AS or 10H; symbol, such as A♠; or the card's name, such as Ace of Spades.
+A way of writing a card as text: short, such as AS or 10H; symbol, such as A♠; the card's name, such as Ace of Spades; or its Unicode character, such as 🂡, from Unicode's Playing Cards block.
 _Avoid_: style, text format, short code
 
 **Colour**:

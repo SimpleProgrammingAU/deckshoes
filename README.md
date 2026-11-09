@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: Unicode playing-card characters such as `"🂡"`; presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -111,13 +111,14 @@ const suit = suitName(queen.suit, { lowercase: true });
 
 ## Cards as text
 
-`parseCard` reads a card written as text and returns the one card object it names. It reads three notations, ignoring the case of A–Z:
+`parseCard` reads a card written as text and returns the one card object it names. It reads four notations, ignoring the case of A–Z:
 
 - **Short**: the rank and then the suit's letter, such as `"AS"`, `"10h"` or `"Th"`. Ten is `10` or `T`.
 - **Symbol**: the rank and then the suit's symbol, such as `"A♠"` or `"10♥"`. The outline symbols `♤ ♡ ♢ ♧` work too, and so does a suit symbol in its emoji form, such as `"♥️"` from a phone's keyboard. Other emoji, such as `❤️`, don't.
 - **Name**: the card's name, such as `"Ace of Spades"`, made from `rankName` and `suitName`.
+- **Unicode character**: the card's character from Unicode's Playing Cards block, such as `"🂡"` for the ace of spades. The block's other characters, such as the knights, the jokers and the card back, aren't standard cards, so they aren't read. Not every font has these characters, so check that they show where you use them.
 
-`formatCard` writes a card in short notation, or in another notation you choose with `Notation.SYMBOL` or `Notation.NAME`. It always writes ten as `10`, and `parseCard` reads whatever it writes back to the same card.
+`formatCard` writes a card in short notation, or in another notation you choose with `Notation.SYMBOL`, `Notation.NAME` or `Notation.UNICODE_CHARACTER`. Short and symbol notation write ten as `10`, never `T`, and `parseCard` reads whatever `formatCard` writes back to the same card.
 
 Text that isn't a card makes `parseCard` throw `InvalidCardError`, and `tryParseCard` return `undefined`. Only the card is read, not even spaces around it, so trim user input first.
 
@@ -129,15 +130,20 @@ parseCard("10h"); // => card("10", "H")
 parseCard("Th"); // => card("10", "H")
 parseCard("Q♦"); // => card("Q", "D")
 parseCard("queen of hearts"); // => card("Q", "H")
+parseCard("🂮"); // => card("K", "S")
 
 const ten = card("10", "H");
 formatCard(ten); // => "10H"
 formatCard(ten, { notation: Notation.SYMBOL }); // => "10♥"
 formatCard(ten, { notation: Notation.NAME }); // => "Ten of Hearts"
+formatCard(ten, { notation: Notation.UNICODE_CHARACTER }); // => "🂺"
 
 // Text that isn't a card.
 parseCard("11S"); // throws INVALID_CARD
 tryParseCard("11S"); // => undefined
+
+// A joker's character isn't a standard card either.
+tryParseCard("🃏"); // => undefined
 
 // Spaces around the card aren't read, so trim user input first.
 const input = " as\n";
