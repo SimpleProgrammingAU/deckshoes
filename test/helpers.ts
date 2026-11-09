@@ -70,6 +70,12 @@ export function asSuit(value: unknown): Suit {
   return value as Suit;
 }
 
+/** Every standard rank and suit pair, from {@link standardRanks} and {@link standardSuits}. */
+export const standardPairs: readonly (readonly [Rank, Suit])[] =
+  standardRanks.flatMap((rank) =>
+    standardSuits.map((suit) => [asRank(rank), asSuit(suit)] as const),
+  );
+
 /** Labelled values that are neither a standard rank nor a standard suit. */
 function neitherRankNorSuit(): readonly (readonly [
   label: string,

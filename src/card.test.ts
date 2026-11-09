@@ -6,11 +6,12 @@ import {
   asSuit,
   nonRanks,
   nonSuits,
+  standardPairs,
   standardRanks,
   standardSuits,
   thrownBy,
 } from "../test/helpers.ts";
-import { card, type Color, isCard, type Rank, type Suit } from "./card.ts";
+import { card, type Color, isCard, type Suit } from "./card.ts";
 
 // Written out here rather than imported, so the tests don't share the
 // implementation's table.
@@ -21,14 +22,9 @@ const COLORS: Readonly<Record<Suit, Color>> = {
   S: "black",
 };
 
-/** Every rank and suit pair, as the test lists them. */
-const PAIRS: readonly (readonly [Rank, Suit])[] = standardRanks.flatMap(
-  (rank) => standardSuits.map((suit) => [asRank(rank), asSuit(suit)] as const),
-);
-
 describe("card", () => {
   it("creates every standard card with its rank, suit and colour", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       expect(card(rank, suit)).toStrictEqual({
         color: COLORS[suit],
         rank,
@@ -38,18 +34,20 @@ describe("card", () => {
   });
 
   it("gives 52 distinct cards", () => {
-    const cards = new Set(PAIRS.map(([rank, suit]) => card(rank, suit)));
+    const cards = new Set(
+      standardPairs.map(([rank, suit]) => card(rank, suit)),
+    );
     expect(cards.size).toBe(52);
   });
 
   it("returns the same object every time", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       expect(card(rank, suit)).toBe(card(rank, suit));
     }
   });
 
   it("returns frozen plain objects with only rank, suit and color", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       const created = card(rank, suit);
       expect(Object.isFrozen(created)).toBe(true);
       expect(Object.getPrototypeOf(created)).toBe(Object.prototype);
@@ -155,7 +153,7 @@ describe("card with input that isn't standard", () => {
 
 describe("isCard", () => {
   it("accepts every standard card", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       expect(isCard(card(rank, suit))).toBe(true);
     }
   });

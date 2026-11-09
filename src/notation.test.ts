@@ -1,14 +1,8 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import {
-  asRank,
-  asSuit,
-  standardRanks,
-  standardSuits,
-  thrownBy,
-} from "../test/helpers.ts";
-import { type Card, card, type Rank, type Suit } from "./card.ts";
+import { standardPairs, thrownBy } from "../test/helpers.ts";
+import { type Card, card, type Suit } from "./card.ts";
 import { isDeckshoesError } from "./errors.ts";
 import { rankName, suitName } from "./names.ts";
 import {
@@ -38,11 +32,6 @@ const EMOJI_SELECTOR = String.fromCodePoint(0xfe_0f);
 /** U+212A, the Kelvin sign, which looks like K and lower-cases to k. */
 const KELVIN_SIGN = String.fromCodePoint(0x21_2a);
 
-/** Every rank and suit pair, as the test lists them. */
-const PAIRS: readonly (readonly [Rank, Suit])[] = standardRanks.flatMap(
-  (rank) => standardSuits.map((suit) => [asRank(rank), asSuit(suit)] as const),
-);
-
 /** Every notation, as the test lists them. */
 const NOTATIONS = [Notation.SHORT, Notation.SYMBOL, Notation.NAME] as const;
 
@@ -63,7 +52,7 @@ function asFormatCardOptions(value: unknown): FormatCardOptions {
 
 describe("formatCard", () => {
   it("writes every card in short notation, which is the default", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       expect(formatCard(card(rank, suit))).toBe(`${rank}${suit}`);
       expect(formatCard(card(rank, suit), { notation: Notation.SHORT })).toBe(
         `${rank}${suit}`,
@@ -72,7 +61,7 @@ describe("formatCard", () => {
   });
 
   it("writes every card in symbol notation", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       expect(formatCard(card(rank, suit), { notation: Notation.SYMBOL })).toBe(
         `${rank}${SYMBOLS[suit]}`,
       );
@@ -80,7 +69,7 @@ describe("formatCard", () => {
   });
 
   it("writes every card's name from rankName and suitName", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       expect(formatCard(card(rank, suit), { notation: Notation.NAME })).toBe(
         `${rankName(rank)} of ${suitName(suit)}`,
       );
@@ -211,7 +200,7 @@ describe("parseCard", () => {
   });
 
   it("reads every card back from every notation", () => {
-    for (const [rank, suit] of PAIRS) {
+    for (const [rank, suit] of standardPairs) {
       for (const notation of NOTATIONS) {
         const written = formatCard(card(rank, suit), { notation });
         expect(parseCard(written)).toBe(card(rank, suit));
