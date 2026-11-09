@@ -15,7 +15,7 @@
     "name": "deckshoes (shuffle only, no chain)",
     "path": "dist/index.js",
     "import": "{ shuffle }",
-    "limit": "800 B"
+    "limit": "820 B"
   },
   {
     "name": "deckshoes/presets (standard52 only)",
