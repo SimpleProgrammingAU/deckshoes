@@ -179,14 +179,16 @@ export function tryParseCard(text: string): Card | undefined {
  * Ten is always written `10`. {@link parseCard} reads each notation back to
  * the same card.
  *
- * Only the 52 card objects that `card()` returns can be written. A copy, such
- * as one sent with `postMessage`, has to go back through `card()` first.
+ * Only the 52 card objects that this install's `card()` returns can be
+ * written. A cloned card, such as one sent with `postMessage`, isn't one of
+ * them, and nor is a card from another install of deckshoes, such as one a
+ * dependency bundles. Pass its rank and suit back through `card()` first.
  *
  * @param card - The card to write.
  * @param options - Settings for the text: its notation.
  * @returns The card written in that notation.
- * @throws {@link InvalidCardError} When `card` isn't one of the cards `card()`
- * returns.
+ * @throws {@link InvalidCardError} When `card` isn't one of the cards this
+ * install's `card()` returns, such as a cloned card.
  * @throws {@link InvalidArgumentError} When `options` isn't an object, or its
  * `notation` isn't `Notation.SHORT`, `Notation.SYMBOL` or `Notation.NAME`.
  *
@@ -202,8 +204,10 @@ export function tryParseCard(text: string): Card | undefined {
  * // Parsing reads every notation back.
  * parseCard(formatCard(ten, { notation: Notation.NAME })) === ten; // => true
  *
- * // A copy isn't a card.
- * formatCard(structuredClone(ten)); // throws INVALID_CARD
+ * // A cloned card has to go back through card() first.
+ * const clone = structuredClone(ten);
+ * formatCard(clone); // throws INVALID_CARD
+ * formatCard(card(clone.rank, clone.suit)); // => "10H"
  * ```
  *
  * @since NEXT
