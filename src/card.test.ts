@@ -128,6 +128,18 @@ describe("card with input that isn't standard", () => {
       "S",
       `Unknown rank "${"x".repeat(30)}"…`,
     ],
+    [
+      "counts an emoji as one character",
+      asRank("🂡".repeat(30)),
+      "S",
+      `Unknown rank "${"🂡".repeat(30)}"`,
+    ],
+    [
+      "cuts a string short without splitting an emoji",
+      asRank(`A${"🂡".repeat(30)}`),
+      "S",
+      `Unknown rank "A${"🂡".repeat(29)}"…`,
+    ],
     ["shows a number as it is", asRank(10), "S", "Unknown rank 10"],
     ["marks a bigint", asRank(10n), "S", "Unknown rank 10n"],
     ["shows null as it is", asRank(null), "S", "Unknown rank null"],
