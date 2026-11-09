@@ -42,6 +42,9 @@ describe("formatCard", () => {
     });
     // The plain string still type-checks (ADR 0010).
     expectTypeOf(formatCard).toBeCallableWith(ace, { notation: "name" });
+    expectTypeOf(formatCard).toBeCallableWith(ace, {
+      notation: "unicode character",
+    });
   });
 
   it("rejects anything but a card, and settings it doesn't have", () => {
@@ -56,18 +59,29 @@ describe("formatCard", () => {
     expectTypeOf(formatCard).toBeCallableWith(ace, { notation: "long" });
     // @ts-expect-error a notation's value is lower case
     expectTypeOf(formatCard).toBeCallableWith(ace, { notation: "SYMBOL" });
+    expectTypeOf(formatCard).toBeCallableWith(ace, {
+      // @ts-expect-error a notation's value has spaces, not underscores
+      notation: "unicode_character",
+    });
+    expectTypeOf(formatCard).toBeCallableWith(ace, {
+      // @ts-expect-error a notation's value isn't its key
+      notation: "UNICODE_CHARACTER",
+    });
     // @ts-expect-error formatCard has no lowercase setting
     expectTypeOf(formatCard).toBeCallableWith(ace, { lowercase: true });
   });
 });
 
 describe("Notation and FormatCardOptions", () => {
-  it("give each notation as a lower-case string", () => {
-    expectTypeOf<Notation>().toEqualTypeOf<"short" | "symbol" | "name">();
+  it("give each notation as a lower-case string, with spaces between words", () => {
+    expectTypeOf<Notation>().toEqualTypeOf<
+      "short" | "symbol" | "name" | "unicode character"
+    >();
     expectTypeOf(Notation).toEqualTypeOf<{
       readonly NAME: "name";
       readonly SHORT: "short";
       readonly SYMBOL: "symbol";
+      readonly UNICODE_CHARACTER: "unicode character";
     }>();
   });
 

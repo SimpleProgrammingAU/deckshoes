@@ -2,7 +2,7 @@ import fc, { type Arbitrary } from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { standardPairs, thrownBy } from "../test/helpers.ts";
-import { type Card, card, type Suit } from "./card.ts";
+import { type Card, card, type Rank, type Suit } from "./card.ts";
 import { isDeckshoesError } from "./errors.ts";
 import { rankName, suitName } from "./names.ts";
 import {
@@ -30,6 +30,47 @@ const OUTLINE_SYMBOLS: Readonly<Record<Suit, string>> = {
   S: "♤",
 };
 
+/** U+1F0A0, the card back, where Unicode's Playing Cards block starts. */
+const BLOCK_START = 0x1_f0_a0;
+
+/** U+1F0FF, the last code point in the Playing Cards block. */
+const BLOCK_END = 0x1_f0_ff;
+
+/** Where each suit's row of 16 starts in the Playing Cards block, from the Unicode chart. */
+const CHARACTER_ROWS: Readonly<Record<Suit, number>> = {
+  C: 0x1_f0_d0,
+  D: 0x1_f0_c0,
+  H: 0x1_f0_b0,
+  S: 0x1_f0_a0,
+};
+
+/** Where each rank sits in its suit's row, from the Unicode chart. The knight, at 0xC, is skipped. */
+const CHARACTER_COLUMNS: Readonly<Record<Rank, number>> = {
+  A: 0x1,
+  2: 0x2,
+  3: 0x3,
+  4: 0x4,
+  5: 0x5,
+  6: 0x6,
+  7: 0x7,
+  8: 0x8,
+  9: 0x9,
+  10: 0xa,
+  J: 0xb,
+  Q: 0xd,
+  K: 0xe,
+};
+
+/** Returns a card's Unicode character, from the Playing Cards block. */
+function characterOf(rank: Rank, suit: Suit): string {
+  return String.fromCodePoint(CHARACTER_ROWS[suit] + CHARACTER_COLUMNS[rank]);
+}
+
+/** Every code point in the Playing Cards block, as text. */
+const BLOCK = Array.from({ length: BLOCK_END - BLOCK_START + 1 }, (_, i) =>
+  String.fromCodePoint(BLOCK_START + i),
+);
+
 /** U+FE0E, which asks for a character to be shown as text. */
 const TEXT_SELECTOR = String.fromCodePoint(0xfe_0e);
 
@@ -40,7 +81,12 @@ const EMOJI_SELECTOR = String.fromCodePoint(0xfe_0f);
 const KELVIN_SIGN = String.fromCodePoint(0x21_2a);
 
 /** Every notation, as the test lists them. */
-const NOTATIONS = [Notation.SHORT, Notation.SYMBOL, Notation.NAME] as const;
+const NOTATIONS = [
+  Notation.SHORT,
+  Notation.SYMBOL,
+  Notation.NAME,
+  Notation.UNICODE_CHARACTER,
+] as const;
 
 /** Lets a test pass a value that isn't text, as untyped callers can. */
 function asText(value: unknown): string {
@@ -65,7 +111,8 @@ function lowerAZ(text: string): string {
 /**
  * Every form parseCard's doc comment lists, lower-cased for A–Z, with the card
  * it names: short and symbol notation with 10 or T for ten, outline symbols,
- * one variation selector after a symbol, and names (ADR 0011).
+ * one variation selector after a symbol, names, and Unicode characters
+ * (ADR 0011).
  */
 function documentedForms(): ReadonlyMap<string, Card> {
   const forms = new Map<string, Card>();
@@ -73,6 +120,7 @@ function documentedForms(): ReadonlyMap<string, Card> {
     const named = card(rank, suit);
     const name = `${rankName(rank)} of ${suitName(suit)}`;
     forms.set(lowerAZ(name), named);
+    forms.set(characterOf(rank, suit), named);
     for (const written of rank === "10" ? ["10", "t"] : [lowerAZ(rank)]) {
       forms.set(`${written}${lowerAZ(suit)}`, named);
       for (const symbol of [SYMBOLS[suit], OUTLINE_SYMBOLS[suit]]) {
@@ -111,7 +159,7 @@ const SUIT_WORDS =
     " ",
   );
 
-/** Text made of pieces of cards' text and near misses, in any case, shaped like short and symbol notation or like a name, so parsing often succeeds and often fails. */
+/** Text made of pieces of cards' text and near misses, in any case, shaped like short and symbol notation, like a name, or like a Unicode character, so parsing often succeeds and often fails. */
 function nearCardText(): Arbitrary<string> {
   const written = fc.tuple(
     fc.constantFrom(...RANK_PIECES),
@@ -125,7 +173,13 @@ function nearCardText(): Arbitrary<string> {
     fc.constantFrom(...SUIT_WORDS),
     fc.constantFrom("", " ", "s"),
   );
-  return fc.mixedCase(fc.oneof(written, named).map((parts) => parts.join("")));
+  const character = fc.tuple(
+    fc.constantFrom(...BLOCK),
+    fc.constantFrom(...ENDINGS),
+  );
+  return fc.mixedCase(
+    fc.oneof(written, named, character).map((parts) => parts.join("")),
+  );
 }
 
 describe("formatCard", () => {
@@ -154,18 +208,40 @@ describe("formatCard", () => {
     }
   });
 
+  it("writes every card as its Unicode character, one code point long", () => {
+    for (const [rank, suit] of standardPairs) {
+      const written = formatCard(card(rank, suit), {
+        notation: Notation.UNICODE_CHARACTER,
+      });
+      expect(written).toBe(characterOf(rank, suit));
+      expect(Array.from(written)).toHaveLength(1);
+    }
+  });
+
   it.each([
-    ["A", "S", "AS", "A♠", "Ace of Spades"],
-    ["10", "H", "10H", "10♥", "Ten of Hearts"],
-    ["Q", "D", "QD", "Q♦", "Queen of Diamonds"],
-    ["2", "C", "2C", "2♣", "Two of Clubs"],
+    ["A", "S", "1F0A1"],
+    ["10", "H", "1F0BA"],
+    ["J", "D", "1F0CB"],
+    ["Q", "C", "1F0DD"],
+    ["K", "S", "1F0AE"],
+  ] as const)("writes %s%s as U+%s, skipping the knight", (rank, suit, hex) => {
+    expect(
+      formatCard(card(rank, suit), { notation: Notation.UNICODE_CHARACTER }),
+    ).toBe(String.fromCodePoint(Number.parseInt(hex, 16)));
+  });
+
+  it.each([
+    ["A", "S", "AS", "A♠", "Ace of Spades", "🂡"],
+    ["10", "H", "10H", "10♥", "Ten of Hearts", "🂺"],
+    ["Q", "D", "QD", "Q♦", "Queen of Diamonds", "🃍"],
+    ["2", "C", "2C", "2♣", "Two of Clubs", "🃒"],
   ] as const)(
-    "writes %s%s as %s, %s and %s",
-    (rank, suit, short, symbol, name) => {
+    "writes %s%s as %s, %s, %s and %s",
+    (rank, suit, short, symbol, name, character) => {
       const written = NOTATIONS.map((notation) =>
         formatCard(card(rank, suit), { notation }),
       );
-      expect(written).toStrictEqual([short, symbol, name]);
+      expect(written).toStrictEqual([short, symbol, name, character]);
     },
   );
 
@@ -272,6 +348,10 @@ describe("parseCard", () => {
     ["Ten of Hearts", "10", "H"],
     ["Queen of Diamonds", "Q", "D"],
     ["Two of Clubs", "2", "C"],
+    ["🂡", "A", "S"],
+    ["🂺", "10", "H"],
+    ["🃍", "Q", "D"],
+    ["🃒", "2", "C"],
   ] as const)("reads %j", (text, rank, suit) => {
     expect(parseCard(text)).toBe(card(rank, suit));
     expect(tryParseCard(text)).toBe(card(rank, suit));
@@ -351,7 +431,23 @@ describe("parseCard and tryParseCard with text that isn't a card", () => {
     ["the Kelvin sign for K", `${KELVIN_SIGN}S`],
     ["the Kelvin sign in a name", `${KELVIN_SIGN}ing of Spades`],
     ["full-width letters", "ＡＳ"],
-    ["a playing-card character", "🂡"],
+    ["the card back", "🂠"],
+    ["a knight", "🂬"],
+    ["the red joker", "🂿"],
+    ["the black joker", "🃏"],
+    ["the black joker as an emoji", `🃏${EMOJI_SELECTOR}`],
+    ["the white joker", "🃟"],
+    ["the fool", "🃠"],
+    [
+      "a code point the block leaves unassigned",
+      String.fromCodePoint(0x1_f0_af),
+    ],
+    ["a text selector after a Unicode character", `🂡${TEXT_SELECTOR}`],
+    ["an emoji selector after a Unicode character", `🂡${EMOJI_SELECTOR}`],
+    ["a space after a Unicode character", "🂡 "],
+    ["a rank before a Unicode character", "A🂡"],
+    ["two Unicode characters", "🂡🂮"],
+    ["half a Unicode character", "🂡".slice(0, 1)],
     ["a joker", "Joker"],
     ["a prototype key", "constructor"],
     ["__proto__", "__proto__"],
@@ -376,6 +472,29 @@ describe("parseCard and tryParseCard with text that isn't a card", () => {
       code: "INVALID_CARD",
     });
     expect(tryParseCard(asText(value))).toBeUndefined();
+  });
+
+  it("reads only the standard cards' Unicode characters from the Playing Cards block", () => {
+    const expected = new Map(
+      standardPairs.map(
+        ([rank, suit]) => [characterOf(rank, suit), card(rank, suit)] as const,
+      ),
+    );
+    expect(expected.size).toBe(52);
+    const read = new Map(
+      BLOCK.flatMap((text) => {
+        const found = tryParseCard(text);
+        return found === undefined ? [] : [[text, found] as const];
+      }),
+    );
+    expect(read).toStrictEqual(expected);
+    const others = BLOCK.filter((text) => !expected.has(text));
+    expect(others).toHaveLength(44);
+    for (const text of others) {
+      expect(thrownBy(() => parseCard(text))).toMatchObject({
+        code: "INVALID_CARD",
+      });
+    }
   });
 
   it("reads nothing but the documented forms", () => {
