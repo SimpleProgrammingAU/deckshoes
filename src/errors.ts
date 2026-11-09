@@ -21,7 +21,7 @@ export interface DeckshoesErrorMap {
    * a random source misbehaved.
    */
   INVALID_ARGUMENT: InvalidArgumentError;
-  /** A rank, suit or card string could not be recognised. */
+  /** A rank, suit, card, or a card's text could not be recognised. */
   INVALID_CARD: InvalidCardError;
   /** An operation needed more cards than were available. */
   INSUFFICIENT_CARDS: InsufficientCardsError;
@@ -121,7 +121,9 @@ export class InvalidArgumentError extends DeckshoesError {
 }
 
 /**
- * Thrown when a rank, suit or card string cannot be recognised.
+ * Thrown when a rank, suit, card, or a card's text can't be recognised, such
+ * as `"11S"` passed to {@link parseCard}, or a copy of a card passed to
+ * {@link formatCard}.
  *
  * @example
  * ```ts
