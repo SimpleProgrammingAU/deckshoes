@@ -114,7 +114,7 @@ const suit = suitName(queen.suit, { lowercase: true });
 `parseCard` reads a card written as text and returns the one card object it names. It reads three notations, ignoring the case of A–Z:
 
 - **Short**: the rank and then the suit's letter, such as `"AS"`, `"10h"` or `"Th"`. Ten is `10` or `T`.
-- **Symbol**: the rank and then the suit's symbol, such as `"A♠"` or `"10♥"`. The outline symbols `♤ ♡ ♢ ♧` work too, and so do the emoji forms a phone's keyboard types.
+- **Symbol**: the rank and then the suit's symbol, such as `"A♠"` or `"10♥"`. The outline symbols `♤ ♡ ♢ ♧` work too, and so does a suit symbol in its emoji form, such as `"♥️"` from a phone's keyboard. Other emoji, such as `❤️`, don't.
 - **Name**: the card's name, such as `"Ace of Spades"`, made from `rankName` and `suitName`.
 
 `formatCard` writes a card in short notation, or in another notation you choose with `Notation.SYMBOL` or `Notation.NAME`. It always writes ten as `10`, and `parseCard` reads whatever it writes back to the same card.
