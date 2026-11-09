@@ -1,4 +1,4 @@
-import fc from "fast-check";
+import fc, { type Arbitrary } from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { standardPairs, thrownBy } from "../test/helpers.ts";
@@ -21,6 +21,13 @@ const SYMBOLS: Readonly<Record<Suit, string>> = {
   D: "♦",
   H: "♥",
   S: "♠",
+};
+
+const OUTLINE_SYMBOLS: Readonly<Record<Suit, string>> = {
+  C: "♧",
+  D: "♢",
+  H: "♡",
+  S: "♤",
 };
 
 /** U+FE0E, which asks for a character to be shown as text. */
@@ -48,6 +55,77 @@ function asCard(value: unknown): Card {
 /** Lets a test pass options that the types rule out. */
 function asFormatCardOptions(value: unknown): FormatCardOptions {
   return value as FormatCardOptions;
+}
+
+/** Lower-cases A–Z only, as parsing does. */
+function lowerAZ(text: string): string {
+  return text.replaceAll(/[A-Z]/gu, (letter) => letter.toLowerCase());
+}
+
+/**
+ * Every form parseCard's doc comment lists, lower-cased for A–Z, with the card
+ * it names: short and symbol notation with 10 or T for ten, outline symbols,
+ * one variation selector after a symbol, and names (ADR 0011).
+ */
+function documentedForms(): ReadonlyMap<string, Card> {
+  const forms = new Map<string, Card>();
+  for (const [rank, suit] of standardPairs) {
+    const named = card(rank, suit);
+    const name = `${rankName(rank)} of ${suitName(suit)}`;
+    forms.set(lowerAZ(name), named);
+    for (const written of rank === "10" ? ["10", "t"] : [lowerAZ(rank)]) {
+      forms.set(`${written}${lowerAZ(suit)}`, named);
+      for (const symbol of [SYMBOLS[suit], OUTLINE_SYMBOLS[suit]]) {
+        for (const selector of ["", TEXT_SELECTOR, EMOJI_SELECTOR]) {
+          forms.set(`${written}${symbol}${selector}`, named);
+        }
+      }
+    }
+  }
+  return forms;
+}
+
+/** Ranks and near misses, for short and symbol notation in {@link nearCardText}. */
+const RANK_PIECES = ["", KELVIN_SIGN, ..."A 2 9 10 T J Q K 1 11 0".split(" ")];
+
+/** Suits, symbols and near misses, for short and symbol notation in {@link nearCardText}. */
+const SUIT_PIECES = ["", ..."S H D C X ♠ ♥ ♦ ♣ ♤ ♡ ♢ ♧ ❤".split(" ")];
+
+/** What can come after a suit, right and wrong, in {@link nearCardText}. */
+const ENDINGS = ["", " ", "S", TEXT_SELECTOR, EMOJI_SELECTOR].flatMap(
+  (ending) => [ending, `${ending}${EMOJI_SELECTOR}`],
+);
+
+/** Rank names and near misses, for names in {@link nearCardText}. */
+const RANK_WORDS = [
+  `${KELVIN_SIGN}ing`,
+  ..."Ace Two Three Four Five Six Seven Eight Nine Ten Jack Queen King".split(
+    " ",
+  ),
+  ..."Tens A 10 T".split(" "),
+];
+
+/** Suit names and near misses, for names in {@link nearCardText}. */
+const SUIT_WORDS =
+  "Spades Hearts Diamonds Clubs Spade Heart Diamond Club Spadess ♠ S".split(
+    " ",
+  );
+
+/** Text made of pieces of cards' text and near misses, in any case, shaped like short and symbol notation or like a name, so parsing often succeeds and often fails. */
+function nearCardText(): Arbitrary<string> {
+  const written = fc.tuple(
+    fc.constantFrom(...RANK_PIECES),
+    fc.constantFrom("", " "),
+    fc.constantFrom(...SUIT_PIECES),
+    fc.constantFrom(...ENDINGS),
+  );
+  const named = fc.tuple(
+    fc.constantFrom(...RANK_WORDS),
+    fc.constantFrom(" of ", "  of ", " ", "of", " of the "),
+    fc.constantFrom(...SUIT_WORDS),
+    fc.constantFrom("", " ", "s"),
+  );
+  return fc.mixedCase(fc.oneof(written, named).map((parts) => parts.join("")));
 }
 
 describe("formatCard", () => {
@@ -199,6 +277,13 @@ describe("parseCard", () => {
     expect(tryParseCard(text)).toBe(card(rank, suit));
   });
 
+  it("reads every documented form, in lower and upper case", () => {
+    for (const [form, named] of documentedForms()) {
+      expect(parseCard(form)).toBe(named);
+      expect(parseCard(form.toUpperCase())).toBe(named);
+    }
+  });
+
   it("reads every card back from every notation", () => {
     for (const [rank, suit] of standardPairs) {
       for (const notation of NOTATIONS) {
@@ -293,32 +378,41 @@ describe("parseCard and tryParseCard with text that isn't a card", () => {
     expect(tryParseCard(asText(value))).toBeUndefined();
   });
 
-  it("gives undefined from tryParseCard exactly when parseCard throws", () => {
-    // Text near a card's, so both outcomes come up often.
-    const nearCards = fc
-      .tuple(
-        fc.constantFrom("A", "a", "10", "T", "1", "K", "Ace", ""),
-        fc.constantFrom("S", "h", "♠", "♡", "X", " of Spades", ""),
-        fc.constantFrom("", EMOJI_SELECTOR, " "),
-      )
-      .map((parts) => parts.join(""));
+  it("reads nothing but the documented forms", () => {
+    const forms = documentedForms();
     fc.assert(
-      fc.property(fc.oneof(fc.anything(), fc.string(), nearCards), (value) => {
-        const found = tryParseCard(asText(value));
-        let parsed: Card | undefined;
-        let thrown: unknown;
-        try {
-          parsed = parseCard(asText(value));
-        } catch (error) {
-          thrown = error;
-        }
-        expect(parsed).toBe(found);
-        expect(
-          found === undefined
-            ? isDeckshoesError(thrown, "INVALID_CARD")
-            : thrown === undefined,
-        ).toBe(true);
+      fc.property(fc.oneof(nearCardText(), fc.string()), (text) => {
+        const found = tryParseCard(text);
+        // Text that parses has to be a documented form of the card it gives.
+        const expected =
+          found === undefined ? undefined : forms.get(lowerAZ(text));
+        expect(found).toBe(expected);
       }),
+      { numRuns: 1000 },
+    );
+  });
+
+  it("gives undefined from tryParseCard exactly when parseCard throws", () => {
+    fc.assert(
+      fc.property(
+        fc.oneof(fc.anything(), fc.string(), nearCardText()),
+        (value) => {
+          const found = tryParseCard(asText(value));
+          let parsed: Card | undefined;
+          let thrown: unknown;
+          try {
+            parsed = parseCard(asText(value));
+          } catch (error) {
+            thrown = error;
+          }
+          expect(parsed).toBe(found);
+          expect(
+            found === undefined
+              ? isDeckshoesError(thrown, "INVALID_CARD")
+              : thrown === undefined,
+          ).toBe(true);
+        },
+      ),
     );
   });
 });
