@@ -11,7 +11,7 @@ A stack is a `CardStack`: a `readonly` array of cards whose first element is the
 
 ## Consequences
 
-- Stack operations are generic over the card type, so custom cards from [#39](https://github.com/SimpleProgrammingAU/deckshoes/issues/39) work with them unchanged. Most never look inside a card: shuffling, drawing, dealing, cutting, inserting, and finding cards with `===`. Sorting and grouping read only a card's rank or suit, and rank and suit orders are generic over the rank and suit types, so they work on any ranked or suited card. Only text formats and presets are typed to standard cards.
+- Stack operations are generic over the card type, so custom cards from [#39](https://github.com/SimpleProgrammingAU/deckshoes/issues/39) work with them unchanged. Most never look inside a card: shuffling, drawing, dealing, cutting, inserting, and finding cards with `===`. Sorting and grouping read only a card's rank or suit, and rank and suit orders are generic over the rank and suit types, so they work on any ranked or suited card. Only notations and presets are typed to standard cards.
 - A shoe ([#28](https://github.com/SimpleProgrammingAU/deckshoes/issues/28)) is its own type rather than a stack, because it also carries a cut card.
 - Cards drawn or peeked from the bottom stay in stack order, top first: `drawBottom([A, B, C, D], 2)` gives `[C, D]`, while drawing one at a time gives D and then C.
 - A hand is in deal order, top first: the first card dealt to it is its top card, so `deal([A, B, C, D], 2, 2)` gives `[A, C]` and `[B, D]`. At a real table, the last card dealt would be on top of each pile.
