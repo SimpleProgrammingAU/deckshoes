@@ -1,0 +1,243 @@
+import { type Card, isCard } from "./card.ts";
+import { InvalidArgumentError, InvalidCardError } from "./errors.ts";
+import { optionsProblem } from "./internal/checks.ts";
+import { display } from "./internal/display.ts";
+import { readCard, SYMBOLS } from "./internal/notation-table.ts";
+import { rankName, suitName } from "./names.ts";
+
+/**
+ * The notations {@link formatCard} can write a card in, as its `notation`
+ * option.
+ *
+ * - `Notation.SHORT`, the default, writes the rank and then the suit's
+ *   letter, such as `"AS"` or `"10H"`.
+ * - `Notation.SYMBOL` writes the rank and then the suit's symbol, such as
+ *   `"A♠"` or `"10♥"`.
+ * - `Notation.NAME` writes the card's name, such as `"Ace of Spades"`.
+ *
+ * {@link parseCard} reads every notation, so it doesn't take one.
+ *
+ * @example
+ * ```ts
+ * import { card, formatCard, Notation } from "deckshoes";
+ *
+ * const ten = card("10", "H");
+ * formatCard(ten, { notation: Notation.SHORT }); // => "10H"
+ * formatCard(ten, { notation: Notation.SYMBOL }); // => "10♥"
+ * formatCard(ten, { notation: Notation.NAME }); // => "Ten of Hearts"
+ *
+ * // The values are plain strings, which is what error messages show.
+ * Notation.SYMBOL; // => "symbol"
+ * ```
+ *
+ * @since NEXT
+ */
+export const Notation: {
+  /** The card's name, such as `"Ace of Spades"`. */
+  readonly NAME: "name";
+  /** The rank and then the suit's letter, such as `"AS"` or `"10H"`. */
+  readonly SHORT: "short";
+  /** The rank and then the suit's symbol, such as `"A♠"` or `"10♥"`. */
+  readonly SYMBOL: "symbol";
+} = /* @__PURE__ */ Object.freeze({
+  NAME: "name",
+  SHORT: "short",
+  SYMBOL: "symbol",
+});
+
+/**
+ * A notation that {@link formatCard} takes: `Notation.SHORT`,
+ * `Notation.SYMBOL` or `Notation.NAME`.
+ *
+ * @example
+ * ```ts
+ * import { card, formatCard, Notation } from "deckshoes";
+ *
+ * const notations: Notation[] = [
+ *   Notation.SHORT,
+ *   Notation.SYMBOL,
+ *   Notation.NAME,
+ * ];
+ * const texts = notations.map((notation) =>
+ *   formatCard(card("Q", "D"), { notation }),
+ * );
+ * texts; // => ["QD", "Q♦", "Queen of Diamonds"]
+ * ```
+ *
+ * @since NEXT
+ */
+export type Notation = (typeof Notation)[keyof typeof Notation];
+
+/**
+ * Settings for {@link formatCard}.
+ *
+ * @example
+ * ```ts
+ * import { card, formatCard, type FormatCardOptions, Notation } from "deckshoes";
+ *
+ * const options: FormatCardOptions = { notation: Notation.NAME };
+ * formatCard(card("A", "S"), options); // => "Ace of Spades"
+ * ```
+ *
+ * @since NEXT
+ */
+export interface FormatCardOptions {
+  /**
+   * The notation to write the card in: `Notation.SHORT`, `Notation.SYMBOL` or
+   * `Notation.NAME`. Leave it out, or pass `undefined`, for short notation.
+   */
+  readonly notation?: Notation | undefined;
+}
+
+/**
+ * Reads a card written as text, and returns the one card object it names.
+ *
+ * It reads every {@link Notation}, ignoring the case of A–Z:
+ *
+ * - Short notation: the rank and then the suit's letter, such as `"AS"`,
+ *   `"10h"` or `"Th"`.
+ * - Symbol notation: the rank and then the suit's symbol, such as `"A♠"` or
+ *   `"10♥"`. The outline symbols `♤ ♡ ♢ ♧` work too, and a symbol can have a
+ *   variation selector after it, as `"♥️"` from an emoji keyboard does.
+ * - The card's name, such as `"Ace of Spades"`, with one space between words.
+ *
+ * Ten is `10` or `T` in short and symbol notation, and `Ten` in a name.
+ * Nothing else is read: not spaces around the text, and not lookalike
+ * characters, such as the Kelvin sign (U+212A) for K. Trim user input first.
+ * To get `undefined` rather than an error, use {@link tryParseCard}.
+ *
+ * @param text - The card's text, such as `"AS"`, `"10♥"` or `"Ace of Spades"`.
+ * @returns The one card object that the text names.
+ * @throws {@link InvalidCardError} When `text` isn't a card written in one of
+ * the notations above.
+ *
+ * @example
+ * ```ts
+ * import { card, parseCard } from "deckshoes";
+ *
+ * parseCard("AS") === card("A", "S"); // => true
+ * parseCard("10h"); // => card("10", "H")
+ * parseCard("Th"); // => card("10", "H")
+ * parseCard("Q♦"); // => card("Q", "D")
+ * parseCard("king of clubs"); // => card("K", "C")
+ *
+ * // Trim user input first: spaces around the text aren't read.
+ * const input = " 7s\n";
+ * parseCard(input.trim()); // => card("7", "S")
+ * parseCard(input); // throws INVALID_CARD
+ * ```
+ *
+ * @since NEXT
+ */
+export function parseCard(text: string): Card {
+  const found = readCard(text);
+  if (found === undefined) {
+    throw new InvalidCardError(
+      `Unknown card ${display(text)}: expected text such as "AS", "10H", "A♠" or "Ace of Spades"`,
+    );
+  }
+  return found;
+}
+
+/**
+ * Reads a card written as text, as {@link parseCard} does, but returns
+ * `undefined` rather than throwing when the text doesn't name a card.
+ *
+ * It reads exactly what `parseCard` reads, and returns `undefined` for
+ * anything `parseCard` throws for, including a value that isn't a string.
+ *
+ * @param text - The card's text, such as `"AS"`, `"10♥"` or `"Ace of Spades"`.
+ * @returns The one card object that the text names, or `undefined` if it
+ * names none.
+ *
+ * @example
+ * ```ts
+ * import { card, tryParseCard } from "deckshoes";
+ *
+ * tryParseCard("A♠") === card("A", "S"); // => true
+ * tryParseCard("11S"); // => undefined
+ * tryParseCard("Ace of Spade"); // => undefined
+ * ```
+ *
+ * @since NEXT
+ */
+export function tryParseCard(text: string): Card | undefined {
+  return readCard(text);
+}
+
+/**
+ * Writes a card as text, in short notation unless you choose another
+ * {@link Notation}.
+ *
+ * - `Notation.SHORT`: the rank and then the suit's letter, such as `"AS"` or
+ *   `"10H"`.
+ * - `Notation.SYMBOL`: the rank and then the suit's symbol, such as `"A♠"` or
+ *   `"10♥"`.
+ * - `Notation.NAME`: the card's name, such as `"Ace of Spades"`, from
+ *   {@link rankName} and {@link suitName}.
+ *
+ * Ten is always written `10`. {@link parseCard} reads each notation back to
+ * the same card.
+ *
+ * Only the 52 card objects that `card()` returns can be written. A copy, such
+ * as one sent with `postMessage`, has to go back through `card()` first.
+ *
+ * @param card - The card to write.
+ * @param options - Settings for the text: its notation.
+ * @returns The card written in that notation.
+ * @throws {@link InvalidCardError} When `card` isn't one of the cards `card()`
+ * returns.
+ * @throws {@link InvalidArgumentError} When `options` isn't an object, or its
+ * `notation` isn't `Notation.SHORT`, `Notation.SYMBOL` or `Notation.NAME`.
+ *
+ * @example
+ * ```ts
+ * import { card, formatCard, Notation, parseCard } from "deckshoes";
+ *
+ * const ten = card("10", "H");
+ * formatCard(ten); // => "10H"
+ * formatCard(ten, { notation: Notation.SYMBOL }); // => "10♥"
+ * formatCard(ten, { notation: Notation.NAME }); // => "Ten of Hearts"
+ *
+ * // Parsing reads every notation back.
+ * parseCard(formatCard(ten, { notation: Notation.NAME })) === ten; // => true
+ *
+ * // A copy isn't a card.
+ * formatCard(structuredClone(ten)); // throws INVALID_CARD
+ * ```
+ *
+ * @since NEXT
+ */
+export function formatCard(
+  card: Card,
+  options: FormatCardOptions = {},
+): string {
+  if (!isCard(card)) {
+    throw new InvalidCardError(
+      `Invalid card ${display(card)}: expected one of the cards card() returns`,
+    );
+  }
+  const optionsError = optionsProblem(options, "{ notation: Notation.SYMBOL }");
+  if (optionsError !== undefined) throw optionsError;
+
+  // Read the option once, as `unknown`: JavaScript callers can pass anything,
+  // and a getter could give the check one value and the text another.
+  const { notation = Notation.SHORT }: Readonly<{ notation?: unknown }> =
+    options;
+  switch (notation) {
+    case Notation.NAME: {
+      return `${rankName(card.rank)} of ${suitName(card.suit)}`;
+    }
+    case Notation.SHORT: {
+      return `${card.rank}${card.suit}`;
+    }
+    case Notation.SYMBOL: {
+      return `${card.rank}${SYMBOLS[card.suit]}`;
+    }
+    default: {
+      throw new InvalidArgumentError(
+        `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL or Notation.NAME`,
+      );
+    }
+  }
+}
