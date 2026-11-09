@@ -2,7 +2,11 @@ import { type Card, isCard } from "./card.ts";
 import { InvalidArgumentError, InvalidCardError } from "./errors.ts";
 import { optionsProblem } from "./internal/checks.ts";
 import { display } from "./internal/display.ts";
-import { readCard, SYMBOLS } from "./internal/notation-table.ts";
+import {
+  readCard,
+  SYMBOLS,
+  unicodeCharacter,
+} from "./internal/notation-table.ts";
 import { rankName, suitName } from "./names.ts";
 
 /**
@@ -14,6 +18,9 @@ import { rankName, suitName } from "./names.ts";
  * - `Notation.SYMBOL` writes the rank and then the suit's symbol, such as
  *   `"A♠"` or `"10♥"`.
  * - `Notation.NAME` writes the card's name, such as `"Ace of Spades"`.
+ * - `Notation.UNICODE_CHARACTER` writes the card's character from Unicode's
+ *   Playing Cards block, such as `"🂡"` for the ace of spades. Not every font
+ *   has these characters, so check that they show where you use them.
  *
  * {@link parseCard} reads every notation, so it doesn't take one.
  *
@@ -25,9 +32,11 @@ import { rankName, suitName } from "./names.ts";
  * formatCard(ten, { notation: Notation.SHORT }); // => "10H"
  * formatCard(ten, { notation: Notation.SYMBOL }); // => "10♥"
  * formatCard(ten, { notation: Notation.NAME }); // => "Ten of Hearts"
+ * formatCard(ten, { notation: Notation.UNICODE_CHARACTER }); // => "🂺"
  *
  * // The values are plain strings, which is what error messages show.
  * Notation.SYMBOL; // => "symbol"
+ * Notation.UNICODE_CHARACTER; // => "unicode character"
  * ```
  *
  * @since NEXT
@@ -39,15 +48,21 @@ export const Notation: {
   readonly SHORT: "short";
   /** The rank and then the suit's symbol, such as `"A♠"` or `"10♥"`. */
   readonly SYMBOL: "symbol";
+  /**
+   * The card's Unicode character, from Unicode's Playing Cards block, such as
+   * `"🂡"`. Not every font has these characters.
+   */
+  readonly UNICODE_CHARACTER: "unicode character";
 } = /* @__PURE__ */ Object.freeze({
   NAME: "name",
   SHORT: "short",
   SYMBOL: "symbol",
+  UNICODE_CHARACTER: "unicode character",
 });
 
 /**
  * A notation that {@link formatCard} takes: `Notation.SHORT`,
- * `Notation.SYMBOL` or `Notation.NAME`.
+ * `Notation.SYMBOL`, `Notation.NAME` or `Notation.UNICODE_CHARACTER`.
  *
  * @example
  * ```ts
@@ -57,11 +72,12 @@ export const Notation: {
  *   Notation.SHORT,
  *   Notation.SYMBOL,
  *   Notation.NAME,
+ *   Notation.UNICODE_CHARACTER,
  * ];
  * const texts = notations.map((notation) =>
  *   formatCard(card("Q", "D"), { notation }),
  * );
- * texts; // => ["QD", "Q♦", "Queen of Diamonds"]
+ * texts; // => ["QD", "Q♦", "Queen of Diamonds", "🃍"]
  * ```
  *
  * @since NEXT
@@ -83,8 +99,9 @@ export type Notation = (typeof Notation)[keyof typeof Notation];
  */
 export interface FormatCardOptions {
   /**
-   * The notation to write the card in: `Notation.SHORT`, `Notation.SYMBOL` or
-   * `Notation.NAME`. Leave it out, or pass `undefined`, for short notation.
+   * The notation to write the card in: `Notation.SHORT`, `Notation.SYMBOL`,
+   * `Notation.NAME` or `Notation.UNICODE_CHARACTER`. Leave it out, or pass
+   * `undefined`, for short notation.
    */
   readonly notation?: Notation | undefined;
 }
@@ -100,11 +117,16 @@ export interface FormatCardOptions {
  *   `"10♥"`. The outline symbols `♤ ♡ ♢ ♧` work too, and a symbol can have a
  *   variation selector after it, as `"♥️"` from an emoji keyboard does.
  * - The card's name, such as `"Ace of Spades"`, with one space between words.
+ * - The card's Unicode character, from Unicode's Playing Cards block, such as
+ *   `"🂡"` for the ace of spades. The block's other characters, such as the
+ *   knights, the jokers and the card back, aren't standard cards, so they
+ *   aren't read.
  *
  * Ten is `10` or `T` in short and symbol notation, and `Ten` in a name.
- * Nothing else is read: not spaces around the text, and not lookalike
- * characters, such as the Kelvin sign (U+212A) for K. Trim user input first.
- * To get `undefined` rather than an error, use {@link tryParseCard}.
+ * Nothing else is read: not spaces around the text, not a variation selector
+ * after a card's Unicode character, and not lookalike characters, such as the
+ * Kelvin sign (U+212A) for K. Trim user input first. To get `undefined`
+ * rather than an error, use {@link tryParseCard}.
  *
  * @param text - The card's text, such as `"AS"`, `"10♥"` or `"Ace of Spades"`.
  * @returns The one card object that the text names.
@@ -120,6 +142,10 @@ export interface FormatCardOptions {
  * parseCard("Th"); // => card("10", "H")
  * parseCard("Q♦"); // => card("Q", "D")
  * parseCard("king of clubs"); // => card("K", "C")
+ * parseCard("🂡"); // => card("A", "S")
+ *
+ * // A joker isn't a standard card.
+ * parseCard("🃏"); // throws INVALID_CARD
  *
  * // Trim user input first: spaces around the text aren't read.
  * const input = " 7s\n";
@@ -175,9 +201,11 @@ export function tryParseCard(text: string): Card | undefined {
  *   `"10♥"`.
  * - `Notation.NAME`: the card's name, such as `"Ace of Spades"`, from
  *   {@link rankName} and {@link suitName}.
+ * - `Notation.UNICODE_CHARACTER`: the card's character from Unicode's Playing
+ *   Cards block, such as `"🂡"`.
  *
- * Ten is always written `10`. {@link parseCard} reads each notation back to
- * the same card.
+ * Short and symbol notation write ten as `10`, never `T`. {@link parseCard}
+ * reads each notation back to the same card.
  *
  * Only the 52 card objects that this install's `card()` returns can be
  * written. A cloned card, such as one sent with `postMessage`, isn't one of
@@ -190,7 +218,8 @@ export function tryParseCard(text: string): Card | undefined {
  * @throws {@link InvalidCardError} When `card` isn't one of the cards this
  * install's `card()` returns, such as a cloned card.
  * @throws {@link InvalidArgumentError} When `options` isn't an object, or its
- * `notation` isn't `Notation.SHORT`, `Notation.SYMBOL` or `Notation.NAME`.
+ * `notation` isn't `Notation.SHORT`, `Notation.SYMBOL`, `Notation.NAME` or
+ * `Notation.UNICODE_CHARACTER`.
  *
  * @example
  * ```ts
@@ -200,6 +229,7 @@ export function tryParseCard(text: string): Card | undefined {
  * formatCard(ten); // => "10H"
  * formatCard(ten, { notation: Notation.SYMBOL }); // => "10♥"
  * formatCard(ten, { notation: Notation.NAME }); // => "Ten of Hearts"
+ * formatCard(ten, { notation: Notation.UNICODE_CHARACTER }); // => "🂺"
  *
  * // Parsing reads every notation back.
  * parseCard(formatCard(ten, { notation: Notation.NAME })) === ten; // => true
@@ -238,9 +268,12 @@ export function formatCard(
     case Notation.SYMBOL: {
       return `${card.rank}${SYMBOLS[card.suit]}`;
     }
+    case Notation.UNICODE_CHARACTER: {
+      return unicodeCharacter(card);
+    }
     default: {
       throw new InvalidArgumentError(
-        `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL or Notation.NAME`,
+        `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL, Notation.NAME or Notation.UNICODE_CHARACTER`,
       );
     }
   }
