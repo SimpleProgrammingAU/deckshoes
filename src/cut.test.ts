@@ -251,9 +251,11 @@ describe.each<
       const spy = vi.spyOn(crypto, "getRandomValues");
       operation(hand);
       operation(hand, Position.RANDOM, { random: undefined });
-      // One pool of 256 values covers a pick, so a shared source would only
-      // fill it once.
+      // Each pick asks crypto for one value of its own.
       expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy.mock.calls.map(([array]) => array.length)).toStrictEqual([
+        1, 1,
+      ]);
     });
 
     it("doesn't touch crypto when there's only one choice", () => {

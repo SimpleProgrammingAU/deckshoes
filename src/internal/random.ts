@@ -15,7 +15,7 @@ declare const crypto: {
 /** 2³², the number of 32-bit values, which turns one into a number from 0 up to 1. */
 const TWO_TO_THE_32 = 2 ** 32;
 
-/** How many 32-bit values a {@link secureRandom} source asks crypto for at once. */
+/** How many 32-bit values a {@link secureRandom} source asks crypto for at once, unless it's given another size. */
 const POOL_SIZE = 256;
 
 /** How many values in a row {@link randomIndex} rejects before deciding the source is broken. */
@@ -23,14 +23,16 @@ const MAX_REJECTIONS = 64;
 
 /**
  * Returns a new secure random source, backed by `crypto.getRandomValues`, with
- * 32 bits in each value. Each operation makes its own and drops it when done,
- * so no values from crypto are kept between operations.
+ * 32 bits in each value, asking crypto for `poolSize` values at a time: a
+ * shuffle uses most of the default 256, and a single pick needs only 1. Each
+ * operation makes its own and drops it when done, so no values from crypto are
+ * kept between operations.
  */
-export function secureRandom(): RandomSource {
-  const pool = new Uint32Array(POOL_SIZE);
-  let next = POOL_SIZE;
+export function secureRandom(poolSize: number = POOL_SIZE): RandomSource {
+  const pool = new Uint32Array(poolSize);
+  let next = poolSize;
   return () => {
-    if (next === POOL_SIZE) {
+    if (next === poolSize) {
       // If this throws, `next` stays put and the next call tries again.
       crypto.getRandomValues(pool);
       next = 0;
@@ -132,5 +134,7 @@ export function randomPosition(
   choices: number,
   random: RandomSource | undefined,
 ): number {
-  return choices > 1 ? randomIndex(choices, random ?? secureRandom()) : 0;
+  // One pick almost always needs one value, so the secure source asks crypto
+  // for one at a time rather than filling a pool it would throw away.
+  return choices > 1 ? randomIndex(choices, random ?? secureRandom(1)) : 0;
 }

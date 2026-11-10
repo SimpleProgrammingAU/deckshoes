@@ -196,12 +196,13 @@ describe("randomPosition", () => {
     );
   });
 
-  it("uses a secure source when random is undefined", () => {
+  it("uses a secure source when random is undefined, asking crypto for one value", () => {
     const spy = vi.spyOn(crypto, "getRandomValues");
     const position = randomPosition(52, undefined);
     expect(position).toBeGreaterThanOrEqual(0);
     expect(position).toBeLessThan(52);
     expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0]?.[0]).toHaveLength(1);
   });
 });
 
@@ -249,6 +250,19 @@ describe("secureRandom", () => {
     const values = Array.from({ length: 513 }, () => random() * 2 ** 32);
     expect(values).toStrictEqual(Array.from({ length: 513 }, (_, i) => i));
     expect(spy).toHaveBeenCalledTimes(3);
+  });
+
+  it("asks for the pool size it's given", () => {
+    const spy = vi
+      .spyOn(crypto, "getRandomValues")
+      .mockImplementation(countUp());
+    const random = secureRandom(1);
+    const values = Array.from({ length: 3 }, () => random() * 2 ** 32);
+    expect(values).toStrictEqual([0, 1, 2]);
+    expect(spy).toHaveBeenCalledTimes(3);
+    expect(spy.mock.calls.map(([array]) => array.length)).toStrictEqual([
+      1, 1, 1,
+    ]);
   });
 
   it("gives each source its own values", () => {
