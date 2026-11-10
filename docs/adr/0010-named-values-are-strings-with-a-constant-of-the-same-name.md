@@ -24,7 +24,7 @@ deal(deck, 4, HandSize.MAXIMIZE, { packetSize: PacketSize.HAND });
 
 - Each parameter has its own object, so the type of each covers only what that parameter takes, and a value in the wrong place is a type error.
 - The values are strings, so error messages, logs and JSON show `"stop"`. The plain string still type-checks, and nothing stops a caller writing it. The docs just never do.
-- A value of several words has spaces, so it has to be encoded in a URL and can't be a CSS class name. Callers who use the constant never handle that.
+- A value of several words has spaces, so it has to be encoded in a URL and can't be a CSS class name. Anyone who puts the value in one handles the space, whether they wrote the constant or the string.
 - A constant is frozen like everything else deckshoes exports, so `isolatedDeclarations` needs its type written out rather than inferred.
 - A bundler can't tell that a top-level `Object.freeze` call does nothing else, so it keeps every constant in every bundle, imported or not, unless the call is marked `/* @__PURE__ */`. Without the mark, deal's constants pushed the "shuffle only" bundle over its size budget.
 - The constant and the type share a name. The API reference files constants and types in separate directories, so their pages don't clash.
