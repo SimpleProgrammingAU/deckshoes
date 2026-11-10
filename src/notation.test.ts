@@ -222,9 +222,10 @@ describe("formatCard", () => {
     ["A", "S", "1F0A1"],
     ["10", "H", "1F0BA"],
     ["J", "D", "1F0CB"],
+    // The queen and king come after the knight, which is at column C.
     ["Q", "C", "1F0DD"],
     ["K", "S", "1F0AE"],
-  ] as const)("writes %s%s as U+%s, skipping the knight", (rank, suit, hex) => {
+  ] as const)("writes %s%s as U+%s", (rank, suit, hex) => {
     expect(
       formatCard(card(rank, suit), { notation: Notation.UNICODE_CHARACTER }),
     ).toBe(String.fromCodePoint(Number.parseInt(hex, 16)));
