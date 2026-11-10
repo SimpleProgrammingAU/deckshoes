@@ -188,7 +188,7 @@ export function cut<C>(
 ): CardStack<C> {
   const problem =
     stackProblem(stack) ??
-    positionProblem(position, stack.length) ??
+    positionProblem(position, stack.length, Position, "Position") ??
     optionsProblem(options, EXAMPLE_OPTIONS);
   if (problem !== undefined) throw problem;
   const random: unknown = options.random;
@@ -280,7 +280,7 @@ export function insert<C>(
   const problem =
     stackProblem(stack) ??
     cardsProblem(cards) ??
-    positionProblem(position, stack.length) ??
+    positionProblem(position, stack.length, Position, "Position") ??
     optionsProblem(options, EXAMPLE_OPTIONS);
   if (problem !== undefined) throw problem;
   const random: unknown = options.random;
