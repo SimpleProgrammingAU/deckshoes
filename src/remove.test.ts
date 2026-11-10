@@ -309,6 +309,28 @@ describe("count", () => {
     );
   });
 
+  it("reads the stack's size once, as filter does, even if match changes it", () => {
+    const growing = [ACE, KING, TEN];
+    let calls = 0;
+    const grown = count(growing, () => {
+      calls += 1;
+      growing.push(ACE);
+      return true;
+    });
+    expect(grown).toBe(3);
+    expect(calls).toBe(3);
+
+    // Cards popped off the end read as undefined, as a hole does.
+    const shrinking = [ACE, KING, TEN, QUEEN];
+    const seen: unknown[] = [];
+    count(shrinking, (each) => {
+      seen.push(each);
+      shrinking.pop();
+      return true;
+    });
+    expect(seen).toStrictEqual([ACE, KING, undefined, undefined]);
+  });
+
   it("counts a truthy return, as filter does", () => {
     const loose = (value: unknown): boolean => value as boolean;
     expect(count(hand, () => loose(1))).toBe(3);
