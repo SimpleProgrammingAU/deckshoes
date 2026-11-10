@@ -1,8 +1,16 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { Card } from "./card.ts";
+import type {
+  cut,
+  CutOptions,
+  insert,
+  InsertOptions,
+  Position,
+} from "./cut.ts";
 import type { deal, DealOptions, DealResult, HandSize } from "./deal.ts";
 import type { draw, drawBottom, DrawResult, peek, peekBottom } from "./draw.ts";
+import type { contains, count, remove } from "./remove.ts";
 import type { shuffle, ShuffleOptions } from "./shuffle.ts";
 import type { CardStack } from "./stack.ts";
 
@@ -41,6 +49,98 @@ describe("TerminatedChain", () => {
     expectTypeOf<TerminatedChain<boolean>["value"]>().toEqualTypeOf<
       () => boolean
     >();
+  });
+});
+
+describe("Chain.contains and Chain.count", () => {
+  it("end the chain with a boolean and a number", () => {
+    expectTypeOf(chain(standard52()).contains([])).toEqualTypeOf<
+      TerminatedChain<boolean>
+    >();
+    expectTypeOf(chain(standard52()).count(() => true)).toEqualTypeOf<
+      TerminatedChain<number>
+    >();
+  });
+
+  it("unwrap to what the functions return", () => {
+    expectTypeOf(chain(standard52()).contains([]).value()).toEqualTypeOf<
+      ReturnType<typeof contains<Card>>
+    >();
+    expectTypeOf(
+      chain(standard52())
+        .count(() => true)
+        .value(),
+    ).toEqualTypeOf<ReturnType<typeof count<Card>>>();
+  });
+
+  it("take the functions' parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["contains"]>>().toEqualTypeOf<
+      AfterStack<typeof contains<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["count"]>>().toEqualTypeOf<
+      AfterStack<typeof count<Card>>
+    >();
+    expectTypeOf<Parameters<Chain<number>["count"]>>().toEqualTypeOf<
+      [match: (card: number) => boolean]
+    >();
+  });
+
+  it("can't be carried on from, as an answer isn't a stack", () => {
+    const counted = chain(standard52()).count(() => true);
+    // @ts-expect-error A pipeline can't carry on from a yes or no.
+    expectTypeOf(chain(standard52()).contains([])).toHaveProperty("shuffle");
+    // @ts-expect-error A pipeline can't carry on from a number.
+    expectTypeOf(counted).toHaveProperty("shuffle");
+  });
+});
+
+describe("Chain.cut, Chain.insert and Chain.remove", () => {
+  it("keep the kind of card, and unwrap to what the functions return", () => {
+    const letters = chain(["a", "b"] as const);
+    expectTypeOf(letters.cut(1)).toEqualTypeOf<Chain<"a" | "b">>();
+    expectTypeOf(letters.insert(["a"])).toEqualTypeOf<Chain<"a" | "b">>();
+    expectTypeOf(letters.remove(["a"])).toEqualTypeOf<Chain<"a" | "b">>();
+    expectTypeOf(chain(standard52()).cut().value()).toEqualTypeOf<
+      ReturnType<typeof cut<Card>>
+    >();
+    expectTypeOf(chain(standard52()).insert([]).value()).toEqualTypeOf<
+      ReturnType<typeof insert<Card>>
+    >();
+    expectTypeOf(chain(standard52()).remove([]).value()).toEqualTypeOf<
+      ReturnType<typeof remove<Card>>
+    >();
+  });
+
+  it("take the functions' parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["cut"]>>().toEqualTypeOf<
+      AfterStack<typeof cut<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["insert"]>>().toEqualTypeOf<
+      AfterStack<typeof insert<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["remove"]>>().toEqualTypeOf<
+      AfterStack<typeof remove<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["cut"]>>().toEqualTypeOf<
+      // An optional parameter also takes undefined, under exactOptionalPropertyTypes.
+      [position?: Position | undefined, options?: CutOptions | undefined]
+    >();
+    expectTypeOf<Parameters<Chain["insert"]>>().toEqualTypeOf<
+      [
+        cards: CardStack,
+        position?: Position | undefined,
+        options?: InsertOptions | undefined,
+      ]
+    >();
+  });
+
+  it("reject cards of another kind", () => {
+    // @ts-expect-error The cards are the same kind as the stack's.
+    expectTypeOf<Chain["insert"]>().toBeCallableWith([1]);
+    // @ts-expect-error The cards are the same kind as the stack's.
+    expectTypeOf<Chain["remove"]>().toBeCallableWith([1]);
+    // @ts-expect-error The cards are the same kind as the stack's.
+    expectTypeOf<Chain["contains"]>().toBeCallableWith([1]);
   });
 });
 

@@ -6,20 +6,42 @@ import type { CardStack } from "./stack.ts";
 import {
   asShuffleOptions,
   asStack,
+  counted,
   deals,
   nonArrays,
   seeds,
   stacks,
+  stacksWithCards,
   stacksWithCounts,
   thrownBy,
 } from "../test/helpers.ts";
-import { card } from "./card.ts";
-import { chain } from "./chain.ts";
+import { type Card, card } from "./card.ts";
+import { chain, type Chain, type TerminatedChain } from "./chain.ts";
+import { cut, type CutOptions, insert, Position } from "./cut.ts";
 import { deal, HandSize, PacketSize, RunOut } from "./deal.ts";
 import { draw, drawBottom, peek, peekBottom } from "./draw.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
+import { contains, count, remove } from "./remove.ts";
 import { shuffle } from "./shuffle.ts";
+
+/** Every method a chain holding a stack has, which a terminated chain mustn't. */
+const STACK_METHODS = [
+  "contains",
+  "count",
+  "cut",
+  "deal",
+  "draw",
+  "drawBottom",
+  "insert",
+  "peek",
+  "peekBottom",
+  "remove",
+  "shuffle",
+];
+
+/** Cards that {@link standard52} holds once each, to insert, remove or look for. */
+const SOME_CARDS = [card("Q", "S"), card("2", "C")];
 
 describe("chain", () => {
   afterEach(() => {
@@ -100,6 +122,204 @@ describe("chain", () => {
 
   describe.each<
     readonly [
+      name: "cut" | "insert",
+      operation: (
+        stack: CardStack,
+        position?: Position,
+        options?: CutOptions,
+      ) => CardStack,
+      method: (
+        chained: Chain,
+        position?: Position,
+        options?: CutOptions,
+      ) => Chain,
+    ]
+  >([
+    [
+      "cut",
+      cut,
+      (chained, position, options) => chained.cut(position, options),
+    ],
+    [
+      "insert",
+      (stack, position, options) =>
+        insert(stack, SOME_CARDS, position, options),
+      (chained, position, options) =>
+        chained.insert(SOME_CARDS, position, options),
+    ],
+  ])("%s", (_name, operation, method) => {
+    it("gives what the function gives, at a given or random position", () => {
+      fc.assert(
+        fc.property(stacksWithCounts(), seeds, ({ count, stack }, seed) => {
+          for (const position of [count, Position.BOTTOM, Position.RANDOM]) {
+            expect(
+              method(chain(stack), position, {
+                random: seededRandom(seed),
+              }).value(),
+            ).toStrictEqual(
+              operation(stack, position, { random: seededRandom(seed) }),
+            );
+          }
+        }),
+      );
+    });
+
+    it("passes the random source on, so a shuffle after it carries on from the same source", () => {
+      fc.assert(
+        fc.property(stacks(), seeds, (stack, seed) => {
+          const chained = seededRandom(seed);
+          const called = seededRandom(seed);
+          expect(
+            method(chain(stack), Position.RANDOM, { random: chained })
+              .shuffle({ random: chained })
+              .value(),
+          ).toStrictEqual(
+            shuffle(operation(stack, Position.RANDOM, { random: called }), {
+              random: called,
+            }),
+          );
+        }),
+      );
+    });
+
+    it("uses a secure source when the position and options are left out", () => {
+      const spy = vi.spyOn(crypto, "getRandomValues");
+      method(chain(standard52()));
+      method(chain(standard52()), undefined, undefined);
+      expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it.each([
+      ["a position past the bottom", 53, undefined],
+      ["a negative position", -1, undefined],
+      ["a random source that returns 1", Position.RANDOM, { random: () => 1 }],
+    ])(
+      "throws what the function throws for %s",
+      (_label, position, options) => {
+        const chained = chain(standard52());
+        expect(
+          thrownBy(() => method(chained, position, options)),
+        ).toStrictEqual(
+          thrownBy(() => operation(standard52(), position, options)),
+        );
+        expect(chained.value()).toBe(standard52());
+      },
+    );
+
+    it("returns a new frozen chain, leaving the old one holding its stack", () => {
+      const deck = standard52();
+      const before = chain(deck);
+      const after = method(before, 26);
+      expect(after).not.toBe(before);
+      expect(Object.isFrozen(after)).toBe(true);
+      expect(before.value()).toBe(deck);
+      expect(after.value()).toStrictEqual(operation(deck, 26));
+    });
+
+    it("never calls the source at a given position", () => {
+      const random = counted(() => 0);
+      method(chain(standard52()), 26, { random });
+      method(chain(standard52()), Position.BOTTOM, { random });
+      expect(random.calls).toBe(0);
+    });
+  });
+
+  describe("remove", () => {
+    it("gives what the function gives", () => {
+      fc.assert(
+        fc.property(stacksWithCards(), ({ cards, stack }) => {
+          expect(chain(stack).remove(cards).value()).toStrictEqual(
+            remove(stack, cards),
+          );
+        }),
+      );
+    });
+
+    it("throws what the function throws for a card that isn't there", () => {
+      const chained = chain(standard52());
+      const twice = [card("A", "S"), card("A", "S")];
+      expect(thrownBy(() => chained.remove(twice))).toStrictEqual(
+        thrownBy(() => remove(standard52(), twice)),
+      );
+      expect(chained.value()).toBe(standard52());
+    });
+
+    it("returns a new frozen chain, leaving the old one holding its stack", () => {
+      const deck = standard52();
+      const before = chain(deck);
+      const after = before.remove(SOME_CARDS);
+      expect(after).not.toBe(before);
+      expect(Object.isFrozen(after)).toBe(true);
+      expect(before.value()).toBe(deck);
+      expect(after.value()).toHaveLength(50);
+    });
+
+    it("carries on, so cards can be taken out and put back", () => {
+      const deck = standard52();
+      expect(
+        chain(deck)
+          .remove(SOME_CARDS)
+          .insert(SOME_CARDS, Position.BOTTOM)
+          .value(),
+      ).toStrictEqual(insert(remove(deck, SOME_CARDS), SOME_CARDS, 52 - 2));
+    });
+  });
+
+  describe.each<
+    readonly [
+      name: "contains" | "count",
+      method: (chained: Chain) => TerminatedChain<unknown>,
+      operation: (stack: CardStack) => unknown,
+    ]
+  >([
+    [
+      "contains",
+      (chained) => chained.contains(SOME_CARDS),
+      (stack) => contains(stack, SOME_CARDS),
+    ],
+    [
+      "count",
+      (chained) => chained.count(({ suit }) => suit === "S"),
+      (stack) => count(stack, ({ suit }) => suit === "S"),
+    ],
+  ])("%s", (_name, method, operation) => {
+    it("gives what the function gives", () => {
+      fc.assert(
+        fc.property(stacks(), (stack) => {
+          expect(method(chain(stack)).value()).toBe(operation(stack));
+        }),
+      );
+    });
+
+    it("leaves the chain it's called on holding its stack", () => {
+      const deck = standard52();
+      const before = chain(deck);
+      method(before);
+      expect(before.value()).toBe(deck);
+    });
+
+    it("returns a frozen chain that can only be unwrapped", () => {
+      const terminated = method(chain(standard52()));
+      expect(Object.isFrozen(terminated)).toBe(true);
+      for (const name of STACK_METHODS) {
+        expect(terminated).not.toHaveProperty(name);
+      }
+    });
+  });
+
+  it("throws what the function throws for contains and count", () => {
+    const chained = chain(standard52());
+    expect(thrownBy(() => chained.contains(asStack("QS 2C")))).toStrictEqual(
+      thrownBy(() => contains(standard52(), asStack("QS 2C"))),
+    );
+    const match = "S" as unknown as (card: Card) => boolean;
+    expect(thrownBy(() => chained.count(match))).toStrictEqual(
+      thrownBy(() => count(standard52(), match)),
+    );
+  });
+
+  describe.each<
+    readonly [
       name: "draw" | "drawBottom" | "peek" | "peekBottom",
       operation: (stack: CardStack, count?: number) => unknown,
     ]
@@ -150,14 +370,7 @@ describe("chain", () => {
       const terminated = chain(standard52())[name](2);
       expect(Object.isFrozen(terminated)).toBe(true);
       expect(terminated.value()).toBe(terminated.value());
-      for (const method of [
-        "deal",
-        "draw",
-        "drawBottom",
-        "peek",
-        "peekBottom",
-        "shuffle",
-      ]) {
+      for (const method of STACK_METHODS) {
         expect(terminated).not.toHaveProperty(method);
       }
     });
@@ -227,7 +440,7 @@ describe("chain", () => {
       const terminated = chain(standard52()).deal(4, 5);
       expect(Object.isFrozen(terminated)).toBe(true);
       expect(terminated.value()).toBe(terminated.value());
-      for (const method of ["deal", "draw", "peek", "shuffle"]) {
+      for (const method of STACK_METHODS) {
         expect(terminated).not.toHaveProperty(method);
       }
     });
