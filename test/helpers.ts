@@ -259,6 +259,19 @@ export function stacksWithCounts(
   );
 }
 
+/** A stack and cards picked from it, each place in the stack at most once, in any order. The stacks come from {@link stacks} unless `from` gives others. */
+export function stacksWithCards(): Arbitrary<{ cards: Card[]; stack: Card[] }>;
+export function stacksWithCards<C>(
+  from: Arbitrary<C[]>,
+): Arbitrary<{ cards: C[]; stack: C[] }>;
+export function stacksWithCards(
+  from: Arbitrary<unknown[]> = stacks(),
+): Arbitrary<{ cards: unknown[]; stack: unknown[] }> {
+  return from.chain((stack) =>
+    fc.record({ cards: fc.shuffledSubarray(stack), stack: fc.constant(stack) }),
+  );
+}
+
 /** What {@link deals} gives: the arguments for one deal. */
 export interface DealArguments<C> {
   deck: C[];

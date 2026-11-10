@@ -11,6 +11,7 @@ import {
   sameValues,
   sparseStacks,
   stacks,
+  stacksWithCards,
   stacksWithCounts,
   thrownBy,
 } from "../test/helpers.ts";
@@ -24,19 +25,6 @@ const KING = card("K", "H");
 const TEN = card("10", "D");
 const QUEEN = card("Q", "C");
 const hand = [ACE, KING, TEN];
-
-/** A stack and cards picked from it, each place in the stack at most once, in any order. The stacks come from {@link stacks} unless `from` gives others. */
-function stacksWithCards(): Arbitrary<{ cards: Card[]; stack: Card[] }>;
-function stacksWithCards<C>(
-  from: Arbitrary<C[]>,
-): Arbitrary<{ cards: C[]; stack: C[] }>;
-function stacksWithCards(
-  from: Arbitrary<unknown[]> = stacks(),
-): Arbitrary<{ cards: unknown[]; stack: unknown[] }> {
-  return from.chain((stack) =>
-    fc.record({ cards: fc.shuffledSubarray(stack), stack: fc.constant(stack) }),
-  );
-}
 
 /** A stack with cards that are sometimes all in it and sometimes not. */
 function stacksWithAnyCards(): Arbitrary<{ cards: Card[]; stack: Card[] }> {

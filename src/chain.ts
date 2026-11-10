@@ -2,6 +2,13 @@ import type { Card } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
 import {
+  cut,
+  type CutOptions,
+  insert,
+  type InsertOptions,
+  type Position,
+} from "./cut.ts";
+import {
   deal,
   type DealOptions,
   type DealResult,
@@ -9,6 +16,7 @@ import {
 } from "./deal.ts";
 import { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
 import { stackProblem } from "./internal/checks.ts";
+import { contains, count, remove } from "./remove.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
 
 /**
@@ -17,10 +25,10 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  *
  * Each method has the same name as a stack operation, calls that function and
  * returns a new chain holding the result. If a pipeline can't carry on from the
- * result, as with dealt hands, drawn cards and the remainder, or peeked cards,
- * that new chain is a {@link TerminatedChain}, which can only be unwrapped. A
- * method never changes the chain it's called on, which still holds the stack it
- * held before.
+ * result, as with dealt hands, drawn cards and the remainder, peeked cards, or
+ * a count, that new chain is a {@link TerminatedChain}, which can only be
+ * unwrapped. A method never changes the chain it's called on, which still holds
+ * the stack it held before.
  *
  * A chain holds the stack passed to {@link chain} itself, not a copy. Every
  * stack deckshoes returns is frozen, but if you pass in an array of your own
@@ -52,6 +60,94 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * @since 1.0.0
  */
 export interface Chain<C = Card> {
+  /**
+   * Tells whether the stack the chain holds has particular cards with
+   * {@link contains}, and ends the chain, because a pipeline can't carry on
+   * from a yes or no.
+   *
+   * To carry on with the stack, call the next method on this chain, not on
+   * what `contains` returns: this chain still holds the stack.
+   *
+   * @param cards - The cards that {@link contains} takes.
+   * @returns A terminated chain holding what {@link contains} returns.
+   * @throws {@link InvalidArgumentError} When {@link contains} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const chained = chain([card("A", "S"), card("K", "H"), card("10", "D")]);
+   * chained.contains([card("K", "H")]).value(); // => true
+   * chained.contains([card("Q", "C")]).value(); // => false
+   *
+   * // To carry on, use the chain that contains was called on.
+   * chained.remove([card("K", "H")]).value(); // => [card("A", "S"), card("10", "D")]
+   * ```
+   *
+   * @since NEXT
+   */
+  contains(cards: CardStack<C>): TerminatedChain<boolean>;
+
+  /**
+   * Counts the cards in the stack the chain holds that `match` accepts with
+   * {@link count}, and ends the chain, because a pipeline can't carry on from a
+   * number.
+   *
+   * To carry on with the stack, call the next method on this chain, not on
+   * what `count` returns: this chain still holds the stack.
+   *
+   * @param match - The function that {@link count} takes.
+   * @returns A terminated chain holding what {@link count} returns.
+   * @throws {@link InvalidArgumentError} When {@link count} would.
+   *
+   * @example
+   * ```ts
+   * import { chain } from "deckshoes";
+   * import { standard52 } from "deckshoes/presets";
+   *
+   * // Spades in the bottom half of a new deck.
+   * const chained = chain(standard52()).cut(26);
+   * chained.count(({ suit }) => suit === "S").value(); // => 13
+   *
+   * // To carry on, use the chain that count was called on.
+   * chained.draw(13).value().cards.length; // => 13
+   * ```
+   *
+   * @since NEXT
+   */
+  count(match: (card: C) => boolean): TerminatedChain<number>;
+
+  /**
+   * Cuts the stack the chain holds with {@link cut}, and returns a new chain
+   * holding the result.
+   *
+   * @param position - The position that {@link cut} takes.
+   * @param options - The options that {@link cut} takes.
+   * @returns A new chain holding the cut stack.
+   * @throws {@link InvalidArgumentError} When {@link cut} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain, Position, seededRandom } from "deckshoes";
+   * import { standard52 } from "deckshoes/presets";
+   *
+   * const deck = chain(standard52()).cut(26).value();
+   * deck[0] === card("K", "D"); // => true
+   *
+   * // A cut at random. The same seed gives the same cut.
+   * const atRandom = chain(standard52())
+   *   .cut(Position.RANDOM, { random: seededRandom(42) })
+   *   .value();
+   * atRandom[0] === card("8", "H"); // => true
+   *
+   * // The chain throws whatever cut throws.
+   * chain(standard52()).cut(53); // throws INVALID_ARGUMENT
+   * ```
+   *
+   * @since NEXT
+   */
+  cut(position?: Position, options?: CutOptions): Chain<C>;
+
   /**
    * Deals cards from the top of the stack the chain holds into hands with
    * {@link deal}, and ends the chain, because a pipeline can't carry on from
@@ -155,6 +251,38 @@ export interface Chain<C = Card> {
   drawBottom(count?: number): TerminatedChain<DrawResult<C>>;
 
   /**
+   * Puts cards into the stack the chain holds with {@link insert}, and returns
+   * a new chain holding the result.
+   *
+   * A chain can't name the size of the stack it holds, so pass
+   * `Position.BOTTOM` to put the cards below the bottom card.
+   *
+   * @param cards - The cards that {@link insert} takes.
+   * @param position - The position that {@link insert} takes.
+   * @param options - The options that {@link insert} takes.
+   * @returns A new chain holding the stack with `cards` in it.
+   * @throws {@link InvalidArgumentError} When {@link insert} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain, Position } from "deckshoes";
+   *
+   * const hand = [card("A", "S"), card("K", "H")];
+   * chain(hand).insert([card("10", "D")], Position.BOTTOM).value(); // => [card("A", "S"), card("K", "H"), card("10", "D")]
+   *
+   * // The chain throws whatever insert throws.
+   * chain(hand).insert([card("10", "D")], 3); // throws INVALID_ARGUMENT
+   * ```
+   *
+   * @since NEXT
+   */
+  insert(
+    cards: CardStack<C>,
+    position?: Position,
+    options?: InsertOptions,
+  ): Chain<C>;
+
+  /**
    * Looks at cards from the top of the stack the chain holds with {@link peek},
    * and ends the chain, because those cards are still in the stack, so a
    * pipeline can't carry on from them.
@@ -217,6 +345,29 @@ export interface Chain<C = Card> {
   peekBottom(count?: number): TerminatedChain<CardStack<C>>;
 
   /**
+   * Removes particular cards from the stack the chain holds with
+   * {@link remove}, and returns a new chain holding the result.
+   *
+   * @param cards - The cards that {@link remove} takes.
+   * @returns A new chain holding the cards left.
+   * @throws {@link InvalidArgumentError} When {@link remove} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain } from "deckshoes";
+   *
+   * const hand = [card("A", "S"), card("K", "H"), card("10", "D")];
+   * chain(hand).remove([card("K", "H")]).value(); // => [card("A", "S"), card("10", "D")]
+   *
+   * // The chain throws whatever remove throws.
+   * chain(hand).remove([card("Q", "C")]); // throws INVALID_ARGUMENT
+   * ```
+   *
+   * @since NEXT
+   */
+  remove(cards: CardStack<C>): Chain<C>;
+
+  /**
    * Shuffles the stack the chain holds with {@link shuffle}, and returns a new
    * chain holding the result.
    *
@@ -263,8 +414,8 @@ export interface Chain<C = Card> {
 
 /**
  * A chain holding something a pipeline can't carry on from, such as dealt
- * hands, drawn cards and the remainder, or peeked cards. It has no stack
- * operations and can only be unwrapped with
+ * hands, drawn cards and the remainder, peeked cards, or a count. It has no
+ * stack operations and can only be unwrapped with
  * {@link TerminatedChain.value | value()}.
  *
  * @typeParam R - What the chain holds: what the last operation returned.
@@ -325,6 +476,18 @@ class StackChain<C> implements Chain<C> {
     Object.freeze(this);
   }
 
+  contains(cards: CardStack<C>): TerminatedChain<boolean> {
+    return new Terminated(contains(this.#stack, cards));
+  }
+
+  count(match: (card: C) => boolean): TerminatedChain<number> {
+    return new Terminated(count(this.#stack, match));
+  }
+
+  cut(position?: Position, options?: CutOptions): Chain<C> {
+    return new StackChain(cut(this.#stack, position, options));
+  }
+
   deal(
     handCount: number,
     handSize: HandSize,
@@ -341,12 +504,24 @@ class StackChain<C> implements Chain<C> {
     return new Terminated(drawBottom(this.#stack, count));
   }
 
+  insert(
+    cards: CardStack<C>,
+    position?: Position,
+    options?: InsertOptions,
+  ): Chain<C> {
+    return new StackChain(insert(this.#stack, cards, position, options));
+  }
+
   peek(count?: number): TerminatedChain<CardStack<C>> {
     return new Terminated(peek(this.#stack, count));
   }
 
   peekBottom(count?: number): TerminatedChain<CardStack<C>> {
     return new Terminated(peekBottom(this.#stack, count));
+  }
+
+  remove(cards: CardStack<C>): Chain<C> {
+    return new StackChain(remove(this.#stack, cards));
   }
 
   shuffle(options?: ShuffleOptions): Chain<C> {
