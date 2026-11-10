@@ -5,6 +5,7 @@ import {
   cardsProblem,
   optionsProblem,
   positionProblem,
+  RANDOM_OPTIONS_EXAMPLE,
   randomProblem,
   stackProblem,
 } from "./internal/checks.ts";
@@ -115,9 +116,6 @@ export interface InsertOptions {
   readonly random?: RandomSource | undefined;
 }
 
-/** The example options in an error message for options that aren't an object. */
-const EXAMPLE_OPTIONS = "{ random: seededRandom(42) }";
-
 /**
  * Cuts a stack: moves the cards above a position from the top to the bottom,
  * keeping their order, so the card at that position ends up on top.
@@ -189,7 +187,7 @@ export function cut<C>(
   const problem =
     stackProblem(stack) ??
     positionProblem(position, stack.length, Position, "Position") ??
-    optionsProblem(options, EXAMPLE_OPTIONS);
+    optionsProblem(options, RANDOM_OPTIONS_EXAMPLE);
   if (problem !== undefined) throw problem;
   const random: unknown = options.random;
   const badRandom = randomProblem(random);
@@ -281,7 +279,7 @@ export function insert<C>(
     stackProblem(stack) ??
     cardsProblem(cards) ??
     positionProblem(position, stack.length, Position, "Position") ??
-    optionsProblem(options, EXAMPLE_OPTIONS);
+    optionsProblem(options, RANDOM_OPTIONS_EXAMPLE);
   if (problem !== undefined) throw problem;
   const random: unknown = options.random;
   const badRandom = randomProblem(random);

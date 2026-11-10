@@ -1,9 +1,12 @@
 import type { RandomSource } from "./random.ts";
 import type { CardStack } from "./stack.ts";
 
-import { InvalidArgumentError } from "./errors.ts";
-import { optionsProblem, stackProblem } from "./internal/checks.ts";
-import { display } from "./internal/display.ts";
+import {
+  optionsProblem,
+  RANDOM_OPTIONS_EXAMPLE,
+  randomProblem,
+  stackProblem,
+} from "./internal/checks.ts";
 import { randomIndex, secureRandom } from "./internal/random.ts";
 import { copyStack } from "./internal/stack.ts";
 
@@ -89,15 +92,11 @@ export function shuffle<C>(
   options: ShuffleOptions = {},
 ): CardStack<C> {
   const problem =
-    stackProblem(stack) ??
-    optionsProblem(options, "{ random: seededRandom(42) }");
+    stackProblem(stack) ?? optionsProblem(options, RANDOM_OPTIONS_EXAMPLE);
   if (problem !== undefined) throw problem;
   const random: unknown = options.random;
-  if (random !== undefined && typeof random !== "function") {
-    throw new InvalidArgumentError(
-      `Invalid random option ${display(random)}: expected a random source, a function returning a number from 0 up to 1`,
-    );
-  }
+  const badRandom = randomProblem(random);
+  if (badRandom !== undefined) throw badRandom;
   const source = (random as RandomSource | undefined) ?? secureRandom();
 
   // Durstenfeld's Fisher–Yates, from the bottom of the stack up. This order

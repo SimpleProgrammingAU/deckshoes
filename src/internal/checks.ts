@@ -89,6 +89,9 @@ export function positionProblem(
       );
 }
 
+/** Options with a `random` option, shown in the error for options that aren't an object by every operation that takes one. */
+export const RANDOM_OPTIONS_EXAMPLE = "{ random: seededRandom(42) }";
+
 /** Returns the error for a `random` option that's neither a function nor `undefined`, or `undefined` for one that is. */
 export function randomProblem(
   value: unknown,
