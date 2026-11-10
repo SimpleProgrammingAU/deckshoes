@@ -10,6 +10,7 @@ import {
   sameValues,
   sparseStacks,
   stacks,
+  stacksWithCards,
   stacksWithCounts,
   thrownBy,
 } from "./helpers.ts";
@@ -228,6 +229,58 @@ describe("stacksWithCounts", () => {
     expect(samples.every(({ stack }) => stack.length === 2)).toBe(true);
     expect(new Set(samples.map(({ count }) => count))).toStrictEqual(
       new Set([0, 1, 2]),
+    );
+  });
+});
+
+describe("stacksWithCards", () => {
+  /** Whether each of `cards` has a copy in the stack that the cards before it haven't taken. */
+  function pickedFrom(
+    cards: readonly unknown[],
+    stack: readonly unknown[],
+  ): boolean {
+    const left = [...stack];
+    for (const picked of cards) {
+      const i = left.indexOf(picked);
+      if (i === -1) return false;
+      left.splice(i, 1);
+    }
+    return true;
+  }
+
+  it("gives none of the stack's cards, all of them and some, never more copies than it holds", () => {
+    // Seeded, because this checks what the arbitrary gives, not a property.
+    const samples = fc.sample(stacksWithCards(), { numRuns: 1000, seed: 42 });
+    expect(
+      samples.filter(({ cards, stack }) => !pickedFrom(cards, stack)),
+    ).toStrictEqual([]);
+    expect(
+      samples.some(
+        ({ cards, stack }) => cards.length === 0 && stack.length > 0,
+      ),
+    ).toBe(true);
+    expect(
+      samples.some(
+        ({ cards, stack }) => cards.length > 0 && cards.length === stack.length,
+      ),
+    ).toBe(true);
+    expect(
+      samples.some(
+        ({ cards, stack }) => cards.length > 0 && cards.length < stack.length,
+      ),
+    ).toBe(true);
+  });
+
+  it("takes its stacks from the arbitrary it's given, and picks in any order", () => {
+    const samples = fc.sample(stacksWithCards(fc.constant(["a", "b"])), {
+      numRuns: 100,
+      seed: 42,
+    });
+    expect(samples.every(({ stack }) => sameValues(stack, ["a", "b"]))).toBe(
+      true,
+    );
+    expect(new Set(samples.map(({ cards }) => cards.join("")))).toStrictEqual(
+      new Set(["", "a", "b", "ab", "ba"]),
     );
   });
 });

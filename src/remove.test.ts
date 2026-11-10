@@ -26,36 +26,49 @@ const TEN = card("10", "D");
 const QUEEN = card("Q", "C");
 const hand = [ACE, KING, TEN];
 
-/** A stack with cards that are sometimes all in it and sometimes not. */
+/** A stack with cards that are sometimes all in it and sometimes not, including short ones of just three cards, where copies interleave and a copy too few is common. */
 function stacksWithAnyCards(): Arbitrary<{ cards: Card[]; stack: Card[] }> {
+  const few = fc.array(fc.constantFrom(ACE, KING, TEN), { maxLength: 8 });
   return fc.oneof(
     stacksWithCards(),
     fc.record({ cards: stacks(), stack: stacks() }),
+    fc.record({ cards: few, stack: few }),
   );
 }
 
-/** What `run` returns, or the code of the error it throws, so a test can compare either without a branch. */
-function outcomeOf(run: () => unknown): { code: unknown } | { value: unknown } {
+/** What `run` returns, or the code and message of the error it throws, so a test can compare either without a branch. */
+function outcomeOf(
+  run: () => unknown,
+): { code: unknown; message: unknown } | { value: unknown } {
   try {
     return { value: run() };
   } catch (error) {
-    return { code: (error as { code?: unknown }).code };
+    const { code, message } = error as { code?: unknown; message?: unknown };
+    return { code, message };
   }
 }
 
-/** What `remove` should give, worked out one entry at a time with `findIndex` and `splice`: the cards left, or `undefined` when an entry has no copy. */
+/** What `remove` should give, worked out one entry at a time with `findIndex` and `splice`: the cards left, or the index of the first entry with no copy. */
 function removeOracle(
   stack: readonly unknown[],
   cards: readonly unknown[],
-): unknown[] | undefined {
+): { left: unknown[] } | { missing: number } {
   const left = [...stack];
-  for (const wanted of cards) {
+  for (const [missing, wanted] of cards.entries()) {
     // `includes` matches with SameValueZero, as `remove` should.
     const i = left.findIndex((value) => [wanted].includes(value));
-    if (i === -1) return undefined;
+    if (i === -1) return { missing };
     left.splice(i, 1);
   }
-  return left;
+  return { left };
+}
+
+/** What `remove` gives when the oracle finds the entry at `missing` has no copy. */
+function missingOutcome(missing: number): { code: string; message: string } {
+  return {
+    code: "INVALID_ARGUMENT",
+    message: `Can't remove cards[${String(missing)}]: the stack has no copy of it left`,
+  };
 }
 
 describe.each<
@@ -144,8 +157,9 @@ describe("remove", () => {
     fc.assert(
       fc.property(stacksWithCards(), ({ cards, stack }) => {
         const expected = removeOracle(stack, cards);
-        expect(expected).toBeDefined();
-        expect(sameValues(remove(stack, cards), expected ?? [])).toBe(true);
+        expect(expected).toHaveProperty("left");
+        const left = "left" in expected ? expected.left : [];
+        expect(sameValues(remove(stack, cards), left)).toBe(true);
       }),
     );
   });
@@ -155,22 +169,22 @@ describe("remove", () => {
       fc.property(
         stacksWithCards(fc.array(fc.anything())),
         ({ cards, stack }) => {
-          expect(
-            sameValues(remove(stack, cards), removeOracle(stack, cards) ?? []),
-          ).toBe(true);
+          const expected = removeOracle(stack, cards);
+          const left = "left" in expected ? expected.left : [];
+          expect(sameValues(remove(stack, cards), left)).toBe(true);
         },
       ),
     );
   });
 
-  it("throws exactly when the oracle finds an entry with no copy", () => {
+  it("throws exactly when the oracle finds an entry with no copy, naming the first one", () => {
     fc.assert(
       fc.property(stacksWithAnyCards(), ({ cards, stack }) => {
         const expected = removeOracle(stack, cards);
         expect(outcomeOf(() => remove(stack, cards))).toStrictEqual(
-          expected === undefined
-            ? { code: "INVALID_ARGUMENT" }
-            : { value: expected },
+          "left" in expected
+            ? { value: expected.left }
+            : missingOutcome(expected.missing),
         );
       }),
     );
