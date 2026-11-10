@@ -1,10 +1,10 @@
 import fc from "fast-check";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { counted, thrownBy } from "../../test/helpers.ts";
+import { counted, seeds, thrownBy } from "../../test/helpers.ts";
 import { isDeckshoesError } from "../errors.ts";
 import { type RandomSource, seededRandom } from "../random.ts";
-import { randomIndex, secureRandom } from "./random.ts";
+import { randomIndex, randomPosition, secureRandom } from "./random.ts";
 
 /** A random source that returns each 32-bit integer in turn as a value from 0 up to 1, and throws if it's called too often. */
 function integerSource(...integers: number[]): RandomSource {
@@ -162,6 +162,46 @@ describe("randomIndex", () => {
         },
       ),
     );
+  });
+});
+
+describe("randomPosition", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each([0, 1])(
+    "gives 0 for %i choices without calling the source",
+    (choices) => {
+      const spy = vi.spyOn(crypto, "getRandomValues");
+      const random = counted(integerSource());
+      expect(randomPosition(choices, random)).toBe(0);
+      expect(randomPosition(choices, undefined)).toBe(0);
+      expect(random.calls).toBe(0);
+      expect(spy).not.toHaveBeenCalled();
+    },
+  );
+
+  it("picks as randomIndex does when there's more than one choice", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ max: 2 ** 32, min: 2 }),
+        seeds,
+        (choices, seed) => {
+          expect(randomPosition(choices, seededRandom(seed))).toBe(
+            randomIndex(choices, seededRandom(seed)),
+          );
+        },
+      ),
+    );
+  });
+
+  it("uses a secure source when random is undefined", () => {
+    const spy = vi.spyOn(crypto, "getRandomValues");
+    const position = randomPosition(52, undefined);
+    expect(position).toBeGreaterThanOrEqual(0);
+    expect(position).toBeLessThan(52);
+    expect(spy).toHaveBeenCalledOnce();
   });
 });
 

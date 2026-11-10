@@ -16,6 +16,13 @@ export {
 } from "./card.ts";
 export { chain, type Chain, type TerminatedChain } from "./chain.ts";
 export {
+  cut,
+  type CutOptions,
+  insert,
+  type InsertOptions,
+  Position,
+} from "./cut.ts";
+export {
   deal,
   type DealOptions,
   type DealResult,

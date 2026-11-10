@@ -121,3 +121,16 @@ export function randomIndex(n: number, random: RandomSource): number {
     `The random source returned ${String(MAX_REJECTIONS)} values in a row that had to be rejected, so it isn't working`,
   );
 }
+
+/**
+ * Picks one of `choices` positions with {@link randomIndex}, from `random` or
+ * a new secure source if it's `undefined`, calling the source only when there
+ * is more than one choice. This is fixed for 1.x (ADR 0006): changing it
+ * changes every seeded cut and insert.
+ */
+export function randomPosition(
+  choices: number,
+  random: RandomSource | undefined,
+): number {
+  return choices > 1 ? randomIndex(choices, random ?? secureRandom()) : 0;
+}
