@@ -62,6 +62,10 @@ _Avoid_: collection, list, cards
 **Top**:
 The end of a stack that cards are drawn, dealt, burned and peeked from. The other end is the bottom.
 
+**Position**:
+A place in a stack, given as the number of cards above it: 0 is the top, and the stack's size is below the bottom card.
+_Avoid_: index, offset
+
 **Deck**:
 The stack that cards are drawn and dealt from. A preset gives a full one.
 _Avoid_: pack
@@ -132,6 +136,13 @@ _Avoid_: discard
 **Cut**:
 To move cards from the top of a stack to the bottom, keeping their order.
 _Avoid_: rotate, split
+
+**Insert**:
+To put cards into a stack at a position, keeping their order.
+
+**Remove**:
+To pull particular cards out of a stack, wherever they are: the topmost copy of each.
+_Avoid_: delete
 
 ## Shoes
 

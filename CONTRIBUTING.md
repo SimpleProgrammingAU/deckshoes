@@ -118,6 +118,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 - Throw where user input enters the library, and nowhere else. Internal invariants use an internal `assert()`, which isn't part of the API.
 - Parsing functions get a non-throwing twin: `parseCard` throws, `tryParseCard` returns `undefined`.
 - A parse function accepts only the forms its doc comment lists ([ADR 0011](./docs/adr/0011-parsing-accepts-only-documented-forms.md)).
+- `INSUFFICIENT_CARDS` is for a stack that runs short of the cards an operation takes. A position outside the stack, or a card to remove that isn't there, is `INVALID_ARGUMENT` ([ADR 0005](./docs/adr/0005-errors-carry-stable-codes-and-a-versioned-brand.md)).
 - When a test checks that something throws, it asserts the error's `code`. Messages can be reworded freely; only tests of how a message is built (such as "1 card" vs "2 cards") look at message text.
 
 ## Tests

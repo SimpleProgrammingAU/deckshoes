@@ -11,3 +11,4 @@ Every error deckshoes throws is a subclass of `DeckshoesError` with a machine-re
 ## Consequences
 
 - Each major release bumps the brand's suffix (`v1` → `v2`).
+- `INSUFFICIENT_CARDS` means a stack ran short of the cards an operation was asked to take, as when `draw(deck, 60)` asks a 52-card deck for 60. A position that has to fall within the stack but doesn't, as in `cut(deck, 60)`, and a card to remove that isn't in the stack, are `INVALID_ARGUMENT`. So `draw` and `cut` throw different codes for the same number. Using `INSUFFICIENT_CARDS` for all three would have grouped them by symptom, but its `requested` and `available` fields are stack totals, which say nothing useful about a position or a missing card, and a catch that reshuffles when the deck runs out would also catch a caller's mistake.
