@@ -120,10 +120,10 @@ export function contains<C>(stack: CardStack<C>, cards: CardStack<C>): boolean {
 /**
  * Counts the cards in a stack that `match` accepts.
  *
- * `match` is called once for each card, top first, with the card alone, and
- * the card counts when it returns a truthy value, as with `filter`. Whatever
- * `match` throws is passed on unchanged. To count the copies of a card, match
- * it with `===`.
+ * `match` is called once for each card the stack held when `count` was called,
+ * top first, with the card alone, and the card counts when it returns a truthy
+ * value, as with `filter`. Whatever `match` throws is passed on unchanged. To
+ * count the copies of a card, match it with `===`.
  *
  * The stack is left untouched, frozen or not. Any stack works, including one
  * with copies or with cards that aren't standard cards.
@@ -164,8 +164,11 @@ export function count<C>(
     );
   }
 
+  // The size is read once, as filter does, so a match that changes the
+  // caller's array can't make the count run on or skip cards.
+  const size = stack.length;
   let matched = 0;
-  for (let i = 0; i < stack.length; i++) {
+  for (let i = 0; i < size; i++) {
     if (match(stack[i] as C)) matched += 1;
   }
   return matched;
