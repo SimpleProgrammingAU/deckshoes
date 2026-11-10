@@ -16,8 +16,9 @@ import { removeTopmost } from "./internal/stack.ts";
  *
  * Every card has to be there. If an entry in `cards` has no copy left in the
  * stack, it throws before removing anything, naming the entry by its index in
- * `cards`. To remove only the cards that are there, check with
- * {@link contains} first, or use `filter`.
+ * `cards`. To remove the cards only when they're all there, check with
+ * {@link contains} first. To remove whichever of them are there, check and
+ * remove one card at a time. `filter` isn't the same: it removes every copy.
  *
  * Neither the stack nor `cards` is changed, frozen or not, and the result is a
  * new frozen array, even when `cards` is empty. Any stack works, including one
