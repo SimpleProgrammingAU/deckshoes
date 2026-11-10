@@ -273,7 +273,7 @@ export function formatCard(
     }
     default: {
       throw new InvalidArgumentError(
-        `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL, Notation.NAME or Notation.UNICODE_CHARACTER`,
+        `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL, Notation.NAME or Notation.UNICODE_CHARACTER ("unicode character")`,
       );
     }
   }
