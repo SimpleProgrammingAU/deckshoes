@@ -73,15 +73,19 @@ export function optionsProblem(
       );
 }
 
-/** Returns the error for a position that isn't an integer from 0 to `size`, `Position.BOTTOM` or `Position.RANDOM`, or `undefined` for one that is. */
+/** Returns the error for a position that isn't an integer from 0 to `size` or one of the `named` values, or `undefined` for one that is; `constant` names their constant in the message. */
 export function positionProblem(
   value: unknown,
   size: number,
+  named: Readonly<Record<string, string>>,
+  constant: string,
 ): InvalidArgumentError | undefined {
-  return value === "bottom" || value === "random" || isInteger(value, 0, size)
+  const names = Object.keys(named);
+  return isInteger(value, 0, size) ||
+    names.some((name) => named[name] === value)
     ? undefined
     : new InvalidArgumentError(
-        `Invalid position ${display(value)}: expected an integer from 0 to ${String(size)}, Position.BOTTOM or Position.RANDOM`,
+        `Invalid position ${display(value)}: expected an integer from 0 to ${String(size)}, ${names.map((name) => `${constant}.${name}`).join(" or ")}`,
       );
 }
 

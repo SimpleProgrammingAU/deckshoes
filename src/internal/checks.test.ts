@@ -66,21 +66,33 @@ describe("optionsProblem", () => {
 });
 
 describe("positionProblem", () => {
-  it("accepts an integer from 0 to the size, counting -0 as 0, and both named values", () => {
-    expect(positionProblem(0, 0)).toBeUndefined();
-    expect(positionProblem(-0, 3)).toBeUndefined();
-    expect(positionProblem(3, 3)).toBeUndefined();
-    expect(positionProblem("bottom", 0)).toBeUndefined();
-    expect(positionProblem("random", 0)).toBeUndefined();
+  // Written out rather than imported, so the test doesn't share cut.ts's values.
+  const named = { BOTTOM: "bottom", RANDOM: "random" };
+
+  it("accepts an integer from 0 to the size, counting -0 as 0, and every named value", () => {
+    expect(positionProblem(0, 0, named, "Position")).toBeUndefined();
+    expect(positionProblem(-0, 3, named, "Position")).toBeUndefined();
+    expect(positionProblem(3, 3, named, "Position")).toBeUndefined();
+    expect(positionProblem("bottom", 0, named, "Position")).toBeUndefined();
+    expect(positionProblem("random", 0, named, "Position")).toBeUndefined();
   });
 
-  it("gives the range and both constants", () => {
-    expect(positionProblem(4, 3)).toMatchObject({
+  it("rejects a key in place of its value, and a value it isn't given", () => {
+    expect(positionProblem("BOTTOM", 3, named, "Position")).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
+    expect(
+      positionProblem("random", 3, { BOTTOM: "bottom" }, "Position"),
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+
+  it("gives the range and names each named value by its constant", () => {
+    expect(positionProblem(4, 3, named, "Position")).toMatchObject({
       code: "INVALID_ARGUMENT",
       message:
         "Invalid position 4: expected an integer from 0 to 3, Position.BOTTOM or Position.RANDOM",
     });
-    expect(positionProblem("top", 3)?.message).toBe(
+    expect(positionProblem("top", 3, named, "Position")?.message).toBe(
       'Invalid position "top": expected an integer from 0 to 3, Position.BOTTOM or Position.RANDOM',
     );
   });
