@@ -39,9 +39,10 @@ export interface ShuffleOptions {
  * frozen array, even when there are too few cards to move. Any stack works,
  * including one with copies or with cards that aren't standard cards.
  *
- * It's a Fisher–Yates shuffle, drawing from the `random` option. Leave the
- * option out to use a secure source, backed by `crypto.getRandomValues`: each
- * shuffle makes its own and keeps nothing from it afterwards. Pass a fresh
+ * It's a Fisher–Yates shuffle that gets its randomness from the `random`
+ * option. Leave the option out to use a secure source, backed by
+ * `crypto.getRandomValues`: each shuffle makes its own and keeps nothing from
+ * it afterwards. Pass a fresh
  * {@link seededRandom} source to make the order reproducible: the same seed
  * gives the same order in every runtime and every 1.x release. A seeded source
  * moves on with each use, so one source passed to two shuffles gives two
