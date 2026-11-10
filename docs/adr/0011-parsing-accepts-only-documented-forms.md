@@ -16,4 +16,4 @@ Any other lookalike, such as `❤️` for hearts, needs a decision of its own, n
 ## Consequences
 
 - Callers trim user input themselves: `parseCard(input.trim())`.
-- Unicode playing-card characters ([#23](https://github.com/SimpleProgrammingAU/deckshoes/issues/23)) and compact strings ([#30](https://github.com/SimpleProgrammingAU/deckshoes/issues/30)) follow the same rule.
+- Unicode characters such as `🂡` ([#23](https://github.com/SimpleProgrammingAU/deckshoes/issues/23)) follow the same rule, and so will compact strings ([#30](https://github.com/SimpleProgrammingAU/deckshoes/issues/30)).
