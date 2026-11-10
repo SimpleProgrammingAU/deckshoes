@@ -54,5 +54,6 @@ export {
   tryParseCard,
 } from "./notation.ts";
 export { type RandomSource, seededRandom } from "./random.ts";
+export { contains, count, remove } from "./remove.ts";
 export { shuffle, type ShuffleOptions } from "./shuffle.ts";
 export { type CardStack } from "./stack.ts";
