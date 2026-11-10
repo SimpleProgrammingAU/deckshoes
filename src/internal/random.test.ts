@@ -26,7 +26,7 @@ const countAndIndex = fc
 describe("randomIndex", () => {
   // Fixed for 1.x: if these change, every seeded shuffle changes too.
   // Worked out from the reference C outputs for seed 42.
-  it("gives the pinned indices for seed 42, as a shuffle of 52 cards draws them", () => {
+  it("gives the pinned indices for seed 42, as a shuffle of 52 cards picks them", () => {
     const random = seededRandom(42);
     const indices = Array.from({ length: 10 }, (_, i) =>
       randomIndex(52 - i, random),
@@ -52,7 +52,7 @@ describe("randomIndex", () => {
     expect(randomIndex(52, integerSource(52 * size - 1))).toBe(51);
   });
 
-  it("draws again when a value lands in the incomplete last bucket", () => {
+  it("calls the source again when a value lands in the incomplete last bucket", () => {
     fc.assert(
       fc.property(countAndIndex, ([n, i]) => {
         const size = Math.floor(2 ** 32 / n);
@@ -70,7 +70,7 @@ describe("randomIndex", () => {
         fc.integer({ max: 2 ** 32, min: 1 }),
         fc.double({ max: 1, maxExcluded: true, min: 0, noNaN: true }),
         (n, value) => {
-          // If `value` lands in the last bucket, 0 is drawn next.
+          // If `value` lands in the last bucket, the source gives 0 next.
           const random = integerSource((value * 2 ** 32) >>> 0, 0);
           const result = randomIndex(n, random);
           expect(Number.isInteger(result)).toBe(true);
@@ -86,7 +86,7 @@ describe("randomIndex", () => {
     ["a fraction", 2.5],
     ["more than 2³²", 2 ** 32 + 1],
     ["NaN", NaN],
-  ])("treats %s as n as a bug, without drawing", (_label, n) => {
+  ])("treats %s as n as a bug, without calling the source", (_label, n) => {
     const random = counted(integerSource());
     const error = thrownBy(() => randomIndex(n, random));
     expect(isDeckshoesError(error)).toBe(false);
@@ -94,7 +94,7 @@ describe("randomIndex", () => {
     expect(random.calls).toBe(0);
   });
 
-  it("draws once for a single card", () => {
+  it("calls the source once even when n is 1", () => {
     const random = counted(integerSource(2 ** 32 - 1));
     expect(randomIndex(1, random)).toBe(0);
     expect(random.calls).toBe(1);

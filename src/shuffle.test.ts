@@ -109,10 +109,10 @@ describe("shuffle", () => {
       );
     });
 
-    it("draws once for each card but the top one", () => {
+    it("calls the source once for each card but the top one", () => {
       fc.assert(
         fc.property(stacks(), (stack) => {
-          // 0 is never rejected, so each pick draws exactly once.
+          // 0 is never rejected, so each pick calls the source exactly once.
           const random = counted(() => 0);
           shuffle(stack, { random });
           expect(random.calls).toBe(Math.max(stack.length - 1, 0));

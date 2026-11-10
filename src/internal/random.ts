@@ -88,10 +88,11 @@ export function xoshiro128StarStar(seed: number): RandomSource {
  * Picks an integer from 0 to n − 1, each equally likely, from a random source.
  *
  * It splits the 2³² values of `floor(r × 2³²)` into n buckets of
- * `floor(2³² / n)` and returns the bucket the value falls in, drawing again
- * when it lands in the incomplete last bucket. `n` must be an integer from 1
- * to 2³², which callers guarantee, so anything else is a bug. This mapping is fixed for 1.x: changing it changes every seeded
- * result.
+ * `floor(2³² / n)` and returns the bucket the value falls in, calling the
+ * source again when the value lands in the incomplete last bucket. It calls
+ * the source even when n is 1. `n` must be an integer from 1 to 2³², which
+ * callers guarantee, so anything else is a bug. This mapping is fixed for 1.x:
+ * changing it changes every seeded result.
  */
 export function randomIndex(n: number, random: RandomSource): number {
   // Checked before calling assert, so the message is only built for a bug:
