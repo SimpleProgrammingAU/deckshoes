@@ -294,6 +294,21 @@ describe("formatCard with input that isn't valid", () => {
     ).toMatchObject({ code: "INVALID_ARGUMENT" });
   });
 
+  it("gives the Unicode character notation's value in the message, since it has a space", () => {
+    expect(
+      thrownBy(() =>
+        formatCard(
+          card("A", "S"),
+          asFormatCardOptions({ notation: "unicode_character" }),
+        ),
+      ),
+    ).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        'Invalid notation option "unicode_character": expected Notation.SHORT, Notation.SYMBOL, Notation.NAME or Notation.UNICODE_CHARACTER ("unicode character")',
+    });
+  });
+
   it("checks the card before the options", () => {
     expect(
       thrownBy(() => formatCard(asCard({}), asFormatCardOptions(null))),
