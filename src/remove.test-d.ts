@@ -59,12 +59,16 @@ describe("count", () => {
     });
   });
 
-  it("rejects a match for another kind of card, or one that doesn't return a boolean", () => {
+  it("accepts a match that returns anything, as filter does", () => {
+    expectTypeOf(count).toBeCallableWith(standard52(), () => 1);
+    const aces = count(standard52(), (each) => each.rank === "A" && each);
+    expectTypeOf(aces).toEqualTypeOf<number>();
+  });
+
+  it("rejects a match for another kind of card, and a match that isn't a function", () => {
     // @ts-expect-error match takes the stack's kind of card.
     const other = count(standard52(), (each: number) => each > 1);
     expectTypeOf(other).toEqualTypeOf<number>();
-    // @ts-expect-error match returns true or false.
-    expectTypeOf(count).toBeCallableWith(standard52(), () => 1);
     // @ts-expect-error match is a function.
     expectTypeOf(count).toBeCallableWith(standard52(), "H");
   });

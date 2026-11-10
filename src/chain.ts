@@ -115,7 +115,7 @@ export interface Chain<C = Card> {
    *
    * @since NEXT
    */
-  count(match: (card: C) => boolean): TerminatedChain<number>;
+  count(match: (card: C) => unknown): TerminatedChain<number>;
 
   /**
    * Cuts the stack the chain holds with {@link cut}, and returns a new chain
@@ -480,7 +480,7 @@ class StackChain<C> implements Chain<C> {
     return new Terminated(contains(this.#stack, cards));
   }
 
-  count(match: (card: C) => boolean): TerminatedChain<number> {
+  count(match: (card: C) => unknown): TerminatedChain<number> {
     return new Terminated(count(this.#stack, match));
   }
 

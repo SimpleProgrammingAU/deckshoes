@@ -332,11 +332,10 @@ describe("count", () => {
   });
 
   it("counts a truthy return, as filter does", () => {
-    const loose = (value: unknown): boolean => value as boolean;
-    expect(count(hand, () => loose(1))).toBe(3);
-    expect(count(hand, (each) => loose(each === KING && each))).toBe(1);
-    expect(count(hand, () => loose(""))).toBe(0);
-    expect(count(hand, () => loose(NaN))).toBe(0);
+    expect(count(hand, () => 1)).toBe(3);
+    expect(count(hand, (each) => each === KING && each)).toBe(1);
+    expect(count(hand, () => "")).toBe(0);
+    expect(count(hand, () => NaN)).toBe(0);
   });
 
   it("counts copies, holes and values of any kind", () => {
@@ -390,7 +389,7 @@ describe("count", () => {
   ])("rejects %s as match, even on an empty stack", (_label, match) => {
     for (const stack of [hand, []]) {
       expect(
-        thrownBy(() => count(stack, match as (each: Card) => boolean)),
+        thrownBy(() => count(stack, match as (each: Card) => unknown)),
       ).toMatchObject({ code: "INVALID_ARGUMENT" });
     }
   });
