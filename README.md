@@ -297,7 +297,7 @@ chain(remainder).draw().value().cards; // => [card("2", "C")]
 
 Leave the position out, or pass `Position.RANDOM`, to pick one at random with the `random` option, as a shuffle does. A random cut picks from 0 to one less than the stack's size, so every card is as likely as any other to end up on top. A random insert picks from 0 to the stack's size and keeps the cards together.
 
-`remove(stack, cards)` takes particular cards out of a stack, wherever they are: the topmost copy of each. `contains(stack, cards)` tells whether they're all there. Both count copies, one for each entry in `cards`, and `cards` is always an array, even for one card. If a card isn't there, `remove` throws before removing anything, so to remove only what's there, check with `contains` first. `count(stack, match)` counts the cards a function accepts.
+`remove(stack, cards)` takes particular cards out of a stack, wherever they are: the topmost copy of each. `contains(stack, cards)` tells whether they're all there. Both count copies, one for each entry in `cards`, and `cards` is always an array, even for one card. If a card isn't there, `remove` throws before removing anything. To remove the cards only when they're all there, check with `contains` first. To remove whichever of them are there, check and remove one card at a time. `filter` isn't the same: it removes every copy. `count(stack, match)` counts the cards a function accepts.
 
 ```ts
 import {

@@ -139,6 +139,11 @@ const EXAMPLE_OPTIONS = "{ random: seededRandom(42) }";
  * every 1.x release. A stack of 0 or 1 cards can only be cut one way, so the
  * source isn't called.
  *
+ * Where the runtime has no `crypto.getRandomValues`, such as React Native
+ * without a polyfill, a random cut of two or more cards without a `random`
+ * option throws the runtime's own error, not a deckshoes error. A position
+ * left out is random, so that includes `cut(stack)`.
+ *
  * The positions a cut takes, and those a random cut picks from, stay the same
  * in every 1.x release.
  *
@@ -221,6 +226,12 @@ export function cut<C>(
  * the position reproducible: the same seed gives the same position in every
  * runtime and every 1.x release. An empty stack has only one place to put
  * them, so the source isn't called.
+ *
+ * Where the runtime has no `crypto.getRandomValues`, such as React Native
+ * without a polyfill, a random insert into a stack of one or more cards
+ * without a `random` option throws the runtime's own error, not a deckshoes
+ * error. A position left out is random, so that includes
+ * `insert(stack, cards)`.
  *
  * Neither the stack nor `cards` is changed, frozen or not, and the result is a
  * new frozen array. Any stack works, including one with copies or with cards

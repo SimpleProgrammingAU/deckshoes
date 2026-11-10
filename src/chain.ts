@@ -26,9 +26,9 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * Each method has the same name as a stack operation, calls that function and
  * returns a new chain holding the result. If a pipeline can't carry on from the
  * result, as with dealt hands, drawn cards and the remainder, peeked cards, or
- * a count, that new chain is a {@link TerminatedChain}, which can only be
- * unwrapped. A method never changes the chain it's called on, which still holds
- * the stack it held before.
+ * an answer such as a count, that new chain is a {@link TerminatedChain},
+ * which can only be unwrapped. A method never changes the chain it's called
+ * on, which still holds the stack it held before.
  *
  * A chain holds the stack passed to {@link chain} itself, not a copy. Every
  * stack deckshoes returns is frozen, but if you pass in an array of your own
@@ -102,15 +102,13 @@ export interface Chain<C = Card> {
    *
    * @example
    * ```ts
-   * import { chain } from "deckshoes";
-   * import { standard52 } from "deckshoes/presets";
+   * import { card, chain } from "deckshoes";
    *
-   * // Spades in the bottom half of a new deck.
-   * const chained = chain(standard52()).cut(26);
-   * chained.count(({ suit }) => suit === "S").value(); // => 13
+   * const chained = chain([card("A", "S"), card("K", "H"), card("10", "H")]);
+   * chained.count(({ suit }) => suit === "H").value(); // => 2
    *
    * // To carry on, use the chain that count was called on.
-   * chained.draw(13).value().cards.length; // => 13
+   * chained.draw(2).value().cards; // => [card("A", "S"), card("K", "H")]
    * ```
    *
    * @since NEXT
@@ -414,8 +412,9 @@ export interface Chain<C = Card> {
 
 /**
  * A chain holding something a pipeline can't carry on from, such as dealt
- * hands, drawn cards and the remainder, peeked cards, or a count. It has no
- * stack operations and can only be unwrapped with
+ * hands, drawn cards and the remainder, peeked cards, or an answer such as
+ * whether the stack contains some cards or how many match. It has no stack
+ * operations and can only be unwrapped with
  * {@link TerminatedChain.value | value()}.
  *
  * @typeParam R - What the chain holds: what the last operation returned.
