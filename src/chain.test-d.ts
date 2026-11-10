@@ -81,7 +81,7 @@ describe("Chain.contains and Chain.count", () => {
       AfterStack<typeof count<Card>>
     >();
     expectTypeOf<Parameters<Chain<number>["count"]>>().toEqualTypeOf<
-      [match: (card: number) => boolean]
+      [match: (card: number) => unknown]
     >();
   });
 

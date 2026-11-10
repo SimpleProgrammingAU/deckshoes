@@ -130,7 +130,8 @@ export function contains<C>(stack: CardStack<C>, cards: CardStack<C>): boolean {
  *
  * @typeParam C - The type of card in the stack.
  * @param stack - The stack to count in, top first.
- * @param match - A function that takes a card and returns whether to count it.
+ * @param match - A function that takes a card and returns whether to count
+ * it: any truthy value counts.
  * @returns How many cards `match` accepted, from 0 to the stack's size.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, or `match`
  * isn't a function.
@@ -153,14 +154,14 @@ export function contains<C>(stack: CardStack<C>, cards: CardStack<C>): boolean {
  */
 export function count<C>(
   stack: CardStack<C>,
-  match: (card: C) => boolean,
+  match: (card: C) => unknown,
 ): number {
   const problem = stackProblem(stack);
   if (problem !== undefined) throw problem;
   const given: unknown = match;
   if (typeof given !== "function") {
     throw new InvalidArgumentError(
-      `Invalid match ${display(given)}: expected a function that takes a card and returns true or false`,
+      `Invalid match ${display(given)}: expected a function that takes a card and returns whether to count it`,
     );
   }
 

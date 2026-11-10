@@ -312,7 +312,7 @@ describe("chain", () => {
     expect(thrownBy(() => chained.contains(asStack("QS 2C")))).toStrictEqual(
       thrownBy(() => contains(standard52(), asStack("QS 2C"))),
     );
-    const match = "S" as unknown as (card: Card) => boolean;
+    const match = "S" as unknown as (card: Card) => unknown;
     expect(thrownBy(() => chained.count(match))).toStrictEqual(
       thrownBy(() => count(standard52(), match)),
     );
