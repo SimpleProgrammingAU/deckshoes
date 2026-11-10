@@ -62,7 +62,7 @@ export function remove<C>(
 ): CardStack<C> {
   const problem = stackProblem(stack) ?? cardsProblem(cards);
   if (problem !== undefined) throw problem;
-  const { left, missing } = removeTopmost(stack, cards);
+  const { left, missing } = removeTopmost(stack, cards, true);
   if (missing !== -1) {
     throw new InvalidArgumentError(
       `Can't remove cards[${String(missing)}]: the stack has no copy of it left`,
@@ -114,7 +114,8 @@ export function remove<C>(
 export function contains<C>(stack: CardStack<C>, cards: CardStack<C>): boolean {
   const problem = stackProblem(stack) ?? cardsProblem(cards);
   if (problem !== undefined) throw problem;
-  return removeTopmost(stack, cards).missing === -1;
+  // Only whether a card is missing matters, so nothing is copied.
+  return removeTopmost(stack, cards, false).missing === -1;
 }
 
 /**

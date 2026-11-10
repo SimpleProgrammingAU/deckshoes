@@ -250,6 +250,18 @@ describe("remove", () => {
 });
 
 describe("contains", () => {
+  it("stops reading the stack once every card has a copy", () => {
+    const read: string[] = [];
+    const deck = new Proxy([...standard52()], {
+      get(target, key, receiver) {
+        if (typeof key === "string" && key !== "length") read.push(key);
+        return Reflect.get(target, key, receiver) as unknown;
+      },
+    });
+    expect(contains(deck, [card("A", "H"), card("3", "H")])).toBe(true);
+    expect(read).toStrictEqual(["0", "1", "2"]);
+  });
+
   it("is true exactly when remove doesn't throw", () => {
     fc.assert(
       fc.property(stacksWithAnyCards(), ({ cards, stack }) => {
