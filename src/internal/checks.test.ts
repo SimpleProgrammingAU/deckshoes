@@ -1,15 +1,28 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cardsProblem,
   countProblem,
   flagProblem,
   optionsProblem,
+  positionProblem,
+  randomProblem,
   shortfall,
   sizeProblem,
   stackProblem,
   unknownRank,
   unknownSuit,
 } from "./checks.ts";
+
+describe("cardsProblem", () => {
+  it("accepts any array and names anything else as the cards", () => {
+    expect(cardsProblem([])).toBeUndefined();
+    expect(cardsProblem("AS")).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message: 'Invalid cards "AS": expected an array of cards',
+    });
+  });
+});
 
 describe("countProblem", () => {
   it("accepts an integer in range, counting -0 as 0", () => {
@@ -49,6 +62,39 @@ describe("optionsProblem", () => {
       "Invalid options null: expected an object, such as { packetSize: 3 }",
     );
     expect(optionsProblem({}, "{ packetSize: 3 }")).toBeUndefined();
+  });
+});
+
+describe("positionProblem", () => {
+  it("accepts an integer from 0 to the size, counting -0 as 0, and both named values", () => {
+    expect(positionProblem(0, 0)).toBeUndefined();
+    expect(positionProblem(-0, 3)).toBeUndefined();
+    expect(positionProblem(3, 3)).toBeUndefined();
+    expect(positionProblem("bottom", 0)).toBeUndefined();
+    expect(positionProblem("random", 0)).toBeUndefined();
+  });
+
+  it("gives the range and both constants", () => {
+    expect(positionProblem(4, 3)).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        "Invalid position 4: expected an integer from 0 to 3, Position.BOTTOM or Position.RANDOM",
+    });
+    expect(positionProblem("top", 3)?.message).toBe(
+      'Invalid position "top": expected an integer from 0 to 3, Position.BOTTOM or Position.RANDOM',
+    );
+  });
+});
+
+describe("randomProblem", () => {
+  it("accepts a function or undefined, and describes a random source for anything else", () => {
+    expect(randomProblem(undefined)).toBeUndefined();
+    expect(randomProblem(() => 0)).toBeUndefined();
+    expect(randomProblem(42)).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        "Invalid random option 42: expected a random source, a function returning a number from 0 up to 1",
+    });
   });
 });
 

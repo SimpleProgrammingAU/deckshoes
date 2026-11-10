@@ -23,6 +23,15 @@ function isInteger(value: unknown, min: number, max = Infinity): boolean {
   );
 }
 
+/** Returns the error for cards that aren't an array, or `undefined` for cards that are. */
+export function cardsProblem(value: unknown): InvalidArgumentError | undefined {
+  return Array.isArray(value)
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid cards ${display(value)}: expected an array of cards`,
+      );
+}
+
 /** Returns the error for a count that isn't an integer from `min` to `max` (no limit if left out), or `undefined` for one that is. */
 export function countProblem(
   value: unknown,
@@ -61,6 +70,29 @@ export function optionsProblem(
     ? undefined
     : new InvalidArgumentError(
         `Invalid options ${display(value)}: expected an object, such as ${example}`,
+      );
+}
+
+/** Returns the error for a position that isn't an integer from 0 to `size`, `Position.BOTTOM` or `Position.RANDOM`, or `undefined` for one that is. */
+export function positionProblem(
+  value: unknown,
+  size: number,
+): InvalidArgumentError | undefined {
+  return value === "bottom" || value === "random" || isInteger(value, 0, size)
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid position ${display(value)}: expected an integer from 0 to ${String(size)}, Position.BOTTOM or Position.RANDOM`,
+      );
+}
+
+/** Returns the error for a `random` option that's neither a function nor `undefined`, or `undefined` for one that is. */
+export function randomProblem(
+  value: unknown,
+): InvalidArgumentError | undefined {
+  return value === undefined || typeof value === "function"
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid random option ${display(value)}: expected a random source, a function returning a number from 0 up to 1`,
       );
 }
 
