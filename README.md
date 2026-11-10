@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling and dealing work today; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting and removing cards work today; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -289,6 +289,79 @@ const { hands, remainder } = chain(standard52())
 hands.map((hand) => hand[0]); // => [card("7", "H"), card("6", "C"), card("10", "D"), card("J", "C")]
 
 chain(remainder).draw().value().cards; // => [card("2", "C")]
+```
+
+## Cutting, inserting and removing
+
+`cut(stack, position)` moves the cards above a position from the top to the bottom, keeping their order. `insert(stack, cards, position)` puts cards into a stack at a position, keeping their order. A position is the number of cards above it: 0 is the top, and the stack's size, which `Position.BOTTOM` stands for, is below the bottom card. A position outside the stack throws `InvalidArgumentError`, whereas `draw` throws `InsufficientCardsError` when the stack runs short.
+
+Leave the position out, or pass `Position.RANDOM`, to pick one at random with the `random` option, as a shuffle does. A random cut picks from 0 to one less than the stack's size, so every card is as likely as any other to end up on top. A random insert picks from 0 to the stack's size and keeps the cards together.
+
+`remove(stack, cards)` takes particular cards out of a stack, wherever they are: the topmost copy of each. `contains(stack, cards)` tells whether they're all there. Both count copies, one for each entry in `cards`, and `cards` is always an array, even for one card. If a card isn't there, `remove` throws before removing anything, so to remove only what's there, check with `contains` first. `count(stack, match)` counts the cards a function accepts.
+
+```ts
+import {
+  card,
+  contains,
+  count,
+  cut,
+  insert,
+  Position,
+  remove,
+  seededRandom,
+} from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const hand = [card("A", "S"), card("K", "H"), card("10", "D")];
+
+// The card above position 1 goes to the bottom.
+cut(hand, 1); // => [card("K", "H"), card("10", "D"), card("A", "S")]
+
+// The new cards start at the position, in their order.
+insert(hand, [card("Q", "C"), card("J", "C")], 1); // => [card("A", "S"), card("Q", "C"), card("J", "C"), card("K", "H"), card("10", "D")]
+insert(hand, [card("Q", "C")], Position.BOTTOM); // => [card("A", "S"), card("K", "H"), card("10", "D"), card("Q", "C")]
+
+// A cut at random. The seed makes it the same every time.
+const deck = cut(standard52(), Position.RANDOM, { random: seededRandom(42) });
+deck[0] === card("8", "H"); // => true
+
+// Each entry removes one copy, so two decks lose both aces of spades.
+const twoDecks = [...standard52(), ...standard52()];
+const left = remove(twoDecks, [card("A", "S"), card("A", "S")]);
+left.length; // => 102
+count(left, (each) => each === card("A", "S")); // => 0
+
+// Every card has to be there.
+remove(hand, [card("Q", "C")]); // throws INVALID_ARGUMENT
+contains(hand, [card("Q", "C")]); // => false
+
+// Count the cards a function accepts.
+count(standard52(), ({ suit }) => suit === "H"); // => 13
+
+// A position has to be in the stack.
+cut(hand, 4); // throws INVALID_ARGUMENT
+```
+
+In a chain, `cut`, `insert` and `remove` carry on, as `shuffle` does. A chain can't name the size of the stack it holds, so pass `Position.BOTTOM` to insert at the bottom. `contains` and `count` end the pipeline, as `peek` does: carry on from the chain you called them on, which still holds the stack.
+
+```ts
+import { card, chain, Position } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const queen = card("Q", "S");
+
+// Cut the deck, then move the queen of spades to the bottom.
+const chained = chain(standard52())
+  .cut(26)
+  .remove([queen])
+  .insert([queen], Position.BOTTOM);
+chained.value()[0] === card("K", "D"); // => true
+chained.value()[51] === queen; // => true
+
+// Look, then carry on from the same chain.
+chained.contains([queen]).value(); // => true
+chained.count(({ suit }) => suit === "S").value(); // => 13
+chained.draw(5).value().remainder.length; // => 47
 ```
 
 ## Error handling
