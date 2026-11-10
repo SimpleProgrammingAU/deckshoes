@@ -39,7 +39,8 @@ export function removeTopmost<C>(
   let missing = -1;
   for (let i = cards.length - 1; i >= 0; i--) {
     const card = cards[i] as C;
-    const short = wanted.get(card) ?? 0;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every card in `cards` is a key
+    const short = wanted.get(card)!;
     if (short > 0) {
       wanted.set(card, short - 1);
       missing = i;
