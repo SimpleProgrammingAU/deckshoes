@@ -10,8 +10,8 @@ import { display } from "./display.ts";
 // Each check returns the error for a public function to throw itself, so that
 // `jsdoc/require-throws` sees the `throw`, or `undefined` when the value is
 // fine. Chain them with `??` to run them in order and throw the first problem.
-// The `unknown…` functions only build the error, for a value a lookup has
-// already failed to find.
+// The `unknown…` functions and `notInOrder` only build the error, for a value
+// a lookup has already failed to find.
 
 /** Whether a value is an integer from `min` to `max`, the one test behind every count and size check. */
 function isInteger(value: unknown, min: number, max = Infinity): boolean {
@@ -71,6 +71,34 @@ export function optionsProblem(
     : new InvalidArgumentError(
         `Invalid options ${display(value)}: expected an object, such as ${example}`,
       );
+}
+
+/** Returns the error for a rank or suit order that isn't an array or lists an entry twice, or `undefined` for one that's neither; `kind` says which order it is. */
+export function orderProblem(
+  value: unknown,
+  kind: "rank" | "suit",
+): InvalidArgumentError | undefined {
+  if (!Array.isArray(value)) {
+    const example = kind === "rank" ? "RankOrder.ACE_HIGH" : "SuitOrder.BRIDGE";
+    return new InvalidArgumentError(
+      `Invalid ${kind} order ${display(value)}: expected an array of ${kind}s from lowest to highest, such as ${example}`,
+    );
+  }
+
+  // A Set compares entries with SameValueZero, as finding a card's place does.
+  const order: readonly unknown[] = value;
+  const size = order.length;
+  const seen = new Set<unknown>();
+  for (let i = 0; i < size; i++) {
+    const entry = order[i];
+    if (seen.has(entry)) {
+      return new InvalidArgumentError(
+        `Invalid ${kind} order: it lists ${display(entry)} twice, but each ${kind} has one place`,
+      );
+    }
+    seen.add(entry);
+  }
+  return undefined;
 }
 
 /** Returns the error for a position that isn't an integer from 0 to `size` or one of the `named` values, or `undefined` for one that is; `constant` names their constant in the message. */
@@ -134,6 +162,18 @@ export function stackProblem(value: unknown): InvalidArgumentError | undefined {
     : new InvalidArgumentError(
         `Invalid stack ${display(value)}: expected an array of cards`,
       );
+}
+
+/** Returns the error for a card, named as `name`, whose rank or suit has no place in its order; `verb` says what couldn't be done to it. */
+export function notInOrder(
+  verb: string,
+  name: string,
+  kind: "rank" | "suit",
+  value: unknown,
+): InvalidArgumentError {
+  return new InvalidArgumentError(
+    `Can't ${verb} ${name}: its ${kind} ${display(value)} isn't in the ${kind} order`,
+  );
 }
 
 /** Returns the error for a rank that isn't a standard rank. */
