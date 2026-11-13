@@ -1,6 +1,6 @@
 # Rank and suit orders are lists passed to every call
 
-A rank order is a frozen list of ranks, lowest first, and a suit order is the same for suits, as the glossary defines them. Every call that compares, sorts or groups by rank takes its rank order as a required positional parameter, with no default: `sort(hand, RankOrder.ACE_HIGH)`, never `sort(hand)`. Cards compare by rank first, and a suit order, passed as an option, only separates cards of the same rank; without one they tie, and a sort keeps them in their order. Grouping takes an order too, and returns one frozen stack for each of its entries, in the order's order, with an empty stack for a rank or suit the stack doesn't hold.
+A rank order is a plain list of ranks, lowest first, and a suit order is the same for suits, as the glossary defines them. The built-in orders are frozen, but any array works. Every call that compares, sorts or groups by rank takes its rank order as a required positional parameter, with no default: `sort(hand, RankOrder.ACE_HIGH)`, never `sort(hand)`. Cards compare by rank first, and a suit order, passed as an option, only separates cards of the same rank; without one they tie, and a sort keeps them in their order. Grouping takes an order too, and returns one frozen stack for each of its entries, in the order's order, with an empty stack for a rank or suit the stack doesn't hold.
 
 ```ts no-test
 sort(hand, RankOrder.ACE_HIGH, { suitOrder: SuitOrder.BRIDGE });
