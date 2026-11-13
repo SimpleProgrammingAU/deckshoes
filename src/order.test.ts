@@ -1,6 +1,8 @@
 import fc, { type Arbitrary } from "fast-check";
 import { describe, expect, it } from "vitest";
 
+import type { CardStack } from "./stack.ts";
+
 import {
   arraySubclasses,
   asStack,
@@ -16,6 +18,8 @@ import { type Card, card, type Rank, type Suit } from "./card.ts";
 import {
   compareCards,
   type CompareCardsOptions,
+  groupByRank,
+  groupBySuit,
   RankOrder,
   sort,
   SuitOrder,
@@ -523,5 +527,190 @@ describe("sort", () => {
           "Can't sort stack[1]: its rank undefined isn't in the rank order",
       });
     });
+  });
+});
+
+describe.each<
+  readonly [
+    name: string,
+    group: (
+      stack: CardStack,
+      order: readonly unknown[],
+    ) => readonly CardStack[],
+    trait: "rank" | "suit",
+    orders: () => Arbitrary<readonly unknown[]>,
+    builtIn: readonly unknown[],
+  ]
+>([
+  [
+    "groupByRank",
+    (stack, order) => groupByRank(stack, order as RankOrder),
+    "rank",
+    rankOrders,
+    RankOrder.ACE_HIGH,
+  ],
+  [
+    "groupBySuit",
+    (stack, order) => groupBySuit(stack, order as SuitOrder),
+    "suit",
+    suitOrders,
+    SuitOrder.BRIDGE,
+  ],
+])("%s", (_name, group, trait, orders, builtIn) => {
+  it("puts each card in the group for its place in the order, keeping the stack's order", () => {
+    fc.assert(
+      fc.property(stacks(), orders(), (stack, order) => {
+        const expected = order.map((entry) =>
+          stack.filter((card) => card[trait] === entry),
+        );
+        expect(group(stack, order)).toStrictEqual(expected);
+      }),
+    );
+  });
+
+  it("gives a group for every entry in the order, even for an empty stack", () => {
+    expect(group([], builtIn)).toStrictEqual(builtIn.map(() => []));
+  });
+
+  it("leaves the stack unchanged, frozen or not, and returns new plain frozen arrays", () => {
+    fc.assert(
+      fc.property(stacks(), fc.boolean(), (original, frozen) => {
+        const stack = frozen ? Object.freeze([...original]) : [...original];
+        const groups = group(stack, builtIn);
+        expect(sameValues(stack, original)).toBe(true);
+        expect(Object.isFrozen(stack)).toBe(frozen);
+        expect(isPlainFrozen(groups)).toBe(true);
+        for (const each of groups) {
+          expect(isPlainFrozen(each)).toBe(true);
+          expect(each).not.toBe(stack);
+        }
+      }),
+    );
+  });
+
+  it.each(arraySubclasses())(
+    "gives what a plain array gives for %s as the stack or the order, frozen or not",
+    (_label, make) => {
+      fc.assert(
+        fc.property(stacks(), fc.boolean(), (stack, frozen) => {
+          const given = <C>(from: CardStack<C>): CardStack<C> =>
+            frozen ? Object.freeze(make(from)) : make(from);
+          const expected = group(stack, builtIn);
+          expect(group(given(stack), builtIn)).toStrictEqual(expected);
+          expect(group(stack, given(builtIn))).toStrictEqual(expected);
+        }),
+      );
+    },
+  );
+
+  it.each(nonArrays())("rejects %s as the stack", (_label, stack) => {
+    expect(thrownBy(() => group(asStack(stack), builtIn))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
+  });
+
+  it.each([
+    ["a string", "CDHS"],
+    ["undefined", undefined],
+    ["an order that lists an entry twice", [...builtIn, builtIn[0]]],
+  ])("rejects %s as the order, even for an empty stack", (_label, order) => {
+    expect(
+      thrownBy(() => group([], order as readonly unknown[])),
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+
+  it("names the first card whose trait isn't in the order", () => {
+    const hand = [card("A", "S"), card("2", "C"), card("K", "H")];
+    const order = builtIn.filter((entry) => entry !== hand[1]?.[trait]);
+    expect(thrownBy(() => group(hand, order))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message: `Can't group stack[1]: its ${trait} "${String(hand[1]?.[trait])}" isn't in the ${trait} order`,
+    });
+  });
+
+  it("rejects a hole, which has no rank or suit", () => {
+    // eslint-disable-next-line no-sparse-arrays -- the hole is the point
+    const holey = asStack([card("A", "S"), , card("K", "H")]);
+    expect(thrownBy(() => group(holey, builtIn))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message: `Can't group stack[1]: its ${trait} undefined isn't in the ${trait} order`,
+    });
+  });
+});
+
+describe("groupByRank", () => {
+  it("lines the groups up with the order, so pairs and runs can be read off", () => {
+    const hand = [
+      card("7", "S"),
+      card("K", "H"),
+      card("7", "D"),
+      card("8", "C"),
+    ];
+    const groups = groupByRank(hand, RankOrder.ACE_HIGH);
+    expect(groups.map((each) => each.length)).toStrictEqual([
+      0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 1, 0,
+    ]);
+    expect(groups[5]).toStrictEqual([card("7", "S"), card("7", "D")]);
+  });
+
+  it("groups cards that aren't standard cards, and reads only their ranks, once each", () => {
+    let reads = 0;
+    const counting = {
+      get rank() {
+        reads += 1;
+        return 11;
+      },
+      get suit() {
+        throw new Error("groupByRank read the suit");
+      },
+    };
+    expect(groupByRank([counting, counting], [10, 11])).toStrictEqual([
+      [],
+      [counting, counting],
+    ]);
+    expect(reads).toBe(2);
+  });
+});
+
+describe("groupBySuit", () => {
+  it("gives a void an empty group, and groups a sorted stack in rank order", () => {
+    const hand = [
+      card("Q", "H"),
+      card("3", "C"),
+      card("A", "H"),
+      card("9", "C"),
+    ];
+    expect(groupBySuit(hand, SuitOrder.BRIDGE)).toStrictEqual([
+      [card("3", "C"), card("9", "C")],
+      [],
+      [card("Q", "H"), card("A", "H")],
+      [],
+    ]);
+    expect(
+      groupBySuit(sort(hand, RankOrder.ACE_HIGH), SuitOrder.BRIDGE).flat(),
+    ).toStrictEqual([
+      card("3", "C"),
+      card("9", "C"),
+      card("Q", "H"),
+      card("A", "H"),
+    ]);
+  });
+
+  it("groups cards that aren't standard cards, and reads only their suits, once each", () => {
+    let reads = 0;
+    const counting = {
+      get rank() {
+        throw new Error("groupBySuit read the rank");
+      },
+      get suit() {
+        reads += 1;
+        return "stars";
+      },
+    };
+    expect(groupBySuit([counting], ["moons", "stars"])).toStrictEqual([
+      [],
+      [counting],
+    ]);
+    expect(reads).toBe(1);
   });
 });

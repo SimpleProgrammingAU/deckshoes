@@ -3,7 +3,14 @@ import { describe, expectTypeOf, it } from "vitest";
 import type { CardStack } from "./stack.ts";
 
 import { type Card, card, type Rank, type Suit } from "./card.ts";
-import { compareCards, RankOrder, sort, SuitOrder } from "./order.ts";
+import {
+  compareCards,
+  groupByRank,
+  groupBySuit,
+  RankOrder,
+  sort,
+  SuitOrder,
+} from "./order.ts";
 import { standard52 } from "./presets/standard52.ts";
 
 /** A card from a deck with ranks beyond the standard ones, as in the 500 deck. */
@@ -146,5 +153,43 @@ describe("sort", () => {
   it("rejects a stack of cards with no rank", () => {
     // @ts-expect-error A card with no rank can't be sorted by rank.
     expectTypeOf(sort).toBeCallableWith([{ color: "red" }], []);
+  });
+});
+
+describe("groupByRank and groupBySuit", () => {
+  it("return frozen groups of the same kind of card", () => {
+    expectTypeOf(groupByRank(standard52(), RankOrder.ACE_HIGH)).toEqualTypeOf<
+      readonly CardStack[]
+    >();
+    expectTypeOf(groupBySuit(standard52(), SuitOrder.BRIDGE)).toEqualTypeOf<
+      readonly CardStack[]
+    >();
+    const fiveHundred: FiveHundredCard[] = [];
+    expectTypeOf(groupByRank(fiveHundred, ["11", "12"])).toEqualTypeOf<
+      readonly CardStack<FiveHundredCard>[]
+    >();
+    expectTypeOf(
+      groupBySuit(standard52(), SuitOrder.BRIDGE),
+    ).not.toHaveProperty("push");
+  });
+
+  it("take an order of the stack's ranks or suits", () => {
+    expectTypeOf(groupByRank<Card>).toBeCallableWith(standard52(), ["9", "10"]);
+    expectTypeOf(groupBySuit<Card>).toBeCallableWith(standard52(), ["S", "H"]);
+    // @ts-expect-error A suit order isn't a rank order.
+    const bySuit = groupByRank(standard52(), SuitOrder.BRIDGE);
+    expectTypeOf(bySuit).toEqualTypeOf<readonly CardStack[]>();
+    // @ts-expect-error A rank order isn't a suit order.
+    const byRank = groupBySuit(standard52(), RankOrder.ACE_HIGH);
+    expectTypeOf(byRank).toEqualTypeOf<readonly CardStack[]>();
+  });
+
+  it("reject cards that lack the trait they group by", () => {
+    const unsuited: UnsuitedCard[] = [];
+    expectTypeOf(groupByRank(unsuited, [1, 2])).toEqualTypeOf<
+      readonly CardStack<UnsuitedCard>[]
+    >();
+    // @ts-expect-error A card with no suit can't be grouped by suit.
+    expectTypeOf(groupBySuit).toBeCallableWith(unsuited, []);
   });
 });

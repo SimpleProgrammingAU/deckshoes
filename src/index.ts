@@ -56,6 +56,8 @@ export {
 export {
   compareCards,
   type CompareCardsOptions,
+  groupByRank,
+  groupBySuit,
   RankOrder,
   sort,
   type SortOptions,
