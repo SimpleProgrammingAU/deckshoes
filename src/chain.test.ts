@@ -50,11 +50,6 @@ const STACK_METHODS = [
   "sort",
 ];
 
-/** Calls `Chain.sort`. The array-sort lint rule takes `chained.sort(order)` for Array#sort, but not a call with spread arguments. */
-function sortChain(chained: Chain, ...args: Parameters<Chain["sort"]>): Chain {
-  return chained.sort(...args);
-}
-
 /** Cards that {@link standard52} holds once each, to insert, remove or look for. */
 const SOME_CARDS = [card("Q", "S"), card("2", "C")];
 
@@ -400,7 +395,7 @@ describe("chain", () => {
           fc.option(fc.constant(SuitOrder.BRIDGE), { nil: undefined }),
           (stack, rankOrder, suitOrder) => {
             expect(
-              sortChain(chain(stack), rankOrder, { suitOrder }).value(),
+              chain(stack).sort(rankOrder, { suitOrder }).value(),
             ).toStrictEqual(sort(stack, rankOrder, { suitOrder }));
           },
         ),
@@ -410,11 +405,11 @@ describe("chain", () => {
     it("uses the function's default when the options are left out or undefined", () => {
       const deck = standard52();
       const expected = sort(deck, RankOrder.ACE_HIGH);
-      expect(sortChain(chain(deck), RankOrder.ACE_HIGH).value()).toStrictEqual(
+      expect(chain(deck).sort(RankOrder.ACE_HIGH).value()).toStrictEqual(
         expected,
       );
       expect(
-        sortChain(chain(deck), RankOrder.ACE_HIGH, undefined).value(),
+        chain(deck).sort(RankOrder.ACE_HIGH, undefined).value(),
       ).toStrictEqual(expected);
     });
 
@@ -432,9 +427,9 @@ describe("chain", () => {
       (_label, rankOrder, options) => {
         const chained = chain(standard52());
         const given = options as { suitOrder?: SuitOrder };
-        expect(
-          thrownBy(() => sortChain(chained, rankOrder, given)),
-        ).toStrictEqual(thrownBy(() => sort(standard52(), rankOrder, given)));
+        expect(thrownBy(() => chained.sort(rankOrder, given))).toStrictEqual(
+          thrownBy(() => sort(standard52(), rankOrder, given)),
+        );
         expect(chained.value()).toBe(standard52());
       },
     );
@@ -442,7 +437,7 @@ describe("chain", () => {
     it("returns a new frozen chain, leaving the old one holding its stack", () => {
       const deck = standard52();
       const before = chain(deck);
-      const after = sortChain(before, RankOrder.ACE_LOW);
+      const after = before.sort(RankOrder.ACE_LOW);
       expect(after).not.toBe(before);
       expect(Object.isFrozen(after)).toBe(true);
       expect(before.value()).toBe(deck);
@@ -451,7 +446,7 @@ describe("chain", () => {
 
     it("carries on, so a sorted deck can be grouped or dealt", () => {
       const deck = standard52();
-      const sorted = sortChain(chain(deck), RankOrder.ACE_HIGH);
+      const sorted = chain(deck).sort(RankOrder.ACE_HIGH);
       expect(sorted.groupBySuit(SuitOrder.BRIDGE).value()).toStrictEqual(
         groupBySuit(sort(deck, RankOrder.ACE_HIGH), SuitOrder.BRIDGE),
       );
