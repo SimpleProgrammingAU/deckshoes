@@ -263,6 +263,8 @@ export interface Chain<C = Card> {
    *
    * To carry on with one group, wrap it again with `chain(group)`.
    *
+   * @typeParam D - The type of card in the stack the chain holds, which has to
+   * have a rank. It's taken from the chain, so you never write it.
    * @param rankOrder - The rank order that {@link groupByRank} takes.
    * @returns A terminated chain holding what {@link groupByRank} returns.
    * @throws {@link InvalidArgumentError} When {@link groupByRank} would.
@@ -281,9 +283,10 @@ export interface Chain<C = Card> {
    *
    * @since NEXT
    */
-  groupByRank(
-    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
-  ): TerminatedChain<readonly CardStack<C>[]>;
+  groupByRank<D extends C & Readonly<Record<"rank", unknown>>>(
+    this: Chain<D>,
+    rankOrder: RankOrder<D["rank"]>,
+  ): TerminatedChain<readonly CardStack<D>[]>;
 
   /**
    * Groups the cards in the stack the chain holds by suit with
@@ -292,6 +295,8 @@ export interface Chain<C = Card> {
    *
    * To carry on with one group, wrap it again with `chain(group)`.
    *
+   * @typeParam D - The type of card in the stack the chain holds, which has to
+   * have a suit. It's taken from the chain, so you never write it.
    * @param suitOrder - The suit order that {@link groupBySuit} takes.
    * @returns A terminated chain holding what {@link groupBySuit} returns.
    * @throws {@link InvalidArgumentError} When {@link groupBySuit} would.
@@ -315,9 +320,10 @@ export interface Chain<C = Card> {
    *
    * @since NEXT
    */
-  groupBySuit(
-    suitOrder: SuitOrder<C extends { readonly suit: infer S } ? S : never>,
-  ): TerminatedChain<readonly CardStack<C>[]>;
+  groupBySuit<D extends C & Readonly<Record<"suit", unknown>>>(
+    this: Chain<D>,
+    suitOrder: SuitOrder<D["suit"]>,
+  ): TerminatedChain<readonly CardStack<D>[]>;
 
   /**
    * Puts cards into the stack the chain holds with {@link insert}, and returns
@@ -464,6 +470,8 @@ export interface Chain<C = Card> {
    * Sorts the stack the chain holds with {@link sort}, and returns a new chain
    * holding the result.
    *
+   * @typeParam D - The type of card in the stack the chain holds, which has to
+   * have a rank. It's taken from the chain, so you never write it.
    * @param rankOrder - The rank order that {@link sort} takes.
    * @param options - The options that {@link sort} takes.
    * @returns A new chain holding the sorted stack.
@@ -490,10 +498,11 @@ export interface Chain<C = Card> {
    *
    * @since NEXT
    */
-  sort(
-    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
-    options?: SortOptions<C extends { readonly suit: infer S } ? S : never>,
-  ): Chain<C>;
+  sort<D extends C & Readonly<Record<"rank", unknown>>>(
+    this: Chain<D>,
+    rankOrder: RankOrder<D["rank"]>,
+    options?: SortOptions<D extends { readonly suit: infer S } ? S : never>,
+  ): Chain<D>;
 
   /**
    * Unwraps the chain, returning the stack it holds.
@@ -572,17 +581,6 @@ class Terminated<R> implements TerminatedChain<R> {
   }
 }
 
-/**
- * A card whose rank and suit could be anything. `Chain` doesn't constrain its
- * kind of card, so its methods pass the stack to the ordering functions as
- * these, and their own parameter types keep the orders to the stack's ranks
- * and suits.
- */
-interface Traits {
-  readonly rank: unknown;
-  readonly suit: unknown;
-}
-
 /** The chain that {@link chain} returns: a frozen object holding a stack. */
 class StackChain<C> implements Chain<C> {
   readonly #stack: CardStack<C>;
@@ -620,18 +618,18 @@ class StackChain<C> implements Chain<C> {
     return new Terminated(drawBottom(this.#stack, count));
   }
 
-  groupByRank(
-    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
-  ): TerminatedChain<readonly CardStack<C>[]> {
-    const groups = groupByRank(this.#stack as CardStack<Traits>, rankOrder);
-    return new Terminated(groups as readonly CardStack<C>[]);
+  groupByRank<D extends C & Readonly<Record<"rank", unknown>>>(
+    this: Chain<D>,
+    rankOrder: RankOrder<D["rank"]>,
+  ): TerminatedChain<readonly CardStack<D>[]> {
+    return new Terminated(groupByRank(this.value(), rankOrder));
   }
 
-  groupBySuit(
-    suitOrder: SuitOrder<C extends { readonly suit: infer S } ? S : never>,
-  ): TerminatedChain<readonly CardStack<C>[]> {
-    const groups = groupBySuit(this.#stack as CardStack<Traits>, suitOrder);
-    return new Terminated(groups as readonly CardStack<C>[]);
+  groupBySuit<D extends C & Readonly<Record<"suit", unknown>>>(
+    this: Chain<D>,
+    suitOrder: SuitOrder<D["suit"]>,
+  ): TerminatedChain<readonly CardStack<D>[]> {
+    return new Terminated(groupBySuit(this.value(), suitOrder));
   }
 
   insert(
@@ -658,12 +656,12 @@ class StackChain<C> implements Chain<C> {
     return new StackChain(shuffle(this.#stack, options));
   }
 
-  sort(
-    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
-    options?: SortOptions<C extends { readonly suit: infer S } ? S : never>,
-  ): Chain<C> {
-    const sorted = sort(this.#stack as CardStack<Traits>, rankOrder, options);
-    return new StackChain(sorted as CardStack<C>);
+  sort<D extends C & Readonly<Record<"rank", unknown>>>(
+    this: Chain<D>,
+    rankOrder: RankOrder<D["rank"]>,
+    options?: SortOptions<D extends { readonly suit: infer S } ? S : never>,
+  ): Chain<D> {
+    return new StackChain(sort(this.value(), rankOrder, options));
   }
 
   value(): CardStack<C> {

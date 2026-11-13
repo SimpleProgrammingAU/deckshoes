@@ -326,14 +326,20 @@ describe("Chain.sort", () => {
     // @ts-expect-error "X" isn't a standard suit.
     const unknown = deck.sort(RankOrder.ACE_HIGH, { suitOrder: ["X"] });
     expectTypeOf(unknown).toEqualTypeOf<Chain>();
-    const jokers = chain([{ color: "red" }]);
-    // @ts-expect-error A chain of cards with no rank can't sort by rank.
-    const unranked = jokers.sort(["A"]);
-    expectTypeOf(unranked).toEqualTypeOf<Chain<{ color: string }>>();
     const ones = chain([{ rank: 1 }]);
     // @ts-expect-error A chain of cards with no suit takes no suit order.
     const unsuited = ones.sort([1], { suitOrder: ["S"] });
     expectTypeOf(unsuited).toEqualTypeOf<Chain<{ rank: number }>>();
+  });
+
+  it("can't be called on a chain of cards that don't all have a rank, as the function can't", () => {
+    // @ts-expect-error A joker has no rank.
+    expectTypeOf(chain([{ color: "red" }]).sort([])).toBeObject();
+    // @ts-expect-error A number has no rank.
+    expectTypeOf(chain([1, 2]).sort([])).toBeObject();
+    const mixed: CardStack<Card | { readonly color: "red" }> = standard52();
+    // @ts-expect-error Some of the cards have no rank.
+    expectTypeOf(chain(mixed).sort(RankOrder.ACE_HIGH)).toBeObject();
   });
 });
 
@@ -342,8 +348,9 @@ describe("Chain.groupByRank and Chain.groupBySuit", () => {
     expectTypeOf(
       chain(standard52()).groupByRank(RankOrder.ACE_HIGH),
     ).toEqualTypeOf<TerminatedChain<readonly CardStack[]>>();
-    expectTypeOf(chain([1, 2]).groupBySuit([])).toEqualTypeOf<
-      TerminatedChain<readonly CardStack<number>[]>
+    const custom = [{ rank: 11, suit: 3 }];
+    expectTypeOf(chain(custom).groupBySuit([3])).toEqualTypeOf<
+      TerminatedChain<readonly CardStack<{ rank: number; suit: number }>[]>
     >();
   });
 
@@ -363,6 +370,25 @@ describe("Chain.groupByRank and Chain.groupBySuit", () => {
     expectTypeOf<Parameters<Chain["groupBySuit"]>>().toEqualTypeOf<
       AfterStack<typeof groupBySuit<Card>>
     >();
+  });
+
+  it("can't be called on a chain of cards that don't all have the trait, as the functions can't", () => {
+    // @ts-expect-error A number has no suit.
+    expectTypeOf(chain([1, 2]).groupBySuit([])).toBeObject();
+    // @ts-expect-error A number has no rank.
+    expectTypeOf(chain([1, 2]).groupByRank([])).toBeObject();
+    const mixed: CardStack<Card | { readonly color: "red" }> = standard52();
+    // @ts-expect-error Some of the cards have no suit.
+    expectTypeOf(chain(mixed).groupBySuit(SuitOrder.BRIDGE)).toBeObject();
+    // @ts-expect-error Some of the cards have no rank.
+    expectTypeOf(chain(mixed).groupByRank(RankOrder.ACE_HIGH)).toBeObject();
+  });
+
+  it("rejects orders the stack's cards can't have", () => {
+    // @ts-expect-error "11" isn't a standard rank.
+    expectTypeOf(chain(standard52()).groupByRank(["10", "11"])).toBeObject();
+    // @ts-expect-error "X" isn't a standard suit.
+    expectTypeOf(chain(standard52()).groupBySuit(["X"])).toBeObject();
   });
 
   it("can't be carried on from, as there are several stacks", () => {
