@@ -144,6 +144,7 @@ describe("card with input that isn't standard", () => {
     ["marks a bigint", asRank(10n), "S", "Unknown rank 10n"],
     ["shows null as it is", asRank(null), "S", "Unknown rank null"],
     ["shows only an object's type", asRank({}), "S", "Unknown rank (object)"],
+    ["shows an array as an array", asRank(["A"]), "S", "Unknown rank (array)"],
     [
       "shows only a function's type",
       asRank(() => "A"),

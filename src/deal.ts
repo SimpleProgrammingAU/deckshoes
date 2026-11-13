@@ -273,9 +273,9 @@ export interface DealResult<C = Card> {
  * to, and the `remainder`, each a new frozen stack, top first.
  * @throws {@link InvalidArgumentError} When `deck` isn't an array, `handCount`
  * isn't an integer from 1 to 2³² − 1, `handSize` isn't an integer of 1 or more
- * or `HandSize.MAXIMIZE`, or `options` isn't an object. Also when its
- * `packetSize` isn't an integer of 1 or more or `PacketSize.HAND`, or its
- * `runOut` isn't `RunOut.THROW` or `RunOut.STOP`.
+ * or `HandSize.MAXIMIZE`, or `options` isn't an object or is an array. Also
+ * when its `packetSize` isn't an integer of 1 or more or `PacketSize.HAND`, or
+ * its `runOut` isn't `RunOut.THROW` or `RunOut.STOP`.
  * @throws {@link InsufficientCardsError} When the deck holds fewer than
  * `handCount × handSize` cards, or fewer cards than hands with
  * `HandSize.MAXIMIZE`, unless `runOut` is `RunOut.STOP`.

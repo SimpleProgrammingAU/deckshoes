@@ -61,12 +61,12 @@ export function flagProblem(
       );
 }
 
-/** Returns the error for options that aren't an object, or `undefined` for options that are; `example` shows valid options in the message. */
+/** Returns the error for options that aren't an object, or are an array, or `undefined` for options that are an object; `example` shows valid options in the message. An array is rejected because it's never options, and is easy to pass by mistake, such as a suit order in place of `{ suitOrder }`. */
 export function optionsProblem(
   value: unknown,
   example: string,
 ): InvalidArgumentError | undefined {
-  return typeof value === "object" && value !== null
+  return typeof value === "object" && value !== null && !Array.isArray(value)
     ? undefined
     : new InvalidArgumentError(
         `Invalid options ${display(value)}: expected an object, such as ${example}`,

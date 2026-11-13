@@ -154,9 +154,10 @@ export interface InsertOptions {
  * @returns A new frozen stack holding the same cards, cut at `position`.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, `position`
  * isn't an integer from 0 to the stack's size, `Position.BOTTOM` or
- * `Position.RANDOM`, `options` isn't an object, or its `random` option isn't a
- * function. Also when the random source returns something other than a number
- * from 0 up to 1, or keeps returning values that have to be rejected.
+ * `Position.RANDOM`, `options` isn't an object or is an array, or its `random`
+ * option isn't a function. Also when the random source returns something other
+ * than a number from 0 up to 1, or keeps returning values that have to be
+ * rejected.
  *
  * @example
  * ```ts
@@ -246,9 +247,10 @@ export function cut<C>(
  * them.
  * @throws {@link InvalidArgumentError} When `stack` or `cards` isn't an array,
  * `position` isn't an integer from 0 to the stack's size, `Position.BOTTOM` or
- * `Position.RANDOM`, `options` isn't an object, or its `random` option isn't a
- * function. Also when the random source returns something other than a number
- * from 0 up to 1, or keeps returning values that have to be rejected.
+ * `Position.RANDOM`, `options` isn't an object or is an array, or its `random`
+ * option isn't a function. Also when the random source returns something other
+ * than a number from 0 up to 1, or keeps returning values that have to be
+ * rejected.
  *
  * @example
  * ```ts

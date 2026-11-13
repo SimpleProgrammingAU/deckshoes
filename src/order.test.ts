@@ -300,6 +300,7 @@ describe("compareCards", () => {
     it.each([
       ["null", null],
       ["a string", "C D H S"],
+      ["a suit order, in place of { suitOrder }", SuitOrder.BRIDGE],
     ])("rejects %s as the options", (_label, options) => {
       expect(
         thrownBy(() =>
@@ -556,6 +557,12 @@ describe("sort", () => {
     it("rejects options that aren't an object, and a bad suit order", () => {
       expect(
         thrownBy(() => sort(hand, RankOrder.ACE_HIGH, asOptions(null))),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+      // A suit order in place of { suitOrder } would otherwise be ignored.
+      expect(
+        thrownBy(() =>
+          sort(hand, RankOrder.ACE_HIGH, asOptions(SuitOrder.BRIDGE)),
+        ),
       ).toMatchObject({ code: "INVALID_ARGUMENT" });
       expect(
         thrownBy(() =>

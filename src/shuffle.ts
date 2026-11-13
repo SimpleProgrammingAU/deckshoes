@@ -60,9 +60,9 @@ export interface ShuffleOptions {
  * @param options - Settings for the shuffle, such as its random source.
  * @returns A new frozen stack holding the same cards in random order.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, `options`
- * isn't an object, or its `random` option isn't a function. Also when the
- * random source returns something other than a number from 0 up to 1, or keeps
- * returning values that have to be rejected.
+ * isn't an object or is an array, or its `random` option isn't a function. Also
+ * when the random source returns something other than a number from 0 up to 1,
+ * or keeps returning values that have to be rejected.
  *
  * @example
  * ```ts

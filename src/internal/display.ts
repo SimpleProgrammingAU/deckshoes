@@ -1,7 +1,7 @@
 /** How many characters (code points) of a rejected string an error message shows. */
 const MAX_LENGTH = 30;
 
-/** Shows a value that was rejected as input in an error message, without calling into it. */
+/** Shows a value that was rejected as input in an error message, without calling into it: an array, other object or function only as what it is. */
 export function display(value: unknown): string {
   if (typeof value === "string") {
     // The first MAX_LENGTH code points, so a character such as an emoji is
@@ -19,7 +19,8 @@ export function display(value: unknown): string {
     (typeof value === "object" && value !== null) ||
     typeof value === "function"
   ) {
-    return `(${typeof value})`;
+    // `Array.isArray` reads no property and calls no Proxy trap.
+    return Array.isArray(value) ? "(array)" : `(${typeof value})`;
   }
   return String(value);
 }

@@ -488,6 +488,7 @@ describe("deal", () => {
       ["a number", 42],
       ["a string", "packets"],
       ["a random source", seededRandom(42)],
+      ["an array", [3]],
     ])("rejects %s in place of the options object", (_label, options) => {
       expect(
         thrownBy(() => deal(hand, 1, 1, asDealOptions(options))),
