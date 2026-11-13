@@ -20,6 +20,13 @@ import { chain, type Chain, type TerminatedChain } from "./chain.ts";
 import { cut, type CutOptions, insert, Position } from "./cut.ts";
 import { deal, HandSize, PacketSize, RunOut } from "./deal.ts";
 import { draw, drawBottom, peek, peekBottom } from "./draw.ts";
+import {
+  groupByRank,
+  groupBySuit,
+  RankOrder,
+  sort,
+  SuitOrder,
+} from "./order.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
 import { contains, count, remove } from "./remove.ts";
@@ -33,12 +40,20 @@ const STACK_METHODS = [
   "deal",
   "draw",
   "drawBottom",
+  "groupByRank",
+  "groupBySuit",
   "insert",
   "peek",
   "peekBottom",
   "remove",
   "shuffle",
+  "sort",
 ];
+
+/** Calls `Chain.sort`. The array-sort lint rule takes `chained.sort(order)` for Array#sort, but not a call with spread arguments. */
+function sortChain(chained: Chain, ...args: Parameters<Chain["sort"]>): Chain {
+  return chained.sort(...args);
+}
 
 /** Cards that {@link standard52} holds once each, to insert, remove or look for. */
 const SOME_CARDS = [card("Q", "S"), card("2", "C")];
@@ -372,6 +387,133 @@ describe("chain", () => {
       expect(terminated.value()).toBe(terminated.value());
       for (const method of STACK_METHODS) {
         expect(terminated).not.toHaveProperty(method);
+      }
+    });
+  });
+
+  describe("sort", () => {
+    it("gives what the function gives, with or without a suit order", () => {
+      fc.assert(
+        fc.property(
+          stacks(),
+          fc.constantFrom(RankOrder.ACE_HIGH, RankOrder.ACE_LOW),
+          fc.option(fc.constant(SuitOrder.BRIDGE), { nil: undefined }),
+          (stack, rankOrder, suitOrder) => {
+            expect(
+              sortChain(chain(stack), rankOrder, { suitOrder }).value(),
+            ).toStrictEqual(sort(stack, rankOrder, { suitOrder }));
+          },
+        ),
+      );
+    });
+
+    it("uses the function's default when the options are left out or undefined", () => {
+      const deck = standard52();
+      const expected = sort(deck, RankOrder.ACE_HIGH);
+      expect(sortChain(chain(deck), RankOrder.ACE_HIGH).value()).toStrictEqual(
+        expected,
+      );
+      expect(
+        sortChain(chain(deck), RankOrder.ACE_HIGH, undefined).value(),
+      ).toStrictEqual(expected);
+    });
+
+    it.each<readonly [label: string, rankOrder: RankOrder, options: unknown]>([
+      ["a rank order that lacks a rank", ["9", "J", "Q", "K", "10", "A"], {}],
+      ["a rank order that lists a rank twice", ["A", "A"], {}],
+      [
+        "a suit order that lacks a suit",
+        RankOrder.ACE_HIGH,
+        { suitOrder: ["S"] },
+      ],
+      ["options that aren't an object", RankOrder.ACE_HIGH, null],
+    ])(
+      "throws what the function throws for %s",
+      (_label, rankOrder, options) => {
+        const chained = chain(standard52());
+        const given = options as { suitOrder?: SuitOrder };
+        expect(
+          thrownBy(() => sortChain(chained, rankOrder, given)),
+        ).toStrictEqual(thrownBy(() => sort(standard52(), rankOrder, given)));
+        expect(chained.value()).toBe(standard52());
+      },
+    );
+
+    it("returns a new frozen chain, leaving the old one holding its stack", () => {
+      const deck = standard52();
+      const before = chain(deck);
+      const after = sortChain(before, RankOrder.ACE_LOW);
+      expect(after).not.toBe(before);
+      expect(Object.isFrozen(after)).toBe(true);
+      expect(before.value()).toBe(deck);
+      expect(after.value()[0]?.rank).toBe("A");
+    });
+
+    it("carries on, so a sorted deck can be grouped or dealt", () => {
+      const deck = standard52();
+      const sorted = sortChain(chain(deck), RankOrder.ACE_HIGH);
+      expect(sorted.groupBySuit(SuitOrder.BRIDGE).value()).toStrictEqual(
+        groupBySuit(sort(deck, RankOrder.ACE_HIGH), SuitOrder.BRIDGE),
+      );
+      expect(sorted.deal(4, 2).value()).toStrictEqual(
+        deal(sort(deck, RankOrder.ACE_HIGH), 4, 2),
+      );
+    });
+  });
+
+  describe.each<
+    readonly [
+      name: "groupByRank" | "groupBySuit",
+      method: (chained: Chain) => TerminatedChain<unknown>,
+      operation: (stack: CardStack) => unknown,
+      bad: (chained: Chain) => unknown,
+      badOperation: (stack: CardStack) => unknown,
+    ]
+  >([
+    [
+      "groupByRank",
+      (chained) => chained.groupByRank(RankOrder.ACE_LOW),
+      (stack) => groupByRank(stack, RankOrder.ACE_LOW),
+      (chained) => chained.groupByRank(["A", "K"]),
+      (stack) => groupByRank(stack, ["A", "K"]),
+    ],
+    [
+      "groupBySuit",
+      (chained) => chained.groupBySuit(SuitOrder.BRIDGE),
+      (stack) => groupBySuit(stack, SuitOrder.BRIDGE),
+      (chained) => chained.groupBySuit(["S", "S"]),
+      (stack) => groupBySuit(stack, ["S", "S"]),
+    ],
+  ])("%s", (_name, method, operation, bad, badOperation) => {
+    it("gives what the function gives", () => {
+      fc.assert(
+        fc.property(stacks(), (stack) => {
+          expect(method(chain(stack)).value()).toStrictEqual(operation(stack));
+        }),
+      );
+    });
+
+    it("throws what the function throws", () => {
+      const chained = chain(standard52());
+      expect(thrownBy(() => bad(chained))).toStrictEqual(
+        thrownBy(() => badOperation(standard52())),
+      );
+      expect(chained.value()).toBe(standard52());
+    });
+
+    it("leaves the chain it's called on holding its stack", () => {
+      const deck = standard52();
+      const before = chain(deck);
+      method(before);
+      expect(before.value()).toBe(deck);
+    });
+
+    it("returns a frozen chain that can only be unwrapped", () => {
+      const terminated = method(chain(standard52()));
+      expect(Object.isFrozen(terminated)).toBe(true);
+      expect(terminated.value()).toBe(terminated.value());
+      for (const name of STACK_METHODS) {
+        expect(terminated).not.toHaveProperty(name);
       }
     });
   });

@@ -10,11 +10,13 @@ import type {
 } from "./cut.ts";
 import type { deal, DealOptions, DealResult, HandSize } from "./deal.ts";
 import type { draw, drawBottom, DrawResult, peek, peekBottom } from "./draw.ts";
+import type { groupByRank, groupBySuit, sort } from "./order.ts";
 import type { contains, count, remove } from "./remove.ts";
 import type { shuffle, ShuffleOptions } from "./shuffle.ts";
 import type { CardStack } from "./stack.ts";
 
 import { chain, type Chain, type TerminatedChain } from "./chain.ts";
+import { RankOrder, SuitOrder } from "./order.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
 
@@ -293,5 +295,79 @@ describe("Chain.shuffle", () => {
     expectTypeOf<Chain["shuffle"]>().toBeCallableWith({ random: 42 });
     // @ts-expect-error Settings go in an options object (ADR 0009).
     expectTypeOf<Chain["shuffle"]>().toBeCallableWith(seededRandom(42));
+  });
+});
+
+describe("Chain.sort", () => {
+  it("keeps the kind of card, and unwraps to what the function returns", () => {
+    expectTypeOf(
+      chain(standard52()).sort(RankOrder.ACE_HIGH),
+    ).toEqualTypeOf<Chain>();
+    expectTypeOf(
+      chain(standard52()).sort(RankOrder.ACE_HIGH).value(),
+    ).toEqualTypeOf<ReturnType<typeof sort<Card>>>();
+    const custom = [{ rank: 11, suit: "stars" as const }];
+    expectTypeOf(chain(custom).sort([10, 11])).toEqualTypeOf<
+      Chain<{ rank: number; suit: "stars" }>
+    >();
+  });
+
+  it("takes the function's parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["sort"]>>().toEqualTypeOf<
+      AfterStack<typeof sort<Card>>
+    >();
+  });
+
+  it("rejects orders the stack's cards can't have", () => {
+    const deck = chain(standard52());
+    // @ts-expect-error "11" isn't a standard rank.
+    const eleven = deck.sort(["10", "11"]);
+    expectTypeOf(eleven).toEqualTypeOf<Chain>();
+    // @ts-expect-error "X" isn't a standard suit.
+    const unknown = deck.sort(RankOrder.ACE_HIGH, { suitOrder: ["X"] });
+    expectTypeOf(unknown).toEqualTypeOf<Chain>();
+    const jokers = chain([{ color: "red" }]);
+    // @ts-expect-error A chain of cards with no rank can't sort by rank.
+    const unranked = jokers.sort(["A"]);
+    expectTypeOf(unranked).toEqualTypeOf<Chain<{ color: string }>>();
+    const ones = chain([{ rank: 1 }]);
+    // @ts-expect-error A chain of cards with no suit takes no suit order.
+    const unsuited = ones.sort([1], { suitOrder: ["S"] });
+    expectTypeOf(unsuited).toEqualTypeOf<Chain<{ rank: number }>>();
+  });
+});
+
+describe("Chain.groupByRank and Chain.groupBySuit", () => {
+  it("end the chain, keeping the kind of card", () => {
+    expectTypeOf(
+      chain(standard52()).groupByRank(RankOrder.ACE_HIGH),
+    ).toEqualTypeOf<TerminatedChain<readonly CardStack[]>>();
+    expectTypeOf(chain([1, 2]).groupBySuit([])).toEqualTypeOf<
+      TerminatedChain<readonly CardStack<number>[]>
+    >();
+  });
+
+  it("unwrap to what the functions return", () => {
+    expectTypeOf(
+      chain(standard52()).groupByRank(RankOrder.ACE_HIGH).value(),
+    ).toEqualTypeOf<ReturnType<typeof groupByRank<Card>>>();
+    expectTypeOf(
+      chain(standard52()).groupBySuit(SuitOrder.BRIDGE).value(),
+    ).toEqualTypeOf<ReturnType<typeof groupBySuit<Card>>>();
+  });
+
+  it("take the functions' parameters after the stack", () => {
+    expectTypeOf<Parameters<Chain["groupByRank"]>>().toEqualTypeOf<
+      AfterStack<typeof groupByRank<Card>>
+    >();
+    expectTypeOf<Parameters<Chain["groupBySuit"]>>().toEqualTypeOf<
+      AfterStack<typeof groupBySuit<Card>>
+    >();
+  });
+
+  it("can't be carried on from, as there are several stacks", () => {
+    const groups = chain(standard52()).groupBySuit(SuitOrder.BRIDGE);
+    // @ts-expect-error A pipeline can't carry on from groups.
+    expectTypeOf(groups).toHaveProperty("sort");
   });
 });

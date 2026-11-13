@@ -385,6 +385,9 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       // `value; // => result` lines are how examples show results.
       "@typescript-eslint/no-unused-expressions": "off",
       "no-console": "off",
+      // The rule can't tell `chain(stack).sort(rankOrder)`, which returns a new
+      // chain, from Array#sort, which sorts in place.
+      "unicorn/no-array-sort": "off",
     },
   },
 
