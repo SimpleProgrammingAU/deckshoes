@@ -31,3 +31,4 @@ deal(deck, 4, HandSize.MAXIMIZE, { packetSize: PacketSize.HAND });
 - Adding a value to a constant is a minor change. Removing or renaming one is a major change.
 - Turning a boolean setting into a named value is a major change.
 - `Rank`, `Suit` and `Color` stay plain unions with no constants. `"A"`, `"S"` and `"red"` are the domain's own notation, as in `"AS"` and `"10H"`, rather than settings.
+- `RankOrder` and `SuitOrder` follow the same pattern for built-in lists rather than strings: a frozen constant, such as `RankOrder.ACE_HIGH`, sharing its name with the type ([ADR 0012](./0012-rank-and-suit-orders-are-lists-passed-to-every-call.md)).
