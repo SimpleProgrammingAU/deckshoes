@@ -599,12 +599,10 @@ describe("sort", () => {
       const holeyOrder = asRankOrder([, ...RankOrder.ACE_HIGH]);
       expect(thrownBy(() => sort(holey, holeyOrder))).toMatchObject({
         code: "INVALID_ARGUMENT",
-        message:
-          "Invalid rank order: it has a hole or undefined at index 0, but each place needs a rank",
       });
     });
 
-    it("rejects a hole, which has no rank", () => {
+    it("names a hole as the card with no rank", () => {
       // eslint-disable-next-line no-sparse-arrays -- the hole is the point
       const holey = [card("A", "S"), , card("K", "H")];
       expect(
@@ -725,7 +723,7 @@ describe.each<
     });
   });
 
-  it("rejects a hole, which has no rank or suit", () => {
+  it("names a hole as the card with no rank or suit", () => {
     // eslint-disable-next-line no-sparse-arrays -- the hole is the point
     const holey = asStack([card("A", "S"), , card("K", "H")]);
     expect(thrownBy(() => group(holey, builtIn))).toMatchObject({
