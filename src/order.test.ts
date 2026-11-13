@@ -253,6 +253,22 @@ describe("compareCards", () => {
     expect(suits.reads).toStrictEqual(SuitOrder.BRIDGE.map(() => 1));
   });
 
+  it("reads a frozen order only the first time, and any other order every time", () => {
+    const ace = card("A", "S");
+    const king = card("K", "S");
+    const frozen = countingOrder(RankOrder.ACE_HIGH);
+    Object.freeze(frozen.order);
+    compareCards(ace, king, frozen.order);
+    compareCards(ace, king, frozen.order);
+    expect(frozen.reads).toStrictEqual(RankOrder.ACE_HIGH.map(() => 1));
+
+    // An order you can still change gives the places it has now.
+    const changing = [...RankOrder.ACE_HIGH];
+    expect(compareCards(ace, king, changing)).toBe(1);
+    changing.reverse();
+    expect(compareCards(ace, king, changing)).toBe(-1);
+  });
+
   it("leaves out the suit order when it's undefined", () => {
     const options = asOptions({ suitOrder: undefined });
     expect(

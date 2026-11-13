@@ -60,6 +60,18 @@ describe("placesIn", () => {
         "Invalid suit order: it has a hole or undefined at index 2, but each place needs a suit",
     });
   });
+  it("keeps a frozen order's places, but reads any other order every time", () => {
+    const frozen = Object.freeze(["A", "K"]);
+    expect(placesIn(frozen, "rank")).toBe(placesIn(frozen, "suit"));
+    const unfrozen = ["A", "K"];
+    expect(placesIn(unfrozen, "rank")).not.toBe(placesIn(unfrozen, "rank"));
+  });
+
+  it("doesn't keep a frozen order it rejects", () => {
+    const twice = Object.freeze(["A", "A"]);
+    expect(placesIn(twice, "rank")).toMatchObject({ code: "INVALID_ARGUMENT" });
+    expect(placesIn(twice, "rank")).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
 });
 
 describe("suitPlacesIn", () => {
