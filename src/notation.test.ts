@@ -274,6 +274,7 @@ describe("formatCard with input that isn't valid", () => {
     ["a number", 1],
     ["a notation", "symbol"],
     ["true", true],
+    ["an array", ["symbol"]],
   ])("rejects %s in place of the options object", (_label, options) => {
     expect(
       thrownBy(() => formatCard(card("A", "S"), asFormatCardOptions(options))),

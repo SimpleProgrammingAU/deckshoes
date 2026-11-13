@@ -213,6 +213,7 @@ describe("shuffle", () => {
       ["null", null],
       ["a number", 42],
       ["a string", "random"],
+      ["an array", []],
     ])("rejects %s in place of the options object", (_label, options) => {
       expect(
         thrownBy(() => shuffle(standard52(), asShuffleOptions(options))),

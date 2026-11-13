@@ -248,11 +248,11 @@ export interface SortOptions<S = Suit> {
  * @param options - Settings for the comparison: a suit order to separate cards
  * of the same rank.
  * @returns -1 if `a` is lower than `b`, 1 if it's higher, or 0 if they tie.
- * @throws {@link InvalidArgumentError} When `options` isn't an object, or
- * `rankOrder`, or a `suitOrder` other than `undefined`, isn't an array, lists
- * an entry twice, or has a hole or `undefined` in it. Also when a card's rank
- * isn't in the rank order, or, with a suit order, its suit isn't in the suit
- * order.
+ * @throws {@link InvalidArgumentError} When `options` isn't an object or is an
+ * array. Also when `rankOrder`, or a `suitOrder` other than `undefined`, isn't
+ * an array, lists an entry twice, or has a hole or `undefined` in it, or when a
+ * card's rank isn't in the rank order, or, with a suit order, its suit isn't in
+ * the suit order.
  *
  * @example
  * ```ts
@@ -334,11 +334,11 @@ export function compareCards<C extends Readonly<Record<"rank", unknown>>>(
  * @param options - Settings for the sort: a suit order to separate cards of
  * the same rank.
  * @returns A new frozen stack holding the same cards, lowest on top.
- * @throws {@link InvalidArgumentError} When `stack` isn't an array, `options`
- * isn't an object, or `rankOrder`, or a `suitOrder` other than `undefined`,
- * isn't an array, lists an entry twice, or has a hole or `undefined` in it.
- * Also when a card's rank isn't in the rank order, or, with a suit order, its
- * suit isn't in the suit order.
+ * @throws {@link InvalidArgumentError} When `stack` isn't an array, or
+ * `options` isn't an object or is an array. Also when `rankOrder`, or a
+ * `suitOrder` other than `undefined`, isn't an array, lists an entry twice, or
+ * has a hole or `undefined` in it, or when a card's rank isn't in the rank
+ * order, or, with a suit order, its suit isn't in the suit order.
  *
  * @example
  * ```ts

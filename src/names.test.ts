@@ -160,6 +160,7 @@ describe("rankName and suitName options", () => {
     ["a string", "lowercase"],
     ["true", true],
     ["a function", () => true],
+    ["an array", []],
   ])("reject %s in place of the options object", (_label, options) => {
     expect(
       thrownBy(() => rankName("A", asRankNameOptions(options))),

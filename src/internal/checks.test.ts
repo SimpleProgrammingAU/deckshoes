@@ -76,6 +76,13 @@ describe("optionsProblem", () => {
     );
     expect(optionsProblem({}, "{ packetSize: 3 }")).toBeUndefined();
   });
+
+  it("rejects an array, which is an object but never options", () => {
+    expect(optionsProblem([3], "{ packetSize: 3 }")?.message).toBe(
+      "Invalid options (array): expected an object, such as { packetSize: 3 }",
+    );
+    expect(optionsProblem(new Date(0), "{ packetSize: 3 }")).toBeUndefined();
+  });
 });
 
 describe("positionProblem", () => {

@@ -217,9 +217,9 @@ export function tryParseCard(text: string): Card | undefined {
  * @returns The card written in that notation.
  * @throws {@link InvalidCardError} When `card` isn't one of the cards this
  * install's `card()` returns, such as a cloned card.
- * @throws {@link InvalidArgumentError} When `options` isn't an object, or its
- * `notation` isn't `Notation.SHORT`, `Notation.SYMBOL`, `Notation.NAME` or
- * `Notation.UNICODE_CHARACTER`.
+ * @throws {@link InvalidArgumentError} When `options` isn't an object or is an
+ * array, or its `notation` isn't `Notation.SHORT`, `Notation.SYMBOL`,
+ * `Notation.NAME` or `Notation.UNICODE_CHARACTER`.
  *
  * @example
  * ```ts

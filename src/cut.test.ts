@@ -364,6 +364,7 @@ describe.each<
       ["null", null],
       ["a number", 42],
       ["a string", "random"],
+      ["an array", []],
     ])(
       "rejects %s in place of the options object, even at a given position",
       (_label, options) => {

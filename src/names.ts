@@ -101,8 +101,8 @@ export interface SuitNameOptions {
  * @param options - Settings for the name: whether it's in lower case.
  * @returns The rank's name: Ace, Two to Ten, Jack, Queen or King.
  * @throws {@link InvalidCardError} When `rank` isn't a standard rank.
- * @throws {@link InvalidArgumentError} When `options` isn't an object, or its
- * `lowercase` isn't `true` or `false`.
+ * @throws {@link InvalidArgumentError} When `options` isn't an object or is an
+ * array, or its `lowercase` isn't `true` or `false`.
  *
  * @example
  * ```ts
@@ -151,8 +151,8 @@ export function rankName(rank: Rank, options: RankNameOptions = {}): string {
  * @returns The suit's name: Spades, Hearts, Diamonds or Clubs, or Spade,
  * Heart, Diamond or Club in the singular.
  * @throws {@link InvalidCardError} When `suit` isn't a standard suit.
- * @throws {@link InvalidArgumentError} When `options` isn't an object, or its
- * `lowercase` or `singular` isn't `true` or `false`.
+ * @throws {@link InvalidArgumentError} When `options` isn't an object or is an
+ * array, or its `lowercase` or `singular` isn't `true` or `false`.
  *
  * @example
  * ```ts
