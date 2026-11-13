@@ -280,7 +280,7 @@ const SUIT_ORDER_EXAMPLE = "{ suitOrder: SuitOrder.BRIDGE }";
  *
  * @since NEXT
  */
-export function compareCards<C extends { readonly rank: unknown }>(
+export function compareCards<C extends Readonly<Record<"rank", unknown>>>(
   a: C,
   b: C,
   rankOrder: RankOrder<C["rank"]>,
@@ -377,7 +377,7 @@ export function compareCards<C extends { readonly rank: unknown }>(
  *
  * @since NEXT
  */
-export function sort<C extends { readonly rank: unknown }>(
+export function sort<C extends Readonly<Record<"rank", unknown>>>(
   stack: CardStack<C>,
   rankOrder: RankOrder<C["rank"]>,
   options: SortOptions<C extends { readonly suit: infer S } ? S : never> = {},
@@ -459,7 +459,7 @@ export function sort<C extends { readonly rank: unknown }>(
  *
  * @since NEXT
  */
-export function groupByRank<C extends { readonly rank: unknown }>(
+export function groupByRank<C extends Readonly<Record<"rank", unknown>>>(
   stack: CardStack<C>,
   rankOrder: RankOrder<C["rank"]>,
 ): readonly CardStack<C>[] {
@@ -526,7 +526,7 @@ export function groupByRank<C extends { readonly rank: unknown }>(
  *
  * @since NEXT
  */
-export function groupBySuit<C extends { readonly suit: unknown }>(
+export function groupBySuit<C extends Readonly<Record<"suit", unknown>>>(
   stack: CardStack<C>,
   suitOrder: SuitOrder<C["suit"]>,
 ): readonly CardStack<C>[] {
