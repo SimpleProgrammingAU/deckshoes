@@ -245,9 +245,9 @@ export interface SortOptions<S = Suit> {
  * @param options - Settings for the comparison: a suit order to separate cards
  * of the same rank.
  * @returns -1 if `a` is lower than `b`, 1 if it's higher, or 0 if they tie.
- * @throws {@link InvalidArgumentError} When `rankOrder` isn't an array or lists
- * a rank twice, `options` isn't an object, or its `suitOrder` is neither
- * `undefined` nor an array, or lists a suit twice. Also when a card's rank
+ * @throws {@link InvalidArgumentError} When `options` isn't an object, or
+ * `rankOrder`, or a `suitOrder` other than `undefined`, isn't an array, lists
+ * an entry twice, or has a hole or `undefined` in it. Also when a card's rank
  * isn't in the rank order, or, with a suit order, its suit isn't in the suit
  * order.
  *
@@ -331,11 +331,11 @@ export function compareCards<C extends Readonly<Record<"rank", unknown>>>(
  * @param options - Settings for the sort: a suit order to separate cards of
  * the same rank.
  * @returns A new frozen stack holding the same cards, lowest on top.
- * @throws {@link InvalidArgumentError} When `stack` isn't an array,
- * `rankOrder` isn't an array or lists a rank twice, `options` isn't an object,
- * or its `suitOrder` is neither `undefined` nor an array, or lists a suit
- * twice. Also when a card's rank isn't in the rank order, or, with a suit
- * order, its suit isn't in the suit order.
+ * @throws {@link InvalidArgumentError} When `stack` isn't an array, `options`
+ * isn't an object, or `rankOrder`, or a `suitOrder` other than `undefined`,
+ * isn't an array, lists an entry twice, or has a hole or `undefined` in it.
+ * Also when a card's rank isn't in the rank order, or, with a suit order, its
+ * suit isn't in the suit order.
  *
  * @example
  * ```ts
@@ -399,8 +399,8 @@ export function sort<C extends Readonly<Record<"rank", unknown>>>(
  * @returns A new frozen array holding a new frozen stack for each rank in
  * `rankOrder`, in its order.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array,
- * `rankOrder` isn't an array or lists a rank twice, or a card's rank isn't in
- * the rank order.
+ * `rankOrder` isn't an array, lists a rank twice or has a hole or `undefined`
+ * in it, or a card's rank isn't in the rank order.
  *
  * @example
  * ```ts
@@ -458,8 +458,8 @@ export function groupByRank<C extends Readonly<Record<"rank", unknown>>>(
  * @returns A new frozen array holding a new frozen stack for each suit in
  * `suitOrder`, in its order.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array,
- * `suitOrder` isn't an array or lists a suit twice, or a card's suit isn't in
- * the suit order.
+ * `suitOrder` isn't an array, lists a suit twice or has a hole or `undefined`
+ * in it, or a card's suit isn't in the suit order.
  *
  * @example
  * ```ts

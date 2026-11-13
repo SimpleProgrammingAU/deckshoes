@@ -372,7 +372,7 @@ A rank order lists the ranks from lowest to highest, each once, and a suit order
 
 `groupByRank(stack, rankOrder)` and `groupBySuit(stack, suitOrder)` give one frozen stack for each entry of the order, in its order, holding that rank's or suit's cards in the order they had. A rank or suit the stack doesn't hold gets an empty group, so the groups always line up with the order. To lay a hand out by suit, then rank, sort it, group it by suit, and flatten the groups.
 
-Every card's rank has to be in the rank order, and its suit in the suit order when there is one, so the wrong order for a deck throws `InvalidArgumentError` rather than sorting quietly. So does an order that lists an entry twice.
+Every card's rank has to be in the rank order, and its suit in the suit order when there is one, so the wrong order for a deck throws `InvalidArgumentError` rather than sorting quietly. So does an order that lists an entry twice or has a hole.
 
 ```ts
 import {
@@ -444,11 +444,11 @@ chain(groups[3] ?? [])
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
 
-| Code                 | Class                    | Thrown when                                                                                                                                                                                                         |
-| -------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, position, seed or option is out of range, a stack isn't an array, a card to remove isn't in the stack, a rank or suit order repeats an entry or lacks a card's rank or suit, or a random source misbehaves |
-| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised                                                                                                                                                            |
-| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                                                                                                                                          |
+| Code                 | Class                    | Thrown when                                                                                                                                                                                                                      |
+| -------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, position, seed or option is out of range, a stack isn't an array, a card to remove isn't in the stack, a rank or suit order repeats an entry, has a hole, or lacks a card's rank or suit, or a random source misbehaves |
+| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised                                                                                                                                                                         |
+| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                                                                                                                                                       |
 
 Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
 

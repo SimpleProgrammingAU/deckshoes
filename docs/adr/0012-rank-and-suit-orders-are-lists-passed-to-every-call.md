@@ -21,7 +21,7 @@ groupBySuit(hand, SuitOrder.BRIDGE); // [clubs, diamonds, hearts, spades]
 
 - `RankOrder.ACE_HIGH`, `RankOrder.ACE_LOW` and `SuitOrder.BRIDGE` are frozen lists on frozen constants that share their names with the `RankOrder` and `SuitOrder` types, as [ADR 0010](./0010-named-values-are-strings-with-a-constant-of-the-same-name.md)'s named values do, though they hold lists rather than strings.
 - The rank order is positional, though it changes how the call works, because [ADR 0009](./0009-settings-go-in-one-options-object.md)'s options are always optional; `count`'s `match` is the precedent. Giving it a default later would be a minor change.
-- An order that lists an entry twice, or that lacks a card's rank, or its suit when a suit order is given, throws `INVALID_ARGUMENT`, so the wrong order for a deck, such as Pinochle's on a full deck, can't sort quietly. A stripped order can't be used as a filter.
+- An order that lists an entry twice, or that lacks a card's rank, or its suit when a suit order is given, throws `INVALID_ARGUMENT`, so the wrong order for a deck, such as Pinochle's on a full deck, can't sort quietly. A stripped order can't be used as a filter. So does an order with a hole or `undefined` in it, since that's what a hole in the stack reads as, so no rank or suit can be `undefined`.
 - `compareCards` returns exactly -1, 0 or 1, and says nothing about how far apart two ranks are.
 - Grouping returns a bare frozen array, since every group has the same role ([ADR 0001](./0001-functional-core-with-a-chain.md)). Looking up one suit's group takes the order: `groups[order.indexOf("S")]`.
 - Trumps, the led suit and Euchre's bowers aren't orders, so they're left to the game helpers.

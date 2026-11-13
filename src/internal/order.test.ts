@@ -11,12 +11,12 @@ describe("placesIn", () => {
         ["K", 1],
       ]),
     );
-    expect(placesIn([1, "1", undefined, null], "suit")).toStrictEqual(
+    expect(placesIn([1, "1", null, false], "suit")).toStrictEqual(
       new Map<unknown, number>([
         [1, 0],
         ["1", 1],
-        [undefined, 2],
-        [null, 3],
+        [null, 2],
+        [false, 3],
       ]),
     );
   });
@@ -47,13 +47,17 @@ describe("placesIn", () => {
     });
   });
 
-  it("reads a hole as undefined, so two holes repeat an entry", () => {
-    // eslint-disable-next-line no-sparse-arrays -- the holes are the point
-    expect(placesIn([, "A"], "rank")).toBeInstanceOf(Map);
-    // eslint-disable-next-line no-sparse-arrays -- the holes are the point
-    expect(placesIn([, "A", ,], "rank")).toMatchObject({
+  it("names where a hole or undefined is, since it's what a card with no rank or suit reads as", () => {
+    // eslint-disable-next-line no-sparse-arrays -- the hole is the point
+    expect(placesIn(["2", , "A"], "rank")).toMatchObject({
+      code: "INVALID_ARGUMENT",
       message:
-        "Invalid rank order: it lists undefined twice, but each rank has one place",
+        "Invalid rank order: it has a hole or undefined at index 1, but each place needs a rank",
+    });
+    expect(placesIn(["C", "D", undefined], "suit")).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        "Invalid suit order: it has a hole or undefined at index 2, but each place needs a suit",
     });
   });
 });
