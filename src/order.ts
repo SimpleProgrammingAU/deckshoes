@@ -1,13 +1,15 @@
 import type { Rank, Suit } from "./card.ts";
 import type { CardStack } from "./stack.ts";
 
+import { InvalidArgumentError } from "./errors.ts";
+import { stackProblem } from "./internal/checks.ts";
 import {
-  notInOrder,
-  optionsProblem,
-  orderProblem,
-  stackProblem,
-} from "./internal/checks.ts";
-import { groupsOf, intoBuckets, keyOf, placesIn } from "./internal/order.ts";
+  compareBy,
+  groupedBy,
+  placesIn,
+  sortedBy,
+  suitPlacesIn,
+} from "./internal/order.ts";
 
 /**
  * A rank order: the ranks from lowest to highest, each listed once, as a plain
@@ -218,9 +220,6 @@ export interface SortOptions<S = Suit> {
   readonly suitOrder?: SuitOrder<S> | undefined;
 }
 
-/** Options with a suit order, shown in the error for options that aren't an object. */
-const SUIT_ORDER_EXAMPLE = "{ suitOrder: SuitOrder.BRIDGE }";
-
 /**
  * Compares two cards by a rank order, and by a suit order when their ranks are
  * the same: -1 if `a` is lower, 1 if it's higher, and 0 if they tie.
@@ -288,31 +287,13 @@ export function compareCards<C extends Readonly<Record<"rank", unknown>>>(
     C extends { readonly suit: infer S } ? S : never
   > = {},
 ): -1 | 0 | 1 {
-  const problem =
-    orderProblem(rankOrder, "rank") ??
-    optionsProblem(options, SUIT_ORDER_EXAMPLE);
-  if (problem !== undefined) throw problem;
-  // Read the option once, as `unknown`: JavaScript callers can pass anything,
-  // and a getter could give the check one value and the comparison another.
-  const { suitOrder }: Readonly<{ suitOrder?: unknown }> = options;
-  const badSuitOrder =
-    suitOrder === undefined ? undefined : orderProblem(suitOrder, "suit");
-  if (badSuitOrder !== undefined) throw badSuitOrder;
-
-  const ranks = placesIn(rankOrder);
-  const suits =
-    suitOrder === undefined
-      ? undefined
-      : placesIn(suitOrder as readonly unknown[]);
-  const keyA = keyOf(a, ranks, suits);
-  if ("missing" in keyA) {
-    throw notInOrder("compare", "a", keyA.missing, keyA.value);
-  }
-  const keyB = keyOf(b, ranks, suits);
-  if ("missing" in keyB) {
-    throw notInOrder("compare", "b", keyB.missing, keyB.value);
-  }
-  return keyA.key < keyB.key ? -1 : keyA.key > keyB.key ? 1 : 0;
+  const ranks = placesIn(rankOrder, "rank");
+  if (ranks instanceof InvalidArgumentError) throw ranks;
+  const suits = suitPlacesIn(options);
+  if (suits instanceof InvalidArgumentError) throw suits;
+  const compared = compareBy(a, b, ranks, suits);
+  if (compared instanceof InvalidArgumentError) throw compared;
+  return compared;
 }
 
 /**
@@ -382,36 +363,15 @@ export function sort<C extends Readonly<Record<"rank", unknown>>>(
   rankOrder: RankOrder<C["rank"]>,
   options: SortOptions<C extends { readonly suit: infer S } ? S : never> = {},
 ): CardStack<C> {
-  const problem =
-    stackProblem(stack) ??
-    orderProblem(rankOrder, "rank") ??
-    optionsProblem(options, SUIT_ORDER_EXAMPLE);
+  const problem = stackProblem(stack);
   if (problem !== undefined) throw problem;
-  // Read the option once, as `unknown`, as compareCards does.
-  const { suitOrder }: Readonly<{ suitOrder?: unknown }> = options;
-  const badSuitOrder =
-    suitOrder === undefined ? undefined : orderProblem(suitOrder, "suit");
-  if (badSuitOrder !== undefined) throw badSuitOrder;
-
-  const sorted = intoBuckets(
-    stack,
-    placesIn(rankOrder),
-    suitOrder === undefined
-      ? undefined
-      : placesIn(suitOrder as readonly unknown[]),
-  );
-  if ("missing" in sorted) {
-    const name = `stack[${String(sorted.index)}]`;
-    throw notInOrder("sort", name, sorted.missing, sorted.value);
-  }
-
-  // Buckets that no card needed are holes, and are skipped. Pushing one card
-  // at a time, rather than spreading a bucket, works for buckets of any size.
-  const result: C[] = [];
-  for (const bucket of sorted.buckets) {
-    if (bucket !== undefined) for (const card of bucket) result.push(card);
-  }
-  return Object.freeze(result);
+  const ranks = placesIn(rankOrder, "rank");
+  if (ranks instanceof InvalidArgumentError) throw ranks;
+  const suits = suitPlacesIn(options);
+  if (suits instanceof InvalidArgumentError) throw suits;
+  const sorted = sortedBy(stack, ranks, suits);
+  if (sorted instanceof InvalidArgumentError) throw sorted;
+  return sorted;
 }
 
 /**
@@ -463,16 +423,13 @@ export function groupByRank<C extends Readonly<Record<"rank", unknown>>>(
   stack: CardStack<C>,
   rankOrder: RankOrder<C["rank"]>,
 ): readonly CardStack<C>[] {
-  const problem = stackProblem(stack) ?? orderProblem(rankOrder, "rank");
+  const problem = stackProblem(stack);
   if (problem !== undefined) throw problem;
-
-  const ranks = placesIn(rankOrder);
-  const grouped = intoBuckets(stack, ranks, undefined);
-  if ("missing" in grouped) {
-    const name = `stack[${String(grouped.index)}]`;
-    throw notInOrder("group", name, grouped.missing, grouped.value);
-  }
-  return groupsOf(grouped.buckets, ranks.size);
+  const places = placesIn(rankOrder, "rank");
+  if (places instanceof InvalidArgumentError) throw places;
+  const groups = groupedBy(stack, places, "rank");
+  if (groups instanceof InvalidArgumentError) throw groups;
+  return groups;
 }
 
 /**
@@ -530,14 +487,11 @@ export function groupBySuit<C extends Readonly<Record<"suit", unknown>>>(
   stack: CardStack<C>,
   suitOrder: SuitOrder<C["suit"]>,
 ): readonly CardStack<C>[] {
-  const problem = stackProblem(stack) ?? orderProblem(suitOrder, "suit");
+  const problem = stackProblem(stack);
   if (problem !== undefined) throw problem;
-
-  const suits = placesIn(suitOrder);
-  const grouped = intoBuckets(stack, undefined, suits);
-  if ("missing" in grouped) {
-    const name = `stack[${String(grouped.index)}]`;
-    throw notInOrder("group", name, grouped.missing, grouped.value);
-  }
-  return groupsOf(grouped.buckets, suits.size);
+  const places = placesIn(suitOrder, "suit");
+  if (places instanceof InvalidArgumentError) throw places;
+  const groups = groupedBy(stack, places, "suit");
+  if (groups instanceof InvalidArgumentError) throw groups;
+  return groups;
 }

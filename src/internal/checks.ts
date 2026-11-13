@@ -73,34 +73,6 @@ export function optionsProblem(
       );
 }
 
-/** Returns the error for a rank or suit order that isn't an array or lists an entry twice, or `undefined` for one that's neither; `kind` says which order it is. */
-export function orderProblem(
-  value: unknown,
-  kind: "rank" | "suit",
-): InvalidArgumentError | undefined {
-  if (!Array.isArray(value)) {
-    const example = kind === "rank" ? "RankOrder.ACE_HIGH" : "SuitOrder.BRIDGE";
-    return new InvalidArgumentError(
-      `Invalid ${kind} order ${display(value)}: expected an array of ${kind}s from lowest to highest, such as ${example}`,
-    );
-  }
-
-  // A Set compares entries with SameValueZero, as finding a card's place does.
-  const order: readonly unknown[] = value;
-  const size = order.length;
-  const seen = new Set<unknown>();
-  for (let i = 0; i < size; i++) {
-    const entry = order[i];
-    if (seen.has(entry)) {
-      return new InvalidArgumentError(
-        `Invalid ${kind} order: it lists ${display(entry)} twice, but each ${kind} has one place`,
-      );
-    }
-    seen.add(entry);
-  }
-  return undefined;
-}
-
 /** Returns the error for a position that isn't an integer from 0 to `size` or one of the `named` values, or `undefined` for one that is; `constant` names their constant in the message. */
 export function positionProblem(
   value: unknown,

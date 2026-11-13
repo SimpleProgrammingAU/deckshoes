@@ -6,7 +6,6 @@ import {
   flagProblem,
   notInOrder,
   optionsProblem,
-  orderProblem,
   positionProblem,
   randomProblem,
   shortfall,
@@ -76,48 +75,6 @@ describe("optionsProblem", () => {
       "Invalid options null: expected an object, such as { packetSize: 3 }",
     );
     expect(optionsProblem({}, "{ packetSize: 3 }")).toBeUndefined();
-  });
-});
-
-describe("orderProblem", () => {
-  it("accepts an array that lists each entry once, whatever the entries are", () => {
-    expect(orderProblem([], "rank")).toBeUndefined();
-    expect(orderProblem(["A", "K"], "rank")).toBeUndefined();
-    expect(orderProblem([1, "1", undefined, null], "suit")).toBeUndefined();
-  });
-
-  it("names the order and shows its built-in when it isn't an array", () => {
-    expect(orderProblem("AKQ", "rank")).toMatchObject({
-      code: "INVALID_ARGUMENT",
-      message:
-        'Invalid rank order "AKQ": expected an array of ranks from lowest to highest, such as RankOrder.ACE_HIGH',
-    });
-    expect(orderProblem(null, "suit")?.message).toBe(
-      "Invalid suit order null: expected an array of suits from lowest to highest, such as SuitOrder.BRIDGE",
-    );
-  });
-
-  it("names an entry listed twice, matching as SameValueZero does", () => {
-    expect(orderProblem(["A", "K", "A"], "rank")).toMatchObject({
-      code: "INVALID_ARGUMENT",
-      message:
-        'Invalid rank order: it lists "A" twice, but each rank has one place',
-    });
-    expect(orderProblem([NaN, NaN], "suit")).toMatchObject({
-      code: "INVALID_ARGUMENT",
-    });
-    expect(orderProblem([0, -0], "suit")).toMatchObject({
-      code: "INVALID_ARGUMENT",
-    });
-  });
-
-  it("reads a hole as undefined, so two holes repeat an entry", () => {
-    // eslint-disable-next-line no-sparse-arrays -- the holes are the point
-    expect(orderProblem([, "A"], "rank")).toBeUndefined();
-    // eslint-disable-next-line no-sparse-arrays -- the holes are the point
-    expect(orderProblem([, "A", ,], "rank")?.message).toBe(
-      "Invalid rank order: it lists undefined twice, but each rank has one place",
-    );
   });
 });
 
