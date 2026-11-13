@@ -1,7 +1,10 @@
 import { describe, expectTypeOf, it } from "vitest";
 
+import type { CardStack } from "./stack.ts";
+
 import { type Card, card, type Rank, type Suit } from "./card.ts";
-import { compareCards, RankOrder, SuitOrder } from "./order.ts";
+import { compareCards, RankOrder, sort, SuitOrder } from "./order.ts";
+import { standard52 } from "./presets/standard52.ts";
 
 /** A card from a deck with ranks beyond the standard ones, as in the 500 deck. */
 interface FiveHundredCard {
@@ -97,5 +100,51 @@ describe("compareCards", () => {
     // @ts-expect-error Both cards are the same kind.
     const mixed = compareCards(ace, green, RankOrder.ACE_HIGH);
     expectTypeOf(mixed).toEqualTypeOf<-1 | 0 | 1>();
+  });
+});
+
+describe("sort", () => {
+  it("returns a stack of the same kind of card, which can't be changed", () => {
+    expectTypeOf(
+      sort(standard52(), RankOrder.ACE_HIGH),
+    ).toEqualTypeOf<CardStack>();
+    const fiveHundred: FiveHundredCard[] = [];
+    expectTypeOf(sort(fiveHundred, ["10", "11", "J"])).toEqualTypeOf<
+      CardStack<FiveHundredCard>
+    >();
+    expectTypeOf(sort(standard52(), RankOrder.ACE_LOW)).not.toHaveProperty(
+      "push",
+    );
+  });
+
+  it("takes orders of the stack's ranks and suits, frozen or not", () => {
+    const pinochle: RankOrder = ["9", "J", "Q", "K", "10", "A"];
+    expectTypeOf(sort<Card>).toBeCallableWith(standard52(), pinochle);
+    expectTypeOf(sort<Card>).toBeCallableWith([ace], RankOrder.ACE_HIGH, {
+      suitOrder: SuitOrder.BRIDGE,
+    });
+    expectTypeOf(sort<Card>).toBeCallableWith(
+      Object.freeze([ace]),
+      RankOrder.ACE_HIGH.toReversed(),
+      { suitOrder: undefined },
+    );
+  });
+
+  it("rejects ranks and suits the stack's cards can't have", () => {
+    // @ts-expect-error "11" isn't a standard rank.
+    const eleven = sort(standard52(), ["10", "11"]);
+    expectTypeOf(eleven).toEqualTypeOf<CardStack>();
+    // @ts-expect-error "X" isn't a standard suit.
+    const unknown = sort([ace], RankOrder.ACE_HIGH, { suitOrder: ["X"] });
+    expectTypeOf(unknown).toEqualTypeOf<CardStack>();
+    const unsuited: UnsuitedCard[] = [];
+    // @ts-expect-error A card with no suit takes no suit order.
+    const suited = sort(unsuited, [7], { suitOrder: ["S"] });
+    expectTypeOf(suited).toEqualTypeOf<CardStack<UnsuitedCard>>();
+  });
+
+  it("rejects a stack of cards with no rank", () => {
+    // @ts-expect-error A card with no rank can't be sorted by rank.
+    expectTypeOf(sort).toBeCallableWith([{ color: "red" }], []);
   });
 });

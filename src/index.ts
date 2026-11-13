@@ -57,6 +57,8 @@ export {
   compareCards,
   type CompareCardsOptions,
   RankOrder,
+  sort,
+  type SortOptions,
   SuitOrder,
 } from "./order.ts";
 export { type RandomSource, seededRandom } from "./random.ts";
