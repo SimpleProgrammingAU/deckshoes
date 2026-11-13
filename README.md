@@ -366,7 +366,7 @@ chained.draw(5).value().remainder.length; // => 47
 
 ## Sorting and grouping
 
-A rank order lists the ranks from lowest to highest, each once, and a suit order does the same for the suits. Both are plain frozen arrays. `RankOrder.ACE_HIGH` and `RankOrder.ACE_LOW` are built in, and so is `SuitOrder.BRIDGE`: clubs, diamonds, hearts, then spades. Any other order is an array you write, such as Pinochle's, where the ten ranks above the king. There's no default, so every call that orders cards takes its order.
+A rank order lists the ranks from lowest to highest, each once, and a suit order does the same for the suits. Both are plain frozen arrays. `RankOrder.ACE_HIGH` and `RankOrder.ACE_LOW` are built in, and so is `SuitOrder.BRIDGE`: clubs, diamonds, hearts, then spades. Any other order is an array you write, such as Pinochle's, where the ten ranks above the king. There's no default, so every call that compares, sorts or groups cards takes its order.
 
 `compareCards(a, b, rankOrder)` returns -1, 0 or 1, and `sort(stack, rankOrder)` returns a new frozen stack with the lowest card on top. Cards of the same rank tie, and a sort keeps them in the order they had, unless a `suitOrder` option separates them. To sort highest first, reverse the orders.
 
