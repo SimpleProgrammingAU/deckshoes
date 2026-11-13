@@ -35,8 +35,8 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  * returns a new chain holding the result. If a pipeline can't carry on from the
  * result, as with dealt hands, drawn cards and the remainder, peeked cards,
  * groups, or an answer such as a count, that new chain is a
- * {@link TerminatedChain}, which can only be unwrapped. A method never changes the chain it's called
- * on, which still holds the stack it held before.
+ * {@link TerminatedChain}, which can only be unwrapped. A method never changes
+ * the chain it's called on, which still holds the stack it held before.
  *
  * A chain holds the stack passed to {@link chain} itself, not a copy. Every
  * stack deckshoes returns is frozen, but if you pass in an array of your own
