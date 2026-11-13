@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting and removing cards work today; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -364,15 +364,91 @@ chained.count(({ suit }) => suit === "S").value(); // => 13
 chained.draw(5).value().remainder.length; // => 47
 ```
 
+## Sorting and grouping
+
+A rank order lists the ranks from lowest to highest, each once, and a suit order does the same for the suits. Both are plain frozen arrays. `RankOrder.ACE_HIGH` and `RankOrder.ACE_LOW` are built in, and so is `SuitOrder.BRIDGE`: clubs, diamonds, hearts, then spades. Any other order is an array you write, such as Pinochle's, where the ten ranks above the king. There's no default, so every call that orders cards takes its order.
+
+`compareCards(a, b, rankOrder)` returns -1, 0 or 1, and `sort(stack, rankOrder)` returns a new frozen stack with the lowest card on top. Cards of the same rank tie, and a sort keeps them in the order they had, unless a `suitOrder` option separates them. To sort highest first, reverse the orders.
+
+`groupByRank(stack, rankOrder)` and `groupBySuit(stack, suitOrder)` give one frozen stack for each entry of the order, in its order, holding that rank's or suit's cards in the order they had. A rank or suit the stack doesn't hold gets an empty group, so the groups always line up with the order. To lay a hand out by suit, then rank, sort it, group it by suit, and flatten the groups.
+
+Every card's rank has to be in the rank order, and its suit in the suit order when there is one, so the wrong order for a deck throws `InvalidArgumentError` rather than sorting quietly. So does an order that lists an entry twice.
+
+```ts
+import {
+  card,
+  compareCards,
+  groupByRank,
+  groupBySuit,
+  RankOrder,
+  sort,
+  SuitOrder,
+} from "deckshoes";
+
+const hand = [card("K", "S"), card("2", "H"), card("A", "H"), card("2", "C")];
+
+// Lowest on top. The twos tie, so they keep their order.
+sort(hand, RankOrder.ACE_HIGH); // => [card("2", "H"), card("2", "C"), card("K", "S"), card("A", "H")]
+sort(hand, RankOrder.ACE_LOW); // => [card("A", "H"), card("2", "H"), card("2", "C"), card("K", "S")]
+
+// A suit order separates cards of the same rank.
+const bySuit = { suitOrder: SuitOrder.BRIDGE };
+sort(hand, RankOrder.ACE_HIGH, bySuit); // => [card("2", "C"), card("2", "H"), card("K", "S"), card("A", "H")]
+
+// Highest on top: reverse the orders.
+sort(hand, RankOrder.ACE_HIGH.toReversed()); // => [card("A", "H"), card("K", "S"), card("2", "H"), card("2", "C")]
+
+// Compare two cards, with a built-in order or one you write.
+compareCards(card("A", "S"), card("K", "S"), RankOrder.ACE_HIGH); // => 1
+const pinochle: RankOrder = ["9", "J", "Q", "K", "10", "A"];
+compareCards(card("10", "H"), card("K", "H"), pinochle); // => 1
+
+// One group for each suit, in bridge order. The hand has no diamonds.
+const [clubs, diamonds, hearts, spades] = groupBySuit(hand, SuitOrder.BRIDGE);
+clubs; // => [card("2", "C")]
+diamonds; // => []
+hearts; // => [card("2", "H"), card("A", "H")]
+spades; // => [card("K", "S")]
+
+// By suit, then rank: sort, then group by suit and flatten.
+const laidOut = groupBySuit(sort(hand, RankOrder.ACE_HIGH), SuitOrder.BRIDGE);
+laidOut.flat(); // => [card("2", "C"), card("2", "H"), card("A", "H"), card("K", "S")]
+
+// One group for each rank, so pairs are easy to find.
+const byRank = groupByRank(hand, RankOrder.ACE_HIGH);
+byRank.filter((group) => group.length === 2); // => [[card("2", "H"), card("2", "C")]]
+
+// Every card has to be in the order.
+sort(hand, pinochle); // throws INVALID_ARGUMENT
+```
+
+In a chain, `sort` carries on, as `shuffle` does. `groupByRank` and `groupBySuit` end the pipeline, as `deal` does: carry on with a group by wrapping it in a new chain.
+
+```ts
+import { card, chain, RankOrder, SuitOrder } from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const sorted = chain(standard52()).sort(RankOrder.ACE_LOW, {
+  suitOrder: SuitOrder.BRIDGE,
+});
+sorted.draw(4).value().cards; // => [card("A", "C"), card("A", "D"), card("A", "H"), card("A", "S")]
+
+// Group the sorted deck by suit, then carry on with the spades.
+const groups = sorted.groupBySuit(SuitOrder.BRIDGE).value();
+chain(groups[3] ?? [])
+  .peek(2)
+  .value(); // => [card("A", "S"), card("2", "S")]
+```
+
 ## Error handling
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
 
-| Code                 | Class                    | Thrown when                                                                                                                                   |
-| -------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, position, seed or option is out of range, a stack isn't an array, a card to remove isn't in the stack, or a random source misbehaves |
-| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised                                                                                      |
-| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                                                                    |
+| Code                 | Class                    | Thrown when                                                                                                                                                                                                         |
+| -------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, position, seed or option is out of range, a stack isn't an array, a card to remove isn't in the stack, a rank or suit order repeats an entry or lacks a card's rank or suit, or a random source misbehaves |
+| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised                                                                                                                                                            |
+| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                                                                                                                                          |
 
 Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
 

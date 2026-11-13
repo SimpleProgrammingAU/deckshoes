@@ -10,8 +10,8 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 
 - `Card`, `Rank`, `Suit` and `Color` types for the 52 standard cards. Cards are frozen and interned, so identical cards are `===`.
 - Parse and format cards: `"AS"`, `"10h"`, `"Th"`, `"A♠"`, `"Ace of Spades"`, and Unicode characters such as `"🂡"`.
-- Rank orders (ace high or low) and suit orders, for sorting and comparing.
-- Stack operations, which never change their input: `shuffle`, `draw`, `drawBottom`, `peek`, `peekBottom`, `deal`, `cut`, `insert`, `remove`, `contains`, `count`, `sort`, `groupBy`.
+- Rank orders (ace high or low) and suit orders, for comparing cards with `compareCards`, sorting and grouping.
+- Stack operations, which never change their input: `shuffle`, `draw`, `drawBottom`, `peek`, `peekBottom`, `deal`, `cut`, `insert`, `remove`, `contains`, `count`, `sort`, `groupByRank`, `groupBySuit`.
 - Random sources: a secure default built on `crypto.getRandomValues`, and `seededRandom(seed)` for reproducible shuffles.
 - The chain: `chain(stack).shuffle({ random }).deal(4, 5).value()`.
 - Presets, imported from `deckshoes/presets`: standard 52, Piquet (32), Euchre (24) and Pinochle (48).
