@@ -136,15 +136,18 @@ export function stackProblem(value: unknown): InvalidArgumentError | undefined {
       );
 }
 
-/** Returns the error for a card, named as `name`, whose rank or suit has no place in its order; `verb` says what couldn't be done to it. */
+/** A trait of a card that an order lists: its rank or its suit. */
+export type Trait = "rank" | "suit";
+
+/** Returns the error for a card, named as `name`, whose rank or suit, as `trait` says, is `actual` and has no place in its order; `verb` says what couldn't be done to it. */
 export function notInOrder(
   verb: string,
   name: string,
-  kind: "rank" | "suit",
-  value: unknown,
+  trait: Trait,
+  actual: unknown,
 ): InvalidArgumentError {
   return new InvalidArgumentError(
-    `Can't ${verb} ${name}: its ${kind} ${display(value)} isn't in the ${kind} order`,
+    `Can't ${verb} ${name}: its ${trait} ${display(actual)} isn't in the ${trait} order`,
   );
 }
 
