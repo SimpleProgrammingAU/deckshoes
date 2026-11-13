@@ -2,7 +2,7 @@ import type { CardStack } from "../stack.ts";
 
 import { InvalidArgumentError } from "../errors.ts";
 import { assert } from "./assert.ts";
-import { notInOrder, optionsProblem } from "./checks.ts";
+import { notInOrder, optionsProblem, type Trait } from "./checks.ts";
 import { display } from "./display.ts";
 
 /** Each entry of a rank or suit order, mapped to its place, from 0 for the lowest. */
@@ -19,10 +19,10 @@ interface PlacedCard<C> extends Placed {
   readonly card: C;
 }
 
-/** Which of a card's traits has no place in its order, and that trait's value. */
+/** Which of a card's traits has no place in its order, and the rank or suit the card actually has. */
 interface Missing {
-  readonly missing: "rank" | "suit";
-  readonly value: unknown;
+  readonly actual: unknown;
+  readonly trait: Trait;
 }
 
 /** The places of each frozen order read so far. A frozen order's entries can't be reassigned, so its places are kept from the first read, and a comparator, called for each pair of cards, reads a built-in order only once. */
@@ -31,15 +31,16 @@ const frozenPlaces = /* @__PURE__ */ new WeakMap<readonly unknown[], Places>();
 /** Options with a suit order, shown in the error for options that aren't an object. */
 const SUIT_ORDER_EXAMPLE = "{ suitOrder: SuitOrder.BRIDGE }";
 
-/** Reads a rank or suit order once, by index, and returns each entry's place, keeping them for a frozen order; or returns the error for an order that isn't an array, has a hole or `undefined` in it, or lists an entry twice. `kind` says which order it is. */
+/** Reads a rank or suit order once, by index, and returns each entry's place, keeping them for a frozen order; or returns the error for an order that isn't an array, has a hole or `undefined` in it, or lists an entry twice. `trait` says which order it is. */
 export function placesIn(
   value: unknown,
-  kind: "rank" | "suit",
+  trait: Trait,
 ): InvalidArgumentError | Places {
   if (!Array.isArray(value)) {
-    const example = kind === "rank" ? "RankOrder.ACE_HIGH" : "SuitOrder.BRIDGE";
+    const example =
+      trait === "rank" ? "RankOrder.ACE_HIGH" : "SuitOrder.BRIDGE";
     return new InvalidArgumentError(
-      `Invalid ${kind} order ${display(value)}: expected an array of ${kind}s from lowest to highest, such as ${example}`,
+      `Invalid ${trait} order ${display(value)}: expected an array of ${trait}s from lowest to highest, such as ${example}`,
     );
   }
 
@@ -57,12 +58,12 @@ export function placesIn(
     // reads as `undefined`, and has to find no place.
     if (entry === undefined) {
       return new InvalidArgumentError(
-        `Invalid ${kind} order: it has a hole or undefined at index ${String(i)}, but each place needs a ${kind}`,
+        `Invalid ${trait} order: it has a hole or undefined at index ${String(i)}, but each place needs a ${trait}`,
       );
     }
     if (places.has(entry)) {
       return new InvalidArgumentError(
-        `Invalid ${kind} order: it lists ${display(entry)} twice, but each ${kind} has one place`,
+        `Invalid ${trait} order: it lists ${display(entry)} twice, but each ${trait} has one place`,
       );
     }
     places.set(entry, i);
@@ -82,29 +83,28 @@ export function suitPlacesIn(
   return suitOrder === undefined ? undefined : placesIn(suitOrder, "suit");
 }
 
-/** Finds a card's places in the rank and suit orders, leaving out an order that's `undefined` as 0; reads the rank, then the suit, once each, and a hole, `null` or a primitive finds no place rather than throwing. */
+/** Finds the place of a card's rank or suit, as `trait` says, in its order, or 0 for an order that's `undefined`; reads the trait once, and a hole, `null` or a primitive finds no place rather than throwing. */
+function placeIn(
+  card: unknown,
+  places: Places | undefined,
+  trait: Trait,
+): Missing | number {
+  if (places === undefined) return 0;
+  const traits = card as Partial<Record<Trait, unknown>> | null | undefined;
+  const actual = traits?.[trait];
+  return places.get(actual) ?? { actual, trait };
+}
+
+/** Finds a card's places in the rank and suit orders, leaving out an order that's `undefined` as 0; reads the rank, then the suit. */
 function placeOf(
   card: unknown,
   ranks: Places | undefined,
   suits: Places | undefined,
 ): Missing | Placed {
-  const traits = card as
-    { readonly rank?: unknown; readonly suit?: unknown } | null | undefined;
-  let rank = 0;
-  if (ranks !== undefined) {
-    const value = traits?.rank;
-    const place = ranks.get(value);
-    if (place === undefined) return { missing: "rank", value };
-    rank = place;
-  }
-  let suit = 0;
-  if (suits !== undefined) {
-    const value = traits?.suit;
-    const place = suits.get(value);
-    if (place === undefined) return { missing: "suit", value };
-    suit = place;
-  }
-  return { rank, suit };
+  const rank = placeIn(card, ranks, "rank");
+  if (typeof rank !== "number") return rank;
+  const suit = placeIn(card, suits, "suit");
+  return typeof suit === "number" ? { rank, suit } : suit;
 }
 
 /** Compares two placed cards by rank, then suit: negative if `a` is lower, positive if it's higher, or 0 if they tie. Comparing the two places, rather than one number made from both, works for orders of any size. */
@@ -120,12 +120,12 @@ export function compareBy(
   suits: Places | undefined,
 ): -1 | 0 | 1 | InvalidArgumentError {
   const placeA = placeOf(a, ranks, suits);
-  if ("missing" in placeA) {
-    return notInOrder("compare", "a", placeA.missing, placeA.value);
+  if ("trait" in placeA) {
+    return notInOrder("compare", "a", placeA.trait, placeA.actual);
   }
   const placeB = placeOf(b, ranks, suits);
-  if ("missing" in placeB) {
-    return notInOrder("compare", "b", placeB.missing, placeB.value);
+  if ("trait" in placeB) {
+    return notInOrder("compare", "b", placeB.trait, placeB.actual);
   }
   const difference = byPlace(placeA, placeB);
   return difference < 0 ? -1 : difference > 0 ? 1 : 0;
@@ -143,9 +143,9 @@ function placeEach<C>(
   for (let i = 0; i < size; i++) {
     const card = stack[i] as C;
     const place = placeOf(card, ranks, suits);
-    if ("missing" in place) {
+    if ("trait" in place) {
       const name = `stack[${String(i)}]`;
-      return notInOrder(verb, name, place.missing, place.value);
+      return notInOrder(verb, name, place.trait, place.actual);
     }
     placed.push({ card, rank: place.rank, suit: place.suit });
   }
@@ -169,7 +169,7 @@ export function sortedBy<C>(
 export function groupedBy<C>(
   stack: CardStack<C>,
   places: Places,
-  trait: "rank" | "suit",
+  trait: Trait,
 ): InvalidArgumentError | readonly CardStack<C>[] {
   const placed =
     trait === "rank"
