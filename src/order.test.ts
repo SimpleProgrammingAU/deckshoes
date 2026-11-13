@@ -481,6 +481,17 @@ describe("sort", () => {
     ]);
   });
 
+  it("sorts by orders of any size, since it compares places, not one number made from both", () => {
+    // 70,000 × 70,000 places are more than an array has indexes.
+    const big = Array.from({ length: 70_000 }, (_, place) => place);
+    const high = { rank: 69_999, suit: 69_999 };
+    const low = { rank: 69_999, suit: 0 };
+    expect(sort([high, low], big, { suitOrder: big })).toStrictEqual([
+      low,
+      high,
+    ]);
+  });
+
   it("reads each card's rank, and its suit when there's a suit order, once", () => {
     let reads = 0;
     const counting = {
