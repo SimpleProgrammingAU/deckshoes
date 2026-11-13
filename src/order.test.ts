@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   arraySubclasses,
+  asStack,
+  isPlainFrozen,
+  nonArrays,
+  sameValues,
+  stacks,
   standardRanks,
   standardSuits,
   thrownBy,
@@ -12,6 +17,7 @@ import {
   compareCards,
   type CompareCardsOptions,
   RankOrder,
+  sort,
   SuitOrder,
 } from "./order.ts";
 import { standard52 } from "./presets/standard52.ts";
@@ -301,6 +307,221 @@ describe("compareCards", () => {
           compareCards(notACard as unknown as Card, ace, RankOrder.ACE_HIGH),
         ),
       ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    });
+  });
+});
+
+describe("sort", () => {
+  it("sorts as a stable sort with compareCards does", () => {
+    fc.assert(
+      fc.property(
+        stacks(),
+        rankOrders(),
+        fc.option(suitOrders(), { nil: undefined }),
+        (stack, rankOrder, suitOrder) => {
+          const options = { suitOrder };
+          // Array.prototype.sort is stable, so it's the oracle.
+          const expected = [...stack];
+          expected.sort((a, b) => compareCards(a, b, rankOrder, options));
+          expect(sort(stack, rankOrder, options)).toStrictEqual(expected);
+        },
+      ),
+    );
+  });
+
+  it("keeps cards that tie in the order they had", () => {
+    fc.assert(
+      fc.property(
+        stacks(),
+        rankOrders(),
+        fc.option(suitOrders(), { nil: undefined }),
+        (stack, rankOrder, suitOrder) => {
+          // Distinct objects for each card, so copies can be told apart.
+          const marked = stack.map(({ rank, suit }, from) => ({
+            from,
+            rank,
+            suit,
+          }));
+          // Ties broken by where each card started: what a stable sort gives.
+          const expected = marked.toSorted(
+            (a, b) =>
+              compareCards(a, b, rankOrder, { suitOrder }) || a.from - b.from,
+          );
+          expect(sort(marked, rankOrder, { suitOrder })).toStrictEqual(
+            expected,
+          );
+        },
+      ),
+    );
+  });
+
+  it("leaves the stack unchanged, frozen or not, and returns a new plain frozen stack", () => {
+    fc.assert(
+      fc.property(stacks(), fc.boolean(), (original, frozen) => {
+        const stack = frozen ? Object.freeze([...original]) : [...original];
+        const sorted = sort(stack, RankOrder.ACE_HIGH);
+        expect(sameValues(stack, original)).toBe(true);
+        expect(Object.isFrozen(stack)).toBe(frozen);
+        expect(isPlainFrozen(sorted)).toBe(true);
+        expect(sorted).not.toBe(stack);
+      }),
+    );
+  });
+
+  it.each(arraySubclasses())(
+    "gives what a plain array gives for %s as the stack, frozen or not",
+    (_label, make) => {
+      fc.assert(
+        fc.property(stacks(), fc.boolean(), (stack, frozen) => {
+          const given = frozen ? Object.freeze(make(stack)) : make(stack);
+          const sorted = sort(given, RankOrder.ACE_LOW, {
+            suitOrder: SuitOrder.BRIDGE,
+          });
+          expect(sorted).toStrictEqual(
+            sort(stack, RankOrder.ACE_LOW, { suitOrder: SuitOrder.BRIDGE }),
+          );
+          expect(isPlainFrozen(sorted)).toBe(true);
+        }),
+      );
+    },
+  );
+
+  it("works on the examples, putting the lowest card on top", () => {
+    const hand = [
+      card("K", "S"),
+      card("2", "H"),
+      card("A", "D"),
+      card("2", "C"),
+    ];
+    expect(sort(hand, RankOrder.ACE_HIGH)).toStrictEqual([
+      card("2", "H"),
+      card("2", "C"),
+      card("K", "S"),
+      card("A", "D"),
+    ]);
+    expect(
+      sort(hand, RankOrder.ACE_HIGH, { suitOrder: SuitOrder.BRIDGE }),
+    ).toStrictEqual([
+      card("2", "C"),
+      card("2", "H"),
+      card("K", "S"),
+      card("A", "D"),
+    ]);
+    expect(
+      sort(standard52(), RankOrder.ACE_LOW, {
+        suitOrder: SuitOrder.BRIDGE,
+      }).slice(0, 5),
+    ).toStrictEqual([
+      card("A", "C"),
+      card("A", "D"),
+      card("A", "H"),
+      card("A", "S"),
+      card("2", "C"),
+    ]);
+  });
+
+  it("returns a new frozen stack for an empty stack, but still checks the orders", () => {
+    const empty: Card[] = [];
+    const sorted = sort(empty, RankOrder.ACE_HIGH);
+    expect(sorted).toStrictEqual([]);
+    expect(sorted).not.toBe(empty);
+    expect(isPlainFrozen(sorted)).toBe(true);
+    expect(thrownBy(() => sort(empty, ["A", "A"]))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
+  });
+
+  it("sorts cards that aren't standard cards, by whatever ranks and suits the orders list", () => {
+    const cards = [
+      { rank: 12, suit: "stars" },
+      { rank: 11, suit: "moons" },
+      { rank: 12, suit: "moons" },
+    ];
+    expect(
+      sort(cards, [11, 12], { suitOrder: ["moons", "stars"] }),
+    ).toStrictEqual([
+      { rank: 11, suit: "moons" },
+      { rank: 12, suit: "moons" },
+      { rank: 12, suit: "stars" },
+    ]);
+  });
+
+  it("reads each card's rank, and its suit when there's a suit order, once", () => {
+    let reads = 0;
+    const counting = {
+      get rank() {
+        reads += 1;
+        return "A";
+      },
+      get suit() {
+        reads += 1;
+        return "S";
+      },
+    };
+    sort([counting, counting, counting], ["A"], { suitOrder: ["S"] });
+    expect(reads).toBe(6);
+  });
+
+  describe("with bad input", () => {
+    const hand = [card("A", "S"), card("2", "C"), card("K", "H")];
+
+    it.each(nonArrays())("rejects %s as the stack", (_label, stack) => {
+      expect(
+        thrownBy(() => sort(asStack(stack), RankOrder.ACE_HIGH)),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    });
+
+    it("rejects a rank order that isn't an array or lists a rank twice", () => {
+      expect(thrownBy(() => sort(hand, asRankOrder("A2K")))).toMatchObject({
+        code: "INVALID_ARGUMENT",
+      });
+      expect(thrownBy(() => sort(hand, ["2", "K", "A", "K"]))).toMatchObject({
+        code: "INVALID_ARGUMENT",
+      });
+    });
+
+    it("rejects options that aren't an object, and a bad suit order", () => {
+      expect(
+        thrownBy(() => sort(hand, RankOrder.ACE_HIGH, asOptions(null))),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+      expect(
+        thrownBy(() =>
+          sort(hand, RankOrder.ACE_HIGH, asOptions({ suitOrder: "CDHS" })),
+        ),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+      expect(
+        thrownBy(() =>
+          sort(hand, RankOrder.ACE_HIGH, { suitOrder: ["C", "C"] }),
+        ),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    });
+
+    it("names the first card whose rank or suit isn't in its order", () => {
+      const pinochle: RankOrder = ["9", "J", "Q", "K", "10", "A"];
+      expect(thrownBy(() => sort(hand, pinochle))).toMatchObject({
+        code: "INVALID_ARGUMENT",
+        message: `Can't sort stack[1]: its rank "2" isn't in the rank order`,
+      });
+      expect(
+        thrownBy(() =>
+          sort(hand, RankOrder.ACE_HIGH, { suitOrder: ["C", "H"] }),
+        ),
+      ).toMatchObject({
+        code: "INVALID_ARGUMENT",
+        message: `Can't sort stack[0]: its suit "S" isn't in the suit order`,
+      });
+    });
+
+    it("rejects a hole, which has no rank", () => {
+      // eslint-disable-next-line no-sparse-arrays -- the hole is the point
+      const holey = [card("A", "S"), , card("K", "H")];
+      expect(
+        thrownBy(() => sort(asStack(holey), RankOrder.ACE_HIGH)),
+      ).toMatchObject({
+        code: "INVALID_ARGUMENT",
+        message:
+          "Can't sort stack[1]: its rank undefined isn't in the rank order",
+      });
     });
   });
 });

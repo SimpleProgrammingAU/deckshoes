@@ -1,3 +1,5 @@
+import type { CardStack } from "../stack.ts";
+
 /** A card's key, which orders cards as the rank and suit orders do, or which of its traits has no place in its order, and that trait's value. */
 export type Keyed =
   | { readonly key: number }
@@ -35,4 +37,23 @@ export function keyOf(
     key = key * suits.size + place;
   }
   return { key };
+}
+
+/** Sorts a stack's cards, read by index, into buckets by key, each in stack order, creating a bucket only when a card needs it; or gives the index of the first card with no key, and why. */
+export function intoBuckets<C>(
+  stack: CardStack<C>,
+  ranks: ReadonlyMap<unknown, number> | undefined,
+  suits: ReadonlyMap<unknown, number> | undefined,
+):
+  | { readonly buckets: readonly (C[] | undefined)[] }
+  | (Extract<Keyed, { missing: unknown }> & { readonly index: number }) {
+  const buckets: (C[] | undefined)[] = [];
+  const size = stack.length;
+  for (let i = 0; i < size; i++) {
+    const card = stack[i] as C;
+    const keyed = keyOf(card, ranks, suits);
+    if ("missing" in keyed) return { ...keyed, index: i };
+    (buckets[keyed.key] ??= []).push(card);
+  }
+  return { buckets };
 }

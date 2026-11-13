@@ -1,11 +1,17 @@
 import type { Rank, Suit } from "./card.ts";
+import type { CardStack } from "./stack.ts";
 
-import { notInOrder, optionsProblem, orderProblem } from "./internal/checks.ts";
-import { keyOf, placesIn } from "./internal/order.ts";
+import {
+  notInOrder,
+  optionsProblem,
+  orderProblem,
+  stackProblem,
+} from "./internal/checks.ts";
+import { intoBuckets, keyOf, placesIn } from "./internal/order.ts";
 
 /**
  * A rank order: the ranks from lowest to highest, each listed once, as a plain
- * array.
+ * array. {@link compareCards} and {@link sort} take one.
  *
  * It compares ranks, not cards, so cards of the same rank tie unless a suit
  * order separates them. Ranks a game counts as equal, such as blackjack's 10
@@ -96,7 +102,8 @@ export const RankOrder: {
 
 /**
  * A suit order: the suits from lowest to highest, each listed once, as a plain
- * array.
+ * array. {@link compareCards} and {@link sort} take one as their `suitOrder`
+ * option.
  *
  * It separates cards of the same rank, which a rank order alone leaves tied.
  * Bridge order is built in, as `SuitOrder.BRIDGE`. Any other order is an array
@@ -180,6 +187,33 @@ export interface CompareCardsOptions<S = Suit> {
    * the same rank, such as `SuitOrder.BRIDGE`. Leave it out, or pass
    * `undefined`, to have cards of the same rank tie. When it's given, both
    * cards' suits have to be in it, even when their ranks decide.
+   */
+  readonly suitOrder?: SuitOrder<S> | undefined;
+}
+
+/**
+ * Settings for {@link sort}.
+ *
+ * @typeParam S - The type of suit the cards have: a standard {@link Suit}
+ * unless you say otherwise.
+ *
+ * @example
+ * ```ts
+ * import { card, RankOrder, sort, type SortOptions, SuitOrder } from "deckshoes";
+ *
+ * const options: SortOptions = { suitOrder: SuitOrder.BRIDGE };
+ * const hand = [card("Q", "D"), card("Q", "C")];
+ * sort(hand, RankOrder.ACE_HIGH, options); // => [card("Q", "C"), card("Q", "D")]
+ * ```
+ *
+ * @since NEXT
+ */
+export interface SortOptions<S = Suit> {
+  /**
+   * The suits from lowest to highest, each listed once, to separate cards of
+   * the same rank, such as `SuitOrder.BRIDGE`. Leave it out, or pass
+   * `undefined`, to keep cards of the same rank in the order they had. When
+   * it's given, every card's suit has to be in it.
    */
   readonly suitOrder?: SuitOrder<S> | undefined;
 }
@@ -279,4 +313,99 @@ export function compareCards<C extends { readonly rank: unknown }>(
     throw notInOrder("compare", "b", keyB.missing, keyB.value);
   }
   return keyA.key < keyB.key ? -1 : keyA.key > keyB.key ? 1 : 0;
+}
+
+/**
+ * Sorts a stack by a rank order, and by a suit order if given, putting the
+ * lowest card on top.
+ *
+ * A card's place is its rank's place in `rankOrder`, lowest first, so the top
+ * card, `stack[0]`, is the lowest. Cards of the same rank keep the order they
+ * had, unless you pass a suit order, which places them by suit, also lowest
+ * first. The sort is stable: cards that still tie, such as copies, keep their
+ * order.
+ *
+ * To sort highest first, reverse the orders, as in
+ * `sort(hand, RankOrder.ACE_HIGH.toReversed())`. Reversing the sorted stack
+ * instead would also reverse the cards that tie.
+ *
+ * Every card's rank has to be in the rank order, and when a suit order is
+ * given, its suit has to be in that, so the wrong order for a deck throws
+ * rather than sorting quietly. A hole in the stack has no rank, so it throws
+ * too. A rank or suit is matched as `includes` matches.
+ *
+ * The stack is left untouched, frozen or not, and the sorted stack is a new
+ * frozen array, even when the order doesn't change. Any stack works, including
+ * one with copies or with cards that aren't standard cards, as long as the
+ * orders list their ranks and suits.
+ *
+ * @typeParam C - The type of card in the stack.
+ * @param stack - The stack to sort, top first.
+ * @param rankOrder - The ranks from lowest to highest, each listed once, such
+ * as `RankOrder.ACE_HIGH`.
+ * @param options - Settings for the sort: a suit order to separate cards of
+ * the same rank.
+ * @returns A new frozen stack holding the same cards, lowest on top.
+ * @throws {@link InvalidArgumentError} When `stack` isn't an array,
+ * `rankOrder` isn't an array or lists a rank twice, `options` isn't an object,
+ * or its `suitOrder` is neither `undefined` nor an array, or lists a suit
+ * twice. Also when a card's rank isn't in the rank order, or, with a suit
+ * order, its suit isn't in the suit order.
+ *
+ * @example
+ * ```ts
+ * import { card, RankOrder, sort, SuitOrder } from "deckshoes";
+ *
+ * const hand = [card("K", "S"), card("2", "H"), card("A", "D"), card("2", "C")];
+ * sort(hand, RankOrder.ACE_HIGH); // => [card("2", "H"), card("2", "C"), card("K", "S"), card("A", "D")]
+ * sort(hand, RankOrder.ACE_LOW); // => [card("A", "D"), card("2", "H"), card("2", "C"), card("K", "S")]
+ *
+ * // A suit order separates cards of the same rank.
+ * const bySuit = { suitOrder: SuitOrder.BRIDGE };
+ * sort(hand, RankOrder.ACE_HIGH, bySuit); // => [card("2", "C"), card("2", "H"), card("K", "S"), card("A", "D")]
+ *
+ * // Highest first: reverse the orders. Cards that tie keep their order.
+ * sort(hand, RankOrder.ACE_HIGH.toReversed()); // => [card("A", "D"), card("K", "S"), card("2", "H"), card("2", "C")]
+ *
+ * // Every rank has to be in the order.
+ * sort(hand, ["9", "J", "Q", "K", "10", "A"]); // throws INVALID_ARGUMENT
+ * ```
+ *
+ * @since NEXT
+ */
+export function sort<C extends { readonly rank: unknown }>(
+  stack: CardStack<C>,
+  rankOrder: RankOrder<C["rank"]>,
+  options: SortOptions<C extends { readonly suit: infer S } ? S : never> = {},
+): CardStack<C> {
+  const problem =
+    stackProblem(stack) ??
+    orderProblem(rankOrder, "rank") ??
+    optionsProblem(options, SUIT_ORDER_EXAMPLE);
+  if (problem !== undefined) throw problem;
+  // Read the option once, as `unknown`, as compareCards does.
+  const { suitOrder }: Readonly<{ suitOrder?: unknown }> = options;
+  const badSuitOrder =
+    suitOrder === undefined ? undefined : orderProblem(suitOrder, "suit");
+  if (badSuitOrder !== undefined) throw badSuitOrder;
+
+  const sorted = intoBuckets(
+    stack,
+    placesIn(rankOrder),
+    suitOrder === undefined
+      ? undefined
+      : placesIn(suitOrder as readonly unknown[]),
+  );
+  if ("missing" in sorted) {
+    const name = `stack[${String(sorted.index)}]`;
+    throw notInOrder("sort", name, sorted.missing, sorted.value);
+  }
+
+  // Buckets that no card needed are holes, and are skipped. Pushing one card
+  // at a time, rather than spreading a bucket, works for buckets of any size.
+  const result: C[] = [];
+  for (const bucket of sorted.buckets) {
+    if (bucket !== undefined) for (const card of bucket) result.push(card);
+  }
+  return Object.freeze(result);
 }
