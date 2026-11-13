@@ -56,7 +56,7 @@ _Avoid_: rank, score
 ## Stacks
 
 **Stack**:
-Any ordered group of cards, top first. It can hold any number of cards, including none, and copies.
+Any number of cards in an order, top first. It can hold none, and copies.
 _Avoid_: collection, list, cards
 
 **Top**:
@@ -144,6 +144,14 @@ To put cards into a stack at a position, keeping their order.
 To pull particular cards out of a stack, wherever they are: the topmost copy of each.
 _Avoid_: delete
 
+**Sort**:
+To put a stack in order by a rank order, lowest on top, with a suit order, if given, separating cards of the same rank. Cards that still tie keep their order.
+_Avoid_: arrange, order (as a verb)
+
+**Group**:
+The cards in a stack that share a rank, or that share a suit, in their order in the stack. Grouping a stack by a rank or suit order gives one group for each entry, empty when the stack has none.
+_Avoid_: bucket, partition, pile
+
 ## Shoes
 
 **Cut card**:
@@ -161,7 +169,7 @@ The ranks from lowest to highest, each listed once. It compares ranks, not cards
 _Avoid_: ranking, comparator, sort order
 
 **Suit order**:
-The suits from lowest to highest, each listed once.
+The suits from lowest to highest, each listed once. Bridge order, from clubs through diamonds and hearts to spades, is the built-in suit order.
 _Avoid_: suit ranking
 
 ## Library
