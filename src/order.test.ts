@@ -268,6 +268,7 @@ describe("compareCards", () => {
       ["a string", "2345678910JQKA"],
       ["undefined", undefined],
       ["a Set", new Set(RankOrder.ACE_HIGH)],
+      ["an order with undefined in it", [undefined, ...RankOrder.ACE_HIGH]],
     ])("rejects %s as the rank order", (_label, rankOrder) => {
       expect(
         thrownBy(() => compareCards(ace, king, asRankOrder(rankOrder))),
@@ -295,6 +296,7 @@ describe("compareCards", () => {
       ["a string", "CDHS"],
       ["null", null],
       ["an order that lists a suit twice", ["C", "D", "H", "S", "C"]],
+      ["an order with undefined in it", ["C", "D", "H", "S", undefined]],
     ])("rejects %s as the suit order", (_label, suitOrder) => {
       expect(
         thrownBy(() =>
@@ -556,6 +558,18 @@ describe("sort", () => {
       });
     });
 
+    it("rejects an order with a hole, which a hole in the stack would find", () => {
+      // eslint-disable-next-line no-sparse-arrays -- the holes are the point
+      const holey = asStack([card("A", "S"), , card("K", "H")]);
+      // eslint-disable-next-line no-sparse-arrays -- the hole is the point
+      const holeyOrder = asRankOrder([, ...RankOrder.ACE_HIGH]);
+      expect(thrownBy(() => sort(holey, holeyOrder))).toMatchObject({
+        code: "INVALID_ARGUMENT",
+        message:
+          "Invalid rank order: it has a hole or undefined at index 0, but each place needs a rank",
+      });
+    });
+
     it("rejects a hole, which has no rank", () => {
       // eslint-disable-next-line no-sparse-arrays -- the hole is the point
       const holey = [card("A", "S"), , card("K", "H")];
@@ -660,6 +674,8 @@ describe.each<
     ["a string", "CDHS"],
     ["undefined", undefined],
     ["an order that lists an entry twice", [...builtIn, builtIn[0]]],
+    // eslint-disable-next-line no-sparse-arrays -- the hole is the point
+    ["an order with a hole", [, ...builtIn]],
   ])("rejects %s as the order, even for an empty stack", (_label, order) => {
     expect(
       thrownBy(() => group([], order as readonly unknown[])),

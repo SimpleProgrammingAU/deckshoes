@@ -15,7 +15,7 @@ type Keyed =
 /** Options with a suit order, shown in the error for options that aren't an object. */
 const SUIT_ORDER_EXAMPLE = "{ suitOrder: SuitOrder.BRIDGE }";
 
-/** Reads a rank or suit order once, by index, and returns each entry's place; or returns the error for an order that isn't an array or lists an entry twice. `kind` says which order it is. */
+/** Reads a rank or suit order once, by index, and returns each entry's place; or returns the error for an order that isn't an array, has a hole or `undefined` in it, or lists an entry twice. `kind` says which order it is. */
 export function placesIn(
   value: unknown,
   kind: "rank" | "suit",
@@ -35,6 +35,13 @@ export function placesIn(
   const size = order.length;
   for (let i = 0; i < size; i++) {
     const entry = order[i];
+    // A hole, `null` or a primitive in the stack has no rank or suit, so it
+    // reads as `undefined`, and has to find no place.
+    if (entry === undefined) {
+      return new InvalidArgumentError(
+        `Invalid ${kind} order: it has a hole or undefined at index ${String(i)}, but each place needs a ${kind}`,
+      );
+    }
     if (places.has(entry)) {
       return new InvalidArgumentError(
         `Invalid ${kind} order: it lists ${display(entry)} twice, but each ${kind} has one place`,
