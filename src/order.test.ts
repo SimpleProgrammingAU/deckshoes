@@ -57,6 +57,25 @@ function asRankOrder(value: unknown): RankOrder {
   return value as RankOrder;
 }
 
+/** An order whose entries are getters that count how often each is read, as a getter or Proxy in a caller's order could. */
+function countingOrder<T>(entries: readonly T[]): {
+  readonly order: readonly T[];
+  readonly reads: readonly number[];
+} {
+  const reads = entries.map(() => 0);
+  const order: T[] = [];
+  for (const [i, entry] of entries.entries()) {
+    Object.defineProperty(order, i, {
+      enumerable: true,
+      get: () => {
+        reads[i] = (reads[i] ?? 0) + 1;
+        return entry;
+      },
+    });
+  }
+  return { order, reads };
+}
+
 /** What comparing two cards should give, worked out with `indexOf`: -1, 0 or 1. */
 function compareOracle(
   a: Card,
@@ -222,6 +241,16 @@ describe("compareCards", () => {
     reads = 0;
     compareCards(counting, counting, ["A"], { suitOrder: ["S"] });
     expect(reads).toBe(4);
+  });
+
+  it("reads each entry of the orders once", () => {
+    const ranks = countingOrder(RankOrder.ACE_HIGH);
+    const suits = countingOrder(SuitOrder.BRIDGE);
+    compareCards(card("A", "S"), card("K", "H"), ranks.order, {
+      suitOrder: suits.order,
+    });
+    expect(ranks.reads).toStrictEqual(RankOrder.ACE_HIGH.map(() => 1));
+    expect(suits.reads).toStrictEqual(SuitOrder.BRIDGE.map(() => 1));
   });
 
   it("leaves out the suit order when it's undefined", () => {
@@ -466,6 +495,17 @@ describe("sort", () => {
     expect(reads).toBe(6);
   });
 
+  it("reads each entry of the orders once", () => {
+    const ranks = countingOrder(RankOrder.ACE_HIGH);
+    const suits = countingOrder(SuitOrder.BRIDGE);
+    const sorted = sort(standard52(), ranks.order, { suitOrder: suits.order });
+    expect(sorted).toStrictEqual(
+      sort(standard52(), RankOrder.ACE_HIGH, { suitOrder: SuitOrder.BRIDGE }),
+    );
+    expect(ranks.reads).toStrictEqual(RankOrder.ACE_HIGH.map(() => 1));
+    expect(suits.reads).toStrictEqual(SuitOrder.BRIDGE.map(() => 1));
+  });
+
   describe("with bad input", () => {
     const hand = [card("A", "S"), card("2", "C"), card("K", "H")];
 
@@ -570,6 +610,13 @@ describe.each<
 
   it("gives a group for every entry in the order, even for an empty stack", () => {
     expect(group([], builtIn)).toStrictEqual(builtIn.map(() => []));
+  });
+
+  it("reads each entry of the order once, and gives a group for each entry it read", () => {
+    const counting = countingOrder(builtIn);
+    const deck = standard52();
+    expect(group(deck, counting.order)).toStrictEqual(group(deck, builtIn));
+    expect(counting.reads).toStrictEqual(builtIn.map(() => 1));
   });
 
   it("leaves the stack unchanged, frozen or not, and returns new plain frozen arrays", () => {
