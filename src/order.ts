@@ -7,11 +7,11 @@ import {
   orderProblem,
   stackProblem,
 } from "./internal/checks.ts";
-import { intoBuckets, keyOf, placesIn } from "./internal/order.ts";
+import { groupsOf, intoBuckets, keyOf, placesIn } from "./internal/order.ts";
 
 /**
  * A rank order: the ranks from lowest to highest, each listed once, as a plain
- * array. {@link compareCards} and {@link sort} take one.
+ * array. {@link compareCards}, {@link sort} and {@link groupByRank} take one.
  *
  * It compares ranks, not cards, so cards of the same rank tie unless a suit
  * order separates them. Ranks a game counts as equal, such as blackjack's 10
@@ -102,8 +102,8 @@ export const RankOrder: {
 
 /**
  * A suit order: the suits from lowest to highest, each listed once, as a plain
- * array. {@link compareCards} and {@link sort} take one as their `suitOrder`
- * option.
+ * array. {@link groupBySuit} takes one, and {@link compareCards} and
+ * {@link sort} take one as their `suitOrder` option.
  *
  * It separates cards of the same rank, which a rank order alone leaves tied.
  * Bridge order is built in, as `SuitOrder.BRIDGE`. Any other order is an array
@@ -329,6 +329,10 @@ export function compareCards<C extends { readonly rank: unknown }>(
  * `sort(hand, RankOrder.ACE_HIGH.toReversed())`. Reversing the sorted stack
  * instead would also reverse the cards that tie.
  *
+ * To sort by suit first, as a bridge hand is laid out, sort by rank, then
+ * group by suit and flatten the groups:
+ * `groupBySuit(sort(hand, RankOrder.ACE_HIGH), SuitOrder.BRIDGE).flat()`.
+ *
  * Every card's rank has to be in the rank order, and when a suit order is
  * given, its suit has to be in that, so the wrong order for a deck throws
  * rather than sorting quietly. A hole in the stack has no rank, so it throws
@@ -408,4 +412,132 @@ export function sort<C extends { readonly rank: unknown }>(
     if (bucket !== undefined) for (const card of bucket) result.push(card);
   }
   return Object.freeze(result);
+}
+
+/**
+ * Groups a stack's cards by rank: one stack for each rank in a rank order,
+ * lowest first, each holding that rank's cards in the order they had.
+ *
+ * The groups line up with the order: `groups[i]` holds the cards whose rank is
+ * `rankOrder[i]`, so a rank the stack doesn't hold gets an empty group, and the
+ * groups for ranks next to each other in the order are next to each other too.
+ * Every card ends up in exactly one group.
+ *
+ * Every card's rank has to be in the rank order, so the wrong order for a deck
+ * throws rather than leaving cards out. A hole in the stack has no rank, so it
+ * throws too. A rank is matched as `includes` matches.
+ *
+ * The stack is left untouched, frozen or not. Each group is a new frozen
+ * array, and so is the array holding them. Any stack works, including one with
+ * copies or with cards that aren't standard cards, as long as the order lists
+ * their ranks.
+ *
+ * @typeParam C - The type of card in the stack.
+ * @param stack - The stack to group, top first.
+ * @param rankOrder - The ranks from lowest to highest, each listed once, such
+ * as `RankOrder.ACE_HIGH`: one group for each.
+ * @returns A new frozen array holding a new frozen stack for each rank in
+ * `rankOrder`, in its order.
+ * @throws {@link InvalidArgumentError} When `stack` isn't an array,
+ * `rankOrder` isn't an array or lists a rank twice, or a card's rank isn't in
+ * the rank order.
+ *
+ * @example
+ * ```ts
+ * import { card, groupByRank, RankOrder } from "deckshoes";
+ *
+ * const hand = [card("7", "S"), card("K", "H"), card("7", "D"), card("2", "C")];
+ * const groups = groupByRank(hand, RankOrder.ACE_HIGH);
+ * groups.length; // => 13
+ * groups[RankOrder.ACE_HIGH.indexOf("7")]; // => [card("7", "S"), card("7", "D")]
+ * groups[RankOrder.ACE_HIGH.indexOf("A")]; // => []
+ *
+ * // The pairs in the hand.
+ * const pairs = groups.filter((group) => group.length === 2);
+ * pairs; // => [[card("7", "S"), card("7", "D")]]
+ * ```
+ *
+ * @since NEXT
+ */
+export function groupByRank<C extends { readonly rank: unknown }>(
+  stack: CardStack<C>,
+  rankOrder: RankOrder<C["rank"]>,
+): readonly CardStack<C>[] {
+  const problem = stackProblem(stack) ?? orderProblem(rankOrder, "rank");
+  if (problem !== undefined) throw problem;
+
+  const ranks = placesIn(rankOrder);
+  const grouped = intoBuckets(stack, ranks, undefined);
+  if ("missing" in grouped) {
+    const name = `stack[${String(grouped.index)}]`;
+    throw notInOrder("group", name, grouped.missing, grouped.value);
+  }
+  return groupsOf(grouped.buckets, ranks.size);
+}
+
+/**
+ * Groups a stack's cards by suit: one stack for each suit in a suit order,
+ * lowest first, each holding that suit's cards in the order they had.
+ *
+ * The groups line up with the order: `groups[i]` holds the cards whose suit is
+ * `suitOrder[i]`, so a suit the stack doesn't hold, such as a void in bridge,
+ * gets an empty group. Every card ends up in exactly one group. To have each
+ * group in rank order, sort the stack first: the groups keep the order the
+ * cards had.
+ *
+ * Every card's suit has to be in the suit order, so the wrong order for a deck
+ * throws rather than leaving cards out. A hole in the stack has no suit, so it
+ * throws too. A suit is matched as `includes` matches.
+ *
+ * The stack is left untouched, frozen or not. Each group is a new frozen
+ * array, and so is the array holding them. Any stack works, including one with
+ * copies or with cards that aren't standard cards, as long as the order lists
+ * their suits.
+ *
+ * @typeParam C - The type of card in the stack.
+ * @param stack - The stack to group, top first.
+ * @param suitOrder - The suits from lowest to highest, each listed once, such
+ * as `SuitOrder.BRIDGE`: one group for each.
+ * @returns A new frozen array holding a new frozen stack for each suit in
+ * `suitOrder`, in its order.
+ * @throws {@link InvalidArgumentError} When `stack` isn't an array,
+ * `suitOrder` isn't an array or lists a suit twice, or a card's suit isn't in
+ * the suit order.
+ *
+ * @example
+ * ```ts
+ * import { card, groupBySuit, RankOrder, sort, SuitOrder } from "deckshoes";
+ *
+ * const hand = [card("Q", "H"), card("3", "C"), card("A", "H"), card("9", "C")];
+ * const [clubs, diamonds, hearts] = groupBySuit(hand, SuitOrder.BRIDGE);
+ * clubs; // => [card("3", "C"), card("9", "C")]
+ * diamonds; // => []
+ * hearts; // => [card("Q", "H"), card("A", "H")]
+ *
+ * // How many cards the hand holds in each suit.
+ * const shape = groupBySuit(hand, SuitOrder.BRIDGE).map((group) => group.length);
+ * shape; // => [2, 0, 2, 0]
+ *
+ * // By suit, then rank: sort, then group and flatten.
+ * const sorted = sort(hand, RankOrder.ACE_HIGH);
+ * const bySuit = groupBySuit(sorted, SuitOrder.BRIDGE).flat();
+ * bySuit; // => [card("3", "C"), card("9", "C"), card("Q", "H"), card("A", "H")]
+ * ```
+ *
+ * @since NEXT
+ */
+export function groupBySuit<C extends { readonly suit: unknown }>(
+  stack: CardStack<C>,
+  suitOrder: SuitOrder<C["suit"]>,
+): readonly CardStack<C>[] {
+  const problem = stackProblem(stack) ?? orderProblem(suitOrder, "suit");
+  if (problem !== undefined) throw problem;
+
+  const suits = placesIn(suitOrder);
+  const grouped = intoBuckets(stack, undefined, suits);
+  if ("missing" in grouped) {
+    const name = `stack[${String(grouped.index)}]`;
+    throw notInOrder("group", name, grouped.missing, grouped.value);
+  }
+  return groupsOf(grouped.buckets, suits.size);
 }

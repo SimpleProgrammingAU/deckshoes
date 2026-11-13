@@ -57,3 +57,13 @@ export function intoBuckets<C>(
   }
   return { buckets };
 }
+
+/** Turns buckets into one new frozen stack for each of an order's `size` places, empty where no card needed a bucket, in a new frozen array. */
+export function groupsOf<C>(
+  buckets: readonly (C[] | undefined)[],
+  size: number,
+): readonly CardStack<C>[] {
+  const groups: CardStack<C>[] = [];
+  for (let i = 0; i < size; i++) groups.push(Object.freeze(buckets[i] ?? []));
+  return Object.freeze(groups);
+}
