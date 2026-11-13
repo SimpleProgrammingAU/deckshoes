@@ -21,3 +21,4 @@ chain(deck)
 - The common case is longer: `shuffle(deck, { random: seededRandom(42) })` rather than `shuffle(deck, seededRandom(42))`.
 - Counts stay positional, even ones with a default: `draw(stack, 2)`, not `draw(stack, { count: 2 })`.
 - Chain methods take the same options object as the functions.
+- Options are always optional, so an input an operation can't run without stays positional, even when it changes how the operation works: `count`'s `match`, and the rank order that `sort` and `compareCards` take ([ADR 0012](./0012-rank-and-suit-orders-are-lists-passed-to-every-call.md)).
