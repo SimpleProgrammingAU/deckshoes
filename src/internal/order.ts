@@ -25,10 +25,13 @@ interface Missing {
   readonly value: unknown;
 }
 
+/** The places of each frozen order read so far. A frozen order's entries can't be reassigned, so its places are kept from the first read, and a comparator, called for each pair of cards, reads a built-in order only once. */
+const frozenPlaces = /* @__PURE__ */ new WeakMap<readonly unknown[], Places>();
+
 /** Options with a suit order, shown in the error for options that aren't an object. */
 const SUIT_ORDER_EXAMPLE = "{ suitOrder: SuitOrder.BRIDGE }";
 
-/** Reads a rank or suit order once, by index, and returns each entry's place; or returns the error for an order that isn't an array, has a hole or `undefined` in it, or lists an entry twice. `kind` says which order it is. */
+/** Reads a rank or suit order once, by index, and returns each entry's place, keeping them for a frozen order; or returns the error for an order that isn't an array, has a hole or `undefined` in it, or lists an entry twice. `kind` says which order it is. */
 export function placesIn(
   value: unknown,
   kind: "rank" | "suit",
@@ -44,6 +47,8 @@ export function placesIn(
   // check one entry and the places another. A Map compares entries with
   // SameValueZero, as `includes` does.
   const order: readonly unknown[] = value;
+  const kept = frozenPlaces.get(order);
+  if (kept !== undefined) return kept;
   const places = new Map<unknown, number>();
   const size = order.length;
   for (let i = 0; i < size; i++) {
@@ -62,6 +67,7 @@ export function placesIn(
     }
     places.set(entry, i);
   }
+  if (Object.isFrozen(order)) frozenPlaces.set(order, places);
   return places;
 }
 

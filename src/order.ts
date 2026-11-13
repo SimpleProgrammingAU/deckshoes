@@ -235,7 +235,10 @@ export interface SortOptions<S = Suit> {
  * orders list their ranks and suits. A rank or suit is matched as `includes`
  * matches.
  *
- * It works as a comparator for `toSorted`.
+ * It works as a comparator for `toSorted`, though {@link sort} is faster for
+ * sorting a stack. A frozen order, such as a built-in one, is read only the
+ * first time it's used, so freeze an order you write before comparing many
+ * cards with it.
  *
  * @typeParam C - The type of the cards.
  * @param a - The first card.
