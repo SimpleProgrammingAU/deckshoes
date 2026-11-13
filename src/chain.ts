@@ -16,6 +16,14 @@ import {
 } from "./deal.ts";
 import { draw, drawBottom, type DrawResult, peek, peekBottom } from "./draw.ts";
 import { stackProblem } from "./internal/checks.ts";
+import {
+  groupByRank,
+  groupBySuit,
+  type RankOrder,
+  sort,
+  type SortOptions,
+  type SuitOrder,
+} from "./order.ts";
 import { contains, count, remove } from "./remove.ts";
 import { shuffle, type ShuffleOptions } from "./shuffle.ts";
 
@@ -25,9 +33,9 @@ import { shuffle, type ShuffleOptions } from "./shuffle.ts";
  *
  * Each method has the same name as a stack operation, calls that function and
  * returns a new chain holding the result. If a pipeline can't carry on from the
- * result, as with dealt hands, drawn cards and the remainder, peeked cards, or
- * an answer such as a count, that new chain is a {@link TerminatedChain},
- * which can only be unwrapped. A method never changes the chain it's called
+ * result, as with dealt hands, drawn cards and the remainder, peeked cards,
+ * groups, or an answer such as a count, that new chain is a
+ * {@link TerminatedChain}, which can only be unwrapped. A method never changes the chain it's called
  * on, which still holds the stack it held before.
  *
  * A chain holds the stack passed to {@link chain} itself, not a copy. Every
@@ -249,6 +257,69 @@ export interface Chain<C = Card> {
   drawBottom(count?: number): TerminatedChain<DrawResult<C>>;
 
   /**
+   * Groups the cards in the stack the chain holds by rank with
+   * {@link groupByRank}, and ends the chain, because a pipeline can't carry on
+   * from several stacks.
+   *
+   * To carry on with one group, wrap it again with `chain(group)`.
+   *
+   * @param rankOrder - The rank order that {@link groupByRank} takes.
+   * @returns A terminated chain holding what {@link groupByRank} returns.
+   * @throws {@link InvalidArgumentError} When {@link groupByRank} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain, RankOrder } from "deckshoes";
+   *
+   * const hand = [card("7", "S"), card("K", "H"), card("7", "D")];
+   * const groups = chain(hand).groupByRank(RankOrder.ACE_HIGH).value();
+   * groups[RankOrder.ACE_HIGH.indexOf("7")]; // => [card("7", "S"), card("7", "D")]
+   *
+   * // The chain throws whatever groupByRank throws.
+   * chain(hand).groupByRank(["2", "3"]); // throws INVALID_ARGUMENT
+   * ```
+   *
+   * @since NEXT
+   */
+  groupByRank(
+    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
+  ): TerminatedChain<readonly CardStack<C>[]>;
+
+  /**
+   * Groups the cards in the stack the chain holds by suit with
+   * {@link groupBySuit}, and ends the chain, because a pipeline can't carry on
+   * from several stacks.
+   *
+   * To carry on with one group, wrap it again with `chain(group)`.
+   *
+   * @param suitOrder - The suit order that {@link groupBySuit} takes.
+   * @returns A terminated chain holding what {@link groupBySuit} returns.
+   * @throws {@link InvalidArgumentError} When {@link groupBySuit} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain, RankOrder, SuitOrder } from "deckshoes";
+   *
+   * const hand = [card("Q", "H"), card("3", "C"), card("A", "H")];
+   * const [clubs, diamonds, hearts] = chain(hand)
+   *   .sort(RankOrder.ACE_HIGH)
+   *   .groupBySuit(SuitOrder.BRIDGE)
+   *   .value();
+   * clubs; // => [card("3", "C")]
+   * diamonds; // => []
+   * hearts; // => [card("Q", "H"), card("A", "H")]
+   *
+   * // The chain throws whatever groupBySuit throws.
+   * chain(hand).groupBySuit(["S", "H"]); // throws INVALID_ARGUMENT
+   * ```
+   *
+   * @since NEXT
+   */
+  groupBySuit(
+    suitOrder: SuitOrder<C extends { readonly suit: infer S } ? S : never>,
+  ): TerminatedChain<readonly CardStack<C>[]>;
+
+  /**
    * Puts cards into the stack the chain holds with {@link insert}, and returns
    * a new chain holding the result.
    *
@@ -390,6 +461,41 @@ export interface Chain<C = Card> {
   shuffle(options?: ShuffleOptions): Chain<C>;
 
   /**
+   * Sorts the stack the chain holds with {@link sort}, and returns a new chain
+   * holding the result.
+   *
+   * @param rankOrder - The rank order that {@link sort} takes.
+   * @param options - The options that {@link sort} takes.
+   * @returns A new chain holding the sorted stack.
+   * @throws {@link InvalidArgumentError} When {@link sort} would.
+   *
+   * @example
+   * ```ts
+   * import { card, chain, RankOrder, SuitOrder } from "deckshoes";
+   * import { standard52 } from "deckshoes/presets";
+   *
+   * const hand = [card("K", "S"), card("2", "H"), card("A", "D")];
+   * chain(hand).sort(RankOrder.ACE_HIGH).value(); // => [card("2", "H"), card("K", "S"), card("A", "D")]
+   *
+   * // Sort a deck, then draw from it.
+   * const { cards } = chain(standard52())
+   *   .sort(RankOrder.ACE_LOW, { suitOrder: SuitOrder.BRIDGE })
+   *   .draw(4)
+   *   .value();
+   * cards; // => [card("A", "C"), card("A", "D"), card("A", "H"), card("A", "S")]
+   *
+   * // The chain throws whatever sort throws.
+   * chain(hand).sort(["9", "10"]); // throws INVALID_ARGUMENT
+   * ```
+   *
+   * @since NEXT
+   */
+  sort(
+    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
+    options?: SortOptions<C extends { readonly suit: infer S } ? S : never>,
+  ): Chain<C>;
+
+  /**
    * Unwraps the chain, returning the stack it holds.
    *
    * That's the stack itself, not a copy: the one passed to {@link chain},
@@ -412,8 +518,8 @@ export interface Chain<C = Card> {
 
 /**
  * A chain holding something a pipeline can't carry on from, such as dealt
- * hands, drawn cards and the remainder, peeked cards, or an answer such as
- * whether the stack contains some cards or how many match. It has no stack
+ * hands, drawn cards and the remainder, peeked cards, groups, or an answer such
+ * as whether the stack contains some cards or how many match. It has no stack
  * operations and can only be unwrapped with
  * {@link TerminatedChain.value | value()}.
  *
@@ -466,6 +572,17 @@ class Terminated<R> implements TerminatedChain<R> {
   }
 }
 
+/**
+ * A card whose rank and suit could be anything. `Chain` doesn't constrain its
+ * kind of card, so its methods pass the stack to the ordering functions as
+ * these, and their own parameter types keep the orders to the stack's ranks
+ * and suits.
+ */
+interface Traits {
+  readonly rank: unknown;
+  readonly suit: unknown;
+}
+
 /** The chain that {@link chain} returns: a frozen object holding a stack. */
 class StackChain<C> implements Chain<C> {
   readonly #stack: CardStack<C>;
@@ -503,6 +620,20 @@ class StackChain<C> implements Chain<C> {
     return new Terminated(drawBottom(this.#stack, count));
   }
 
+  groupByRank(
+    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
+  ): TerminatedChain<readonly CardStack<C>[]> {
+    const groups = groupByRank(this.#stack as CardStack<Traits>, rankOrder);
+    return new Terminated(groups as readonly CardStack<C>[]);
+  }
+
+  groupBySuit(
+    suitOrder: SuitOrder<C extends { readonly suit: infer S } ? S : never>,
+  ): TerminatedChain<readonly CardStack<C>[]> {
+    const groups = groupBySuit(this.#stack as CardStack<Traits>, suitOrder);
+    return new Terminated(groups as readonly CardStack<C>[]);
+  }
+
   insert(
     cards: CardStack<C>,
     position?: Position,
@@ -525,6 +656,14 @@ class StackChain<C> implements Chain<C> {
 
   shuffle(options?: ShuffleOptions): Chain<C> {
     return new StackChain(shuffle(this.#stack, options));
+  }
+
+  sort(
+    rankOrder: RankOrder<C extends { readonly rank: infer R } ? R : never>,
+    options?: SortOptions<C extends { readonly suit: infer S } ? S : never>,
+  ): Chain<C> {
+    const sorted = sort(this.#stack as CardStack<Traits>, rankOrder, options);
+    return new StackChain(sorted as CardStack<C>);
   }
 
   value(): CardStack<C> {
