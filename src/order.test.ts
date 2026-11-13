@@ -602,6 +602,19 @@ describe("sort", () => {
       });
     });
 
+    it.each([
+      ["null", null],
+      ["a string", "AS"],
+      ["a number", 1],
+    ])("rejects %s in the stack, since it has no rank", (_label, notACard) => {
+      const stack = asStack([card("A", "S"), notACard]);
+      expect(
+        thrownBy(() =>
+          sort(stack, RankOrder.ACE_HIGH, { suitOrder: SuitOrder.BRIDGE }),
+        ),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    });
+
     it("names a hole as the card with no rank", () => {
       // eslint-disable-next-line no-sparse-arrays -- the hole is the point
       const holey = [card("A", "S"), , card("K", "H")];
@@ -722,6 +735,20 @@ describe.each<
       message: `Can't group stack[1]: its ${trait} "${String(hand[1]?.[trait])}" isn't in the ${trait} order`,
     });
   });
+
+  it.each([
+    ["null", null],
+    ["a string", "AS"],
+    ["a number", 1],
+  ])(
+    "rejects %s in the stack, since it has no rank or suit",
+    (_label, notACard) => {
+      const stack = asStack([card("A", "S"), notACard]);
+      expect(thrownBy(() => group(stack, builtIn))).toMatchObject({
+        code: "INVALID_ARGUMENT",
+      });
+    },
+  );
 
   it("names a hole as the card with no rank or suit", () => {
     // eslint-disable-next-line no-sparse-arrays -- the hole is the point
