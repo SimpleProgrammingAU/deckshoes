@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: presets for the standard 52-card, Piquet, Euchre and Pinochle decks; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: the Pinochle preset; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -149,6 +149,38 @@ tryParseCard("🃏"); // => undefined
 const input = " as\n";
 tryParseCard(input); // => undefined
 parseCard(input.trim()); // => card("A", "S")
+```
+
+## Presets
+
+A preset is a ready-made deck, imported from `deckshoes/presets`. Each one returns the same frozen stack on every call, and operations such as `shuffle` return new stacks rather than changing it. A preset's order won't change in any 1.x release, since every seeded shuffle of it starts from that order.
+
+| Preset         | Cards | Ranks       | Order                                |
+| -------------- | ----- | ----------- | ------------------------------------ |
+| `standard52()` | 52    | Ace to king | New deck order                       |
+| `piquet()`     | 32    | 7 to ace    | New deck order, without the 2s to 6s |
+| `euchre()`     | 24    | 9 to ace    | New deck order, without the 2s to 8s |
+
+New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order.
+
+```ts
+import { card } from "deckshoes";
+import { euchre, piquet, standard52 } from "deckshoes/presets";
+
+standard52().length; // => 52
+piquet().length; // => 32
+euchre().length; // => 24
+
+// The ace of hearts is on top, then the lowest heart the deck holds.
+piquet().slice(0, 2); // => [card("A", "H"), card("7", "H")]
+euchre().slice(0, 2); // => [card("A", "H"), card("9", "H")]
+
+// The ace of spades is at the bottom.
+euchre()[23]; // => card("A", "S")
+
+// Every call returns the same frozen stack.
+euchre() === euchre(); // => true
+Object.isFrozen(euchre()); // => true
 ```
 
 ## Random sources
