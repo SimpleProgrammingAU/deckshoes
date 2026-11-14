@@ -102,7 +102,7 @@ The order a new standard 52 comes in from the box: face down from the top, heart
 _Avoid_: NDO, factory order
 
 **Stripped deck**:
-A preset made by removing ranks from the standard 52, such as Piquet or Euchre.
+A preset made by removing ranks from the standard 52, such as Piquet or Euchre. The cards left stay in new deck order.
 
 ## Actions
 
