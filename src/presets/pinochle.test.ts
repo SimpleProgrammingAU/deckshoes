@@ -13,7 +13,7 @@ function asPinochleOptions(value: unknown): PinochleOptions {
   return value as PinochleOptions;
 }
 
-/** A list repeated, one copy after another. */
+/** A list repeated, one after another. */
 function repeated<T>(list: readonly T[], times: number): T[] {
   return Array.from({ length: times }, () => list).flat();
 }
@@ -37,7 +37,7 @@ const TEN_TO_ACE = [
   "KS QS JS 10S AS",
 ];
 
-/** Each deck's size, the ranks it keeps, its stripped deck's order, and how many copies of that it holds. */
+/** Each deck's size, the ranks it keeps, its stripped deck's order, and how many times it repeats that. */
 const DECKS = [
   {
     copies: 2,
@@ -66,14 +66,14 @@ describe("pinochle", () => {
     ({ copies, kept, order, size }) => {
       const ranks = new Set<Rank>(kept);
 
-      // Fixed for 1.x (ADR 0008): copies of a stripped deck, one on top of the other.
+      // Fixed for 1.x (ADR 0008): a stripped deck repeated, one on top of the other.
       it("is its stripped deck in new deck order, again and again, top first", () => {
         expect(pinochle({ size }).map((c) => short(c))).toStrictEqual(
           repeated(order.join(" ").split(" "), copies),
         );
       });
 
-      // ADR 0008: each copy keeps the standard 52's order.
+      // ADR 0008: the stripped deck keeps the standard 52's order each time.
       it("is the standard 52 with only its ranks, again and again", () => {
         const once = standard52().filter(({ rank }) => ranks.has(rank));
         expect(pinochle({ size })).toStrictEqual(repeated(once, copies));

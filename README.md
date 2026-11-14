@@ -165,7 +165,7 @@ A preset is a ready-made deck, imported from `deckshoes/presets`. Each one retur
 | `pinochle({ size: 80 })`  | 80    | 10 to ace, four of each | New deck order without the 2s to 9s, four times |
 | `pinochle({ size: 120 })` | 120   | 10 to ace, six of each  | New deck order without the 2s to 9s, six times  |
 
-New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order. A Pinochle deck is copies of one stripped deck, one on top of the other: 48 cards for the usual game, 80 for double-deck Pinochle, and 64 or 120 for less common games. A card's copies are the same object, so they compare with `===`.
+New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order. A Pinochle deck is one stripped deck repeated, one on top of the other: 48 cards for the usual game, 80 for double-deck Pinochle, and 64 or 120 for less common games. A card's copies are the same object, so they compare with `===`.
 
 ```ts
 import { card } from "deckshoes";

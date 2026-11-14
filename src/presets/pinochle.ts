@@ -35,7 +35,7 @@ export interface PinochleOptions {
 type Size = NonNullable<PinochleOptions["size"]>;
 
 /** The ranks a Pinochle deck strips from the standard 52, and how many copies of the cards left it holds. */
-type Recipe = readonly [stripped: readonly Rank[], copies: number];
+type Recipe = readonly [without: readonly Rank[], copies: number];
 
 /** Each size's recipe. {@link pinochle} checks a size by looking it up here, so a size is valid exactly when it has a recipe. */
 const RECIPES: ReadonlyMap<unknown, Recipe> = new Map<Size, Recipe>([
@@ -49,11 +49,11 @@ const RECIPES: ReadonlyMap<unknown, Recipe> = new Map<Size, Recipe>([
 const decks = new Map<unknown, CardStack>();
 
 /**
- * Returns a Pinochle deck: by default the 48 standard cards from 9 to ace, two
- * copies of each.
+ * Returns a Pinochle deck: by default 48 cards, two copies of each standard
+ * card from 9 to ace.
  *
- * Pass a `size` for one of the game's other decks. Each deck is copies of a
- * stripped deck, one on top of the other:
+ * Pass a `size` for one of the game's other decks. Each deck is one stripped
+ * deck repeated, one on top of the other:
  *
  * - 48, the default: the 24 cards from 9 to ace, twice. That's two Euchre
  *   decks, from {@link euchre}.
@@ -62,11 +62,12 @@ const decks = new Map<unknown, CardStack>();
  * - 80: the 20 cards from 10 to ace, four times, for double-deck Pinochle.
  * - 120: the 20 cards from 10 to ace, six times, for triple-deck Pinochle.
  *
- * Each copy is in new deck order. Face down from the top, that's hearts and
- * clubs from ace to king, then diamonds and spades from king to ace, without
- * the stripped ranks. So the top card, `[0]`, is the ace of hearts, and the
- * bottom card is the ace of spades. In the 48-card deck, the 9 of hearts is
- * under the top card, and the second copy starts at `[24]`:
+ * The stripped deck is in new deck order each time. Face down from the top,
+ * that's hearts and clubs from ace to king, then diamonds and spades from king
+ * to ace, without the stripped ranks. So the top card, `[0]`, is the ace of
+ * hearts, and the bottom card is the ace of spades. In the 48-card deck, the 9
+ * of hearts is under the top card, and the second Euchre deck starts at
+ * `[24]`:
  *
  * A♥ 9♥ … K♥, A♣ 9♣ … K♣, K♦ … 9♦ A♦, K♠ … 9♠ A♠, A♥ 9♥ … K♥, …, K♠ … 9♠ A♠
  *
@@ -132,10 +133,12 @@ export function pinochle(options: PinochleOptions = {}): CardStack {
 
   let deck = decks.get(size);
   if (deck === undefined) {
-    // Copies of the stripped deck, one on top of the other.
-    const [stripped, copies] = recipe;
-    const once = newDeckOrder(stripped);
-    deck = Object.freeze(Array.from({ length: copies }, () => once).flat());
+    // The stripped deck, repeated one on top of the other.
+    const [without, copies] = recipe;
+    const strippedDeck = newDeckOrder(without);
+    deck = Object.freeze(
+      Array.from({ length: copies }, () => strippedDeck).flat(),
+    );
     decks.set(size, deck);
   }
   return deck;
