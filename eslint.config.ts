@@ -267,7 +267,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
                 'JsdocBlock:has(JsdocTag[tag="throws"]:not([rawType=/^@link\\s+\\S+(?:\\s+\\|\\s+\\S+)?$/]))',
               context: "any",
               message:
-                "Write `@throws {@link ErrorClass} When …`, so the docs link to the error.",
+                "Write `@throws {@link ErrorClass} When …`, or `{@link deckshoes!ErrorClass | ErrorClass}` from another entry point, so the docs link to the error.",
             },
             {
               comment:
