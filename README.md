@@ -443,8 +443,8 @@ sort(hand, RankOrder.ACE_HIGH.toReversed()); // => [card("A", "H"), card("K", "S
 
 // Compare two cards, with a built-in order or one you write.
 compareCards(card("A", "S"), card("K", "S"), RankOrder.ACE_HIGH); // => 1
-const pinochle: RankOrder = ["9", "J", "Q", "K", "10", "A"];
-compareCards(card("10", "H"), card("K", "H"), pinochle); // => 1
+const pinochleOrder: RankOrder = ["9", "J", "Q", "K", "10", "A"];
+compareCards(card("10", "H"), card("K", "H"), pinochleOrder); // => 1
 
 // One group for each suit, in bridge order. The hand has no diamonds.
 const [clubs, diamonds, hearts, spades] = groupBySuit(hand, SuitOrder.BRIDGE);
@@ -462,7 +462,7 @@ const byRank = groupByRank(hand, RankOrder.ACE_HIGH);
 byRank.filter((group) => group.length === 2); // => [[card("2", "H"), card("2", "C")]]
 
 // Every card has to be in the order.
-sort(hand, pinochle); // throws INVALID_ARGUMENT
+sort(hand, pinochleOrder); // throws INVALID_ARGUMENT
 ```
 
 In a chain, `sort` carries on, as `shuffle` does. `groupByRank` and `groupBySuit` end the pipeline, as `deal` does: carry on with a group by wrapping it in a new chain.
