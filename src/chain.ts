@@ -92,7 +92,7 @@ export interface Chain<C = Card> {
    * chained.remove([card("K", "H")]).value(); // => [card("A", "S"), card("10", "D")]
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   contains(cards: CardStack<C>): TerminatedChain<boolean>;
 
@@ -119,7 +119,7 @@ export interface Chain<C = Card> {
    * chained.draw(2).value().cards; // => [card("A", "S"), card("K", "H")]
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   count(match: (card: C) => unknown): TerminatedChain<number>;
 
@@ -150,7 +150,7 @@ export interface Chain<C = Card> {
    * chain(standard52()).cut(53); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   cut(position?: Position, options?: CutOptions): Chain<C>;
 
@@ -281,7 +281,7 @@ export interface Chain<C = Card> {
    * chain(hand).groupByRank(["2", "3"]); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   groupByRank<D extends C & Readonly<Record<"rank", unknown>>>(
     this: Chain<D>,
@@ -318,7 +318,7 @@ export interface Chain<C = Card> {
    * chain(hand).groupBySuit(["S", "H"]); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   groupBySuit<D extends C & Readonly<Record<"suit", unknown>>>(
     this: Chain<D>,
@@ -349,7 +349,7 @@ export interface Chain<C = Card> {
    * chain(hand).insert([card("10", "D")], 3); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   insert(
     cards: CardStack<C>,
@@ -438,7 +438,7 @@ export interface Chain<C = Card> {
    * chain(hand).remove([card("Q", "C")]); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   remove(cards: CardStack<C>): Chain<C>;
 
@@ -496,7 +496,7 @@ export interface Chain<C = Card> {
    * chain(hand).sort(["9", "10"]); // throws INVALID_ARGUMENT
    * ```
    *
-   * @since NEXT
+   * @since 1.0.0
    */
   sort<D extends C & Readonly<Record<"rank", unknown>>>(
     this: Chain<D>,

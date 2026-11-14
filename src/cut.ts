@@ -32,7 +32,7 @@ import { randomPosition } from "./internal/random.ts";
  * Position.RANDOM; // => "random"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const Position: {
   /** Below the bottom card: the stack's size. */
@@ -59,7 +59,7 @@ export const Position: {
  * topAfterCut(Position.BOTTOM) === card("A", "S"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type Position = number | (typeof Position)[keyof typeof Position];
 
@@ -75,7 +75,7 @@ export type Position = number | (typeof Position)[keyof typeof Position];
  * cut(standard52(), Position.RANDOM, options)[0] === card("8", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface CutOptions {
   /**
@@ -102,7 +102,7 @@ export interface CutOptions {
  * deck[8] === card("A", "S"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface InsertOptions {
   /**
@@ -178,7 +178,7 @@ export interface InsertOptions {
  * cut(hand, 4); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function cut<C>(
   stack: CardStack<C>,
@@ -269,7 +269,7 @@ export function cut<C>(
  * insert(hand, [card("10", "D")], 3); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function insert<C>(
   stack: CardStack<C>,
