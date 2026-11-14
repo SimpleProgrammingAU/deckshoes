@@ -1,7 +1,7 @@
 import type { CardStack } from "../stack.ts";
 
-import { card } from "../card.ts";
 import { RANKS } from "../internal/card-table.ts";
+import { newDeckOrder } from "../internal/new-deck-order.ts";
 
 /** The stack {@link standard52} returns, built on the first call. */
 let deck: CardStack | undefined;
@@ -17,8 +17,9 @@ let deck: CardStack | undefined;
  * A♥ 2♥ … K♥, A♣ 2♣ … K♣, K♦ Q♦ … A♦, K♠ Q♠ … A♠
  *
  * Every call returns the same frozen stack, and its cards are the ones
- * {@link card} returns, so they compare with `===`. The order won't change in
- * any 1.x release, because every seeded shuffle of the deck starts from it.
+ * {@link deckshoes!card} returns, so they compare with `===`. The order won't
+ * change in any 1.x release, because every seeded shuffle of the deck starts
+ * from it.
  *
  * @returns The 52 standard cards, top first.
  *
@@ -47,14 +48,6 @@ let deck: CardStack | undefined;
  * @since 1.0.0
  */
 export function standard52(): CardStack {
-  if (deck === undefined) {
-    const kingToAce = RANKS.toReversed();
-    deck = Object.freeze([
-      ...RANKS.map((rank) => card(rank, "H")),
-      ...RANKS.map((rank) => card(rank, "C")),
-      ...kingToAce.map((rank) => card(rank, "D")),
-      ...kingToAce.map((rank) => card(rank, "S")),
-    ]);
-  }
+  deck ??= newDeckOrder(RANKS);
   return deck;
 }
