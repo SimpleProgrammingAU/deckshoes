@@ -5,4 +5,5 @@
  * @module deckshoes/presets
  */
 
+export { piquet } from "./piquet.ts";
 export { standard52 } from "./standard52.ts";
