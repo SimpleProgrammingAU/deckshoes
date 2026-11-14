@@ -30,6 +30,15 @@ for (const [call, preset, size] of [["piquet()", piquet(), 32], ["euchre()", euc
     throw new Error("deckshoes/presets " + call + " has its own card objects, not the ones card() returns");
   }
 }
+let presetError;
+try {
+  pinochle({ size: 72 });
+} catch (error) {
+  presetError = error;
+}
+if (!(presetError instanceof InvalidArgumentError) || !isDeckshoesError(presetError, "INVALID_ARGUMENT")) {
+  throw new Error("deckshoes/presets throws its own error classes, not the ones deckshoes exports");
+}
 for (const name of ["standard52", "piquet", "euchre", "pinochle"]) {
   if (name in root) {
     throw new Error("the deckshoes entry point exports the " + name + " preset");
@@ -119,7 +128,7 @@ try {
     path.join(dir, "esm.mjs"),
     [
       `import * as root from "deckshoes";`,
-      `import { card, chain, draw, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
+      `import { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
       `import { euchre, pinochle, piquet, standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -128,7 +137,7 @@ try {
     path.join(dir, "cjs.cjs"),
     [
       `const root = require("deckshoes");`,
-      `const { card, chain, draw, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
+      `const { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
       `const { euchre, pinochle, piquet, standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),
