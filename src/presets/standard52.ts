@@ -1,6 +1,5 @@
 import type { CardStack } from "../stack.ts";
 
-import { RANKS } from "../internal/card-table.ts";
 import { newDeckOrder } from "../internal/new-deck-order.ts";
 
 /** The stack {@link standard52} returns, built on the first call. */
@@ -47,6 +46,6 @@ let deck: CardStack | undefined;
  * @since 1.0.0
  */
 export function standard52(): CardStack {
-  deck ??= newDeckOrder(RANKS);
+  deck ??= newDeckOrder();
   return deck;
 }
