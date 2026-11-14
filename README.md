@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do the standard 52, Piquet and Euchre presets; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -155,11 +155,11 @@ parseCard(input.trim()); // => card("A", "S")
 
 A preset is a ready-made deck, imported from `deckshoes/presets`. Each one returns the same frozen stack on every call, and operations such as `shuffle` return new stacks rather than changing it. A preset's order won't change in any 1.x release, since every seeded shuffle of it starts from that order.
 
-| Preset         | Cards | Ranks       | Order                                |
-| -------------- | ----- | ----------- | ------------------------------------ |
-| `standard52()` | 52    | Ace to king | New deck order                       |
-| `piquet()`     | 32    | 7 to ace    | New deck order, without the 2s to 6s |
-| `euchre()`     | 24    | 9 to ace    | New deck order, without the 2s to 8s |
+| Preset         | Cards | Ranks    | Order                                |
+| -------------- | ----- | -------- | ------------------------------------ |
+| `standard52()` | 52    | 2 to ace | New deck order                       |
+| `piquet()`     | 32    | 7 to ace | New deck order, without the 2s to 6s |
+| `euchre()`     | 24    | 9 to ace | New deck order, without the 2s to 8s |
 
 New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order.
 
