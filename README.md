@@ -155,15 +155,15 @@ parseCard(input.trim()); // => card("A", "S")
 
 A preset is a ready-made deck, imported from `deckshoes/presets`. Each one returns the same frozen stack on every call with the same options, and operations such as `shuffle` return new stacks rather than changing it. A preset's order won't change in any 1.x release, since every seeded shuffle of it starts from that order.
 
-| Preset                    | Cards | Ranks                   | Order                                           |
-| ------------------------- | ----- | ----------------------- | ----------------------------------------------- |
-| `standard52()`            | 52    | 2 to ace                | New deck order                                  |
-| `piquet()`                | 32    | 7 to ace                | New deck order, without the 2s to 6s            |
-| `euchre()`                | 24    | 9 to ace                | New deck order, without the 2s to 8s            |
-| `pinochle()`              | 48    | 9 to ace, two of each   | Euchre's order, twice                           |
-| `pinochle({ size: 64 })`  | 64    | 7 to ace, two of each   | Piquet's order, twice                           |
-| `pinochle({ size: 80 })`  | 80    | 10 to ace, four of each | New deck order without the 2s to 9s, four times |
-| `pinochle({ size: 120 })` | 120   | 10 to ace, six of each  | New deck order without the 2s to 9s, six times  |
+| Preset                    | Cards | Ranks                   | Order                                            |
+| ------------------------- | ----- | ----------------------- | ------------------------------------------------ |
+| `standard52()`            | 52    | 2 to ace                | New deck order                                   |
+| `piquet()`                | 32    | 7 to ace                | New deck order, without the 2s to 6s             |
+| `euchre()`                | 24    | 9 to ace                | New deck order, without the 2s to 8s             |
+| `pinochle()`              | 48    | 9 to ace, two of each   | Euchre's order, twice                            |
+| `pinochle({ size: 64 })`  | 64    | 7 to ace, two of each   | Piquet's order, twice                            |
+| `pinochle({ size: 80 })`  | 80    | 10 to ace, four of each | New deck order, without the 2s to 9s, four times |
+| `pinochle({ size: 120 })` | 120   | 10 to ace, six of each  | New deck order, without the 2s to 9s, six times  |
 
 New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order. A Pinochle deck is one stripped deck repeated, one on top of the other: 48 cards for the usual game, 80 for double-deck Pinochle, and 64 or 120 for less common games. A card's copies are the same object, so they compare with `===`.
 
