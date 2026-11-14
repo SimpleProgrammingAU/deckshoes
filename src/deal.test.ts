@@ -161,7 +161,7 @@ describe("deal", () => {
       );
     });
 
-    it("deals packets of 3 then 2 for hands of 5, as in Euchre", () => {
+    it("deals packets of 3 then 2 for hands of 5", () => {
       const deck = standard52().slice(0, 24);
       const { hands, remainder } = deal(deck, 4, 5, { packetSize: 3 });
       const at = (...indices: number[]) => indices.map((i) => deck[i]);
