@@ -170,15 +170,15 @@ export type RunOut = (typeof RunOut)[keyof typeof RunOut];
  * @example
  * ```ts
  * import { card, deal, type DealOptions } from "deckshoes";
- * import { standard52 } from "deckshoes/presets";
+ * import { euchre } from "deckshoes/presets";
  *
- * // Euchre-style packets: 3 cards to each hand, then 2.
+ * // A Euchre deck dealt to 4 hands of 5 in packets of 3, then 2.
  * const options: DealOptions = { packetSize: 3 };
- * const [first] = deal(standard52(), 4, 5, options).hands;
+ * const [first] = deal(euchre(), 4, 5, options).hands;
  *
  * // The first hand gets the top 3 cards, then 2 more once the others have 3.
- * first?.[2] === card("3", "H"); // => true
- * first?.[3] === card("K", "H"); // => true
+ * first?.[2] === card("10", "H"); // => true
+ * first?.[3] === card("K", "D"); // => true
  * ```
  *
  * @since 1.0.0
