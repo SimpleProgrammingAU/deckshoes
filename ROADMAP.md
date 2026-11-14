@@ -14,7 +14,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 - Stack operations, which never change their input: `shuffle`, `draw`, `drawBottom`, `peek`, `peekBottom`, `deal`, `cut`, `insert`, `remove`, `contains`, `count`, `sort`, `groupByRank`, `groupBySuit`.
 - Random sources: a secure default built on `crypto.getRandomValues`, and `seededRandom(seed)` for reproducible shuffles.
 - The chain: `chain(stack).shuffle({ random }).deal(4, 5).value()`.
-- Presets, imported from `deckshoes/presets`: standard 52, Piquet (32), Euchre (24) and Pinochle (48).
+- Presets, imported from `deckshoes/presets`: standard 52, Piquet (32), Euchre (24) and Pinochle (48, 64, 80 or 120).
 - Property-based tests for every stack operation, plus benchmarks.
 
 ## M2: Stable (`1.0.0`)
