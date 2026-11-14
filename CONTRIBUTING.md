@@ -76,15 +76,15 @@ Most of these are enforced by ESLint or TypeScript; the rest are checked in revi
 
 Every public export needs a complete doc comment. ESLint enforces each of these:
 
-| Tag           | Rule                                                                                                 |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| (description) | Says what it is or does, not just its name restated.                                                 |
-| `@param`      | Every parameter, as `@param name - Description.` No `{type}`; TypeScript provides types.             |
-| `@returns`    | Required unless the function returns `void`, `Promise<void>`, `never` or `undefined`.                |
-| `@throws`     | One per error the function throws, as `@throws {@link InvalidArgumentError} When …`.                 |
-| `@example`    | At least one per export: a fenced `ts` block that compiles, passes lint, and runs as a test.         |
-| `@since`      | `@since NEXT` on anything new; the release script replaces it with the version number.               |
-| `@deprecated` | When something is superseded: name the replacement with `{@link …}` and say when it will be removed. |
+| Tag           | Rule                                                                                                                                                                                                                        |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (description) | Says what it is or does, not just its name restated.                                                                                                                                                                        |
+| `@param`      | Every parameter, as `@param name - Description.` No `{type}`; TypeScript provides types.                                                                                                                                    |
+| `@returns`    | Required unless the function returns `void`, `Promise<void>`, `never` or `undefined`.                                                                                                                                       |
+| `@throws`     | One per error the function throws, as `@throws {@link InvalidArgumentError} When …`. In `deckshoes/presets`, name the root entry point and the link text: `{@link deckshoes!InvalidArgumentError \| InvalidArgumentError}`. |
+| `@example`    | At least one per export: a fenced `ts` block that compiles, passes lint, and runs as a test.                                                                                                                                |
+| `@since`      | `@since NEXT` on anything new; the release script replaces it with the version number.                                                                                                                                      |
+| `@deprecated` | When something is superseded: name the replacement with `{@link …}` and say when it will be removed.                                                                                                                        |
 
 Four things ESLint can't fully check:
 
