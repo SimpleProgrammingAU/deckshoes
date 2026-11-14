@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { short } from "../../test/helpers.ts";
 import { card, isCard } from "../card.ts";
 import { piquet } from "./piquet.ts";
+import { standard52 } from "./standard52.ts";
 
 describe("piquet", () => {
   // Fixed for 1.x (ADR 0008): new deck order without the 2s to 6s.
@@ -15,6 +16,14 @@ describe("piquet", () => {
     ];
     expect(piquet().map((c) => short(c))).toStrictEqual(
       order.join(" ").split(" "),
+    );
+  });
+
+  // ADR 0008: a stripped deck keeps the standard 52's order.
+  it("is the standard 52 without the 2s to 6s", () => {
+    const stripped = new Set(["2", "3", "4", "5", "6"]);
+    expect(piquet()).toStrictEqual(
+      standard52().filter(({ rank }) => !stripped.has(rank)),
     );
   });
 

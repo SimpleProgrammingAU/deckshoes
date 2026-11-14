@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { short } from "../../test/helpers.ts";
 import { card, isCard } from "../card.ts";
 import { euchre } from "./euchre.ts";
+import { standard52 } from "./standard52.ts";
 
 describe("euchre", () => {
   // Fixed for 1.x (ADR 0008): new deck order without the 2s to 8s.
@@ -15,6 +16,14 @@ describe("euchre", () => {
     ];
     expect(euchre().map((c) => short(c))).toStrictEqual(
       order.join(" ").split(" "),
+    );
+  });
+
+  // ADR 0008: a stripped deck keeps the standard 52's order.
+  it("is the standard 52 without the 2s to 8s", () => {
+    const stripped = new Set(["2", "3", "4", "5", "6", "7", "8"]);
+    expect(euchre()).toStrictEqual(
+      standard52().filter(({ rank }) => !stripped.has(rank)),
     );
   });
 
