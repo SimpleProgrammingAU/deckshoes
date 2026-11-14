@@ -261,8 +261,10 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
                 "`@since` must be `NEXT` (for unreleased code) or a version such as `1.2.0`.",
             },
             {
+              // The link may name its text, as `{@link deckshoes!X | X}`
+              // does, so a link to another entry point reads as the class.
               comment:
-                'JsdocBlock:has(JsdocTag[tag="throws"]:not([rawType=/^@link\\s+\\S+$/]))',
+                'JsdocBlock:has(JsdocTag[tag="throws"]:not([rawType=/^@link\\s+\\S+(?:\\s+\\|\\s+\\S+)?$/]))',
               context: "any",
               message:
                 "Write `@throws {@link ErrorClass} When …`, so the docs link to the error.",
