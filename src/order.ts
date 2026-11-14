@@ -31,8 +31,8 @@ import {
  * import { card, compareCards, type RankOrder } from "deckshoes";
  *
  * // In Pinochle, the ten ranks above the king.
- * const pinochle: RankOrder = ["9", "J", "Q", "K", "10", "A"];
- * compareCards(card("10", "H"), card("K", "H"), pinochle); // => 1
+ * const pinochleOrder: RankOrder = ["9", "J", "Q", "K", "10", "A"];
+ * compareCards(card("10", "H"), card("K", "H"), pinochleOrder); // => 1
  * ```
  *
  * @since NEXT
@@ -276,8 +276,8 @@ export interface SortOptions<S = Suit> {
  * highFirst; // => [card("A", "C"), card("9", "D"), card("2", "H")]
  *
  * // Every rank has to be in the order.
- * const pinochle: RankOrder = ["9", "J", "Q", "K", "10", "A"];
- * compareCards(card("2", "H"), ace, pinochle); // throws INVALID_ARGUMENT
+ * const pinochleOrder: RankOrder = ["9", "J", "Q", "K", "10", "A"];
+ * compareCards(card("2", "H"), ace, pinochleOrder); // throws INVALID_ARGUMENT
  * ```
  *
  * @since NEXT
