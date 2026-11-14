@@ -6,5 +6,6 @@
  */
 
 export { euchre } from "./euchre.ts";
+export { pinochle, type PinochleOptions } from "./pinochle.ts";
 export { piquet } from "./piquet.ts";
 export { standard52 } from "./standard52.ts";
