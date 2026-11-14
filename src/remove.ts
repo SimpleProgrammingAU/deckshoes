@@ -55,7 +55,7 @@ import { removeTopmost } from "./internal/stack.ts";
  * remove(hand, [card("K", "H"), card("K", "H")]); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function remove<C>(
   stack: CardStack<C>,
@@ -110,7 +110,7 @@ export function remove<C>(
  * contains(hand, []); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function contains<C>(stack: CardStack<C>, cards: CardStack<C>): boolean {
   const problem = stackProblem(stack) ?? cardsProblem(cards);
@@ -152,7 +152,7 @@ export function contains<C>(stack: CardStack<C>, cards: CardStack<C>): boolean {
  * count(twoDecks, (each) => each === card("Q", "S")); // => 2
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function count<C>(
   stack: CardStack<C>,
