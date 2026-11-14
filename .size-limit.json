@@ -18,6 +18,12 @@
     "limit": "820 B"
   },
   {
+    "name": "deckshoes/presets (everything)",
+    "path": "dist/presets.js",
+    "import": "*",
+    "limit": "1 kB"
+  },
+  {
     "name": "deckshoes/presets (standard52 only)",
     "path": "dist/presets.js",
     "import": "{ standard52 }",
