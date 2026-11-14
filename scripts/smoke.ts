@@ -22,8 +22,18 @@ if (deck.length !== 52 || deck[0] !== card("A", "H")) {
 if (!deck.every((c) => c === card(c.rank, c.suit))) {
   throw new Error("deckshoes/presets has its own card objects, not the ones card() returns");
 }
-if ("standard52" in root) {
-  throw new Error("the deckshoes entry point exports a preset");
+for (const [name, stripped, size] of [["piquet", piquet(), 32], ["euchre", euchre(), 24]]) {
+  if (stripped.length !== size || stripped[0] !== card("A", "H")) {
+    throw new Error("deckshoes/presets loaded but " + name + "() misbehaved");
+  }
+  if (!stripped.every((c) => c === card(c.rank, c.suit))) {
+    throw new Error("deckshoes/presets " + name + "() has its own card objects, not the ones card() returns");
+  }
+}
+for (const name of ["standard52", "piquet", "euchre"]) {
+  if (name in root) {
+    throw new Error("the deckshoes entry point exports the " + name + " preset");
+  }
 }
 const shuffled = shuffle(deck, { random: seededRandom(42) });
 if (shuffled.length !== 52 || shuffled[0] !== card("7", "H")) {
@@ -55,8 +65,9 @@ if (chainedDraw.cards[0] !== drawn.cards[0] || chainedDraw.remainder[0] !== draw
  */
 const TYPES = `
 import { type Card, card, type CardStack, chain, type Chain, draw, type DrawResult, seededRandom, shuffle, type TerminatedChain } from "deckshoes";
-import { standard52 } from "deckshoes/presets";
+import { euchre, piquet, standard52 } from "deckshoes/presets";
 
+export const stripped: CardStack<Card>[] = [piquet(), euchre()];
 const deck: CardStack<Card> = shuffle(standard52(), { random: seededRandom(1) });
 const top: Card | undefined = deck[0];
 export const same: boolean = top === card("A", "H");
@@ -108,7 +119,7 @@ try {
     [
       `import * as root from "deckshoes";`,
       `import { card, chain, draw, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
-      `import { standard52 } from "deckshoes/presets";`,
+      `import { euchre, piquet, standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
   );
@@ -117,7 +128,7 @@ try {
     [
       `const root = require("deckshoes");`,
       `const { card, chain, draw, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
-      `const { standard52 } = require("deckshoes/presets");`,
+      `const { euchre, piquet, standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),
   );
