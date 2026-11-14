@@ -19,7 +19,7 @@ Presets are functions named after the deck in camelCase, with the card count onl
 - **One function taking a name** (`preset("standard52")`). One entry point, but it bundles every preset.
 - **Each suit from ace to king, in the order spades, hearts, diamonds, clubs** for `standard52()`. Simpler to state, but no real deck comes out of the box that way.
 - **Rank first** (A♠ A♥ A♦ A♣ 2♠ …) for `standard52()`. It's the order of the library's internal card table, but it reads oddly as a deck.
-- **Each suit of a stripped deck from its lowest rank up to ace**, as the games rank them (7♥ 8♥ … A♥ for Piquet). It reads like the games' rank order, but it's a second ordering rule beside new deck order, and a stripped deck's order would differ from the deck it's stripped from, so a seeded shuffle of `euchre()` wouldn't match one of the standard 52 with its 2s to 8s filtered out.
+- **Each suit of a stripped deck from its lowest rank up to ace**, as the games rank them (7♥ 8♥ … A♥ for Piquet). It reads like the games' rank order, but it's a second ordering rule beside new deck order, and a stripped deck's order would differ from the deck it's stripped from, so shuffling `euchre()` wouldn't give the same stack as filtering the 2s to 8s out of the standard 52 and then shuffling it with the same seed.
 
 ## Consequences
 
