@@ -17,9 +17,8 @@ let deck: CardStack | undefined;
  * A♥ 7♥ 8♥ … K♥, A♣ 7♣ … K♣, K♦ Q♦ … 7♦ A♦, K♠ Q♠ … 7♠ A♠
  *
  * Every call returns the same frozen stack, and its cards are the ones
- * {@link deckshoes!card} returns, so they compare with `===`. The order won't
- * change in any 1.x release, because every seeded shuffle of the deck starts
- * from it.
+ * `card()` returns, so they compare with `===`. The order won't change in any
+ * 1.x release, because every seeded shuffle of the deck starts from it.
  *
  * @returns The 32 cards from 7 to ace, top first.
  *
