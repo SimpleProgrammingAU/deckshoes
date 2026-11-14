@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do the standard 52, Piquet and Euchre presets; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: the Pinochle preset; shoes with a cut card; and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: shoes with a cut card and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -153,23 +153,32 @@ parseCard(input.trim()); // => card("A", "S")
 
 ## Presets
 
-A preset is a ready-made deck, imported from `deckshoes/presets`. Each one returns the same frozen stack on every call, and operations such as `shuffle` return new stacks rather than changing it. A preset's order won't change in any 1.x release, since every seeded shuffle of it starts from that order.
+A preset is a ready-made deck, imported from `deckshoes/presets`. Each one returns the same frozen stack on every call with the same options, and operations such as `shuffle` return new stacks rather than changing it. A preset's order won't change in any 1.x release, since every seeded shuffle of it starts from that order.
 
-| Preset         | Cards | Ranks    | Order                                |
-| -------------- | ----- | -------- | ------------------------------------ |
-| `standard52()` | 52    | 2 to ace | New deck order                       |
-| `piquet()`     | 32    | 7 to ace | New deck order, without the 2s to 6s |
-| `euchre()`     | 24    | 9 to ace | New deck order, without the 2s to 8s |
+| Preset                    | Cards | Ranks                   | Order                                           |
+| ------------------------- | ----- | ----------------------- | ----------------------------------------------- |
+| `standard52()`            | 52    | 2 to ace                | New deck order                                  |
+| `piquet()`                | 32    | 7 to ace                | New deck order, without the 2s to 6s            |
+| `euchre()`                | 24    | 9 to ace                | New deck order, without the 2s to 8s            |
+| `pinochle()`              | 48    | 9 to ace, two of each   | Euchre's order, twice                           |
+| `pinochle({ size: 64 })`  | 64    | 7 to ace, two of each   | Piquet's order, twice                           |
+| `pinochle({ size: 80 })`  | 80    | 10 to ace, four of each | New deck order without the 2s to 9s, four times |
+| `pinochle({ size: 120 })` | 120   | 10 to ace, six of each  | New deck order without the 2s to 9s, six times  |
 
-New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order.
+New deck order is the order a new deck comes out of the box in: face down from the top, hearts and clubs from ace to king, then diamonds and spades from king to ace. Piquet and Euchre are stripped decks, the standard 52 with its low ranks taken out, so the cards left stay in that order. A Pinochle deck is copies of one stripped deck, one on top of the other: 48 cards for the usual game, 80 for double-deck Pinochle, and 64 or 120 for less common games. A card's copies are the same object, so they compare with `===`.
 
 ```ts
 import { card } from "deckshoes";
-import { euchre, piquet, standard52 } from "deckshoes/presets";
+import { euchre, pinochle, piquet, standard52 } from "deckshoes/presets";
 
 standard52().length; // => 52
 piquet().length; // => 32
 euchre().length; // => 24
+pinochle().length; // => 48
+pinochle({ size: 80 }).length; // => 80
+
+// The second Euchre deck in a Pinochle deck starts with the ace of hearts too.
+pinochle()[24]; // => card("A", "H")
 
 // The ace of hearts is on top, then the lowest heart the deck holds.
 piquet().slice(0, 2); // => [card("A", "H"), card("7", "H")]
