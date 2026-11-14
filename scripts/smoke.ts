@@ -22,12 +22,12 @@ if (deck.length !== 52 || deck[0] !== card("A", "H")) {
 if (!deck.every((c) => c === card(c.rank, c.suit))) {
   throw new Error("deckshoes/presets has its own card objects, not the ones card() returns");
 }
-for (const [name, preset, size] of [["piquet", piquet(), 32], ["euchre", euchre(), 24], ["pinochle", pinochle(), 48], ["pinochle 80", pinochle({ size: 80 }), 80]]) {
+for (const [call, preset, size] of [["piquet()", piquet(), 32], ["euchre()", euchre(), 24], ["pinochle()", pinochle(), 48], ["pinochle({ size: 80 })", pinochle({ size: 80 }), 80]]) {
   if (preset.length !== size || preset[0] !== card("A", "H")) {
-    throw new Error("deckshoes/presets loaded but " + name + "() misbehaved");
+    throw new Error("deckshoes/presets loaded but " + call + " misbehaved");
   }
   if (!preset.every((c) => c === card(c.rank, c.suit))) {
-    throw new Error("deckshoes/presets " + name + "() has its own card objects, not the ones card() returns");
+    throw new Error("deckshoes/presets " + call + " has its own card objects, not the ones card() returns");
   }
 }
 for (const name of ["standard52", "piquet", "euchre", "pinochle"]) {
