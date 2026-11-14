@@ -46,6 +46,6 @@ let deck: CardStack | undefined;
  * @since NEXT
  */
 export function piquet(): CardStack {
-  deck ??= newDeckOrder(["A", "7", "8", "9", "10", "J", "Q", "K"]);
+  deck ??= newDeckOrder(["2", "3", "4", "5", "6"]);
   return deck;
 }

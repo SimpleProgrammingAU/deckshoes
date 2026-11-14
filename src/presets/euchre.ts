@@ -46,6 +46,6 @@ let deck: CardStack | undefined;
  * @since NEXT
  */
 export function euchre(): CardStack {
-  deck ??= newDeckOrder(["A", "9", "10", "J", "Q", "K"]);
+  deck ??= newDeckOrder(["2", "3", "4", "5", "6", "7", "8"]);
   return deck;
 }
