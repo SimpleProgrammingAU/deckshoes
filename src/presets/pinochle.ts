@@ -34,16 +34,19 @@ export interface PinochleOptions {
 /** A Pinochle deck's size. */
 type Size = NonNullable<PinochleOptions["size"]>;
 
-/** For each size, the ranks the deck strips from the standard 52, and how many copies of the cards left it holds. */
-const RECIPES: Readonly<Record<Size, readonly [readonly Rank[], number]>> = {
-  48: [["2", "3", "4", "5", "6", "7", "8"], 2],
-  64: [["2", "3", "4", "5", "6"], 2],
-  80: [["2", "3", "4", "5", "6", "7", "8", "9"], 4],
-  120: [["2", "3", "4", "5", "6", "7", "8", "9"], 6],
-};
+/** The ranks a Pinochle deck strips from the standard 52, and how many copies of the cards left it holds. */
+type Recipe = readonly [stripped: readonly Rank[], copies: number];
+
+/** Each size's recipe. {@link pinochle} checks a size by looking it up here, so a size is valid exactly when it has a recipe. */
+const RECIPES: ReadonlyMap<unknown, Recipe> = new Map<Size, Recipe>([
+  [48, [["2", "3", "4", "5", "6", "7", "8"], 2]],
+  [64, [["2", "3", "4", "5", "6"], 2]],
+  [80, [["2", "3", "4", "5", "6", "7", "8", "9"], 4]],
+  [120, [["2", "3", "4", "5", "6", "7", "8", "9"], 6]],
+]);
 
 /** The stacks {@link pinochle} returns, each built on the first call for its size. */
-const decks = new Map<Size, CardStack>();
+const decks = new Map<unknown, CardStack>();
 
 /**
  * Returns a Pinochle deck: by default the 48 standard cards from 9 to ace, two
@@ -118,7 +121,9 @@ export function pinochle(options: PinochleOptions = {}): CardStack {
   // Read the option once, as `unknown`: JavaScript callers can pass anything,
   // and a getter could give the check one value and the lookup another.
   const { size = 48 }: Readonly<{ size?: unknown }> = options;
-  if (size !== 48 && size !== 64 && size !== 80 && size !== 120) {
+  // A Map lookup compares with SameValueZero, so "48" and "constructor" miss.
+  const recipe = RECIPES.get(size);
+  if (recipe === undefined) {
     throw new InvalidArgumentError(
       `Invalid size option ${display(size)}: expected 48, 64, 80 or 120`,
     );
@@ -127,7 +132,7 @@ export function pinochle(options: PinochleOptions = {}): CardStack {
   let deck = decks.get(size);
   if (deck === undefined) {
     // Copies of the stripped deck, one on top of the other.
-    const [stripped, copies] = RECIPES[size];
+    const [stripped, copies] = recipe;
     const once = newDeckOrder(stripped);
     deck = Object.freeze(Array.from({ length: copies }, () => once).flat());
     decks.set(size, deck);
