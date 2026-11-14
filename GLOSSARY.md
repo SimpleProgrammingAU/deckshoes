@@ -90,7 +90,7 @@ Several decks combined and dealt from as one, with a cut card that marks when to
 _Avoid_: multi-deck
 
 **Preset**:
-A ready-made deck with a documented list of cards in a documented order. Some presets depend on a choice, such as the 500 deck's player count, with a fixed list for each.
+A ready-made deck with a documented list of cards in a documented order. Some presets depend on a choice, such as a Pinochle deck's size or the 500 deck's player count, with a fixed list for each.
 _Avoid_: template, variant, deck type, generator
 
 **Standard 52**:
