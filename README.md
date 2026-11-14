@@ -274,7 +274,7 @@ Three settings change how the deal works. Their named values are constants holdi
 
 ```ts
 import { card, deal, HandSize, PacketSize, RunOut } from "deckshoes";
-import { standard52 } from "deckshoes/presets";
+import { euchre, standard52 } from "deckshoes/presets";
 
 const ranks = ["A", "2", "3", "4", "5", "6", "7"] as const;
 const deck = ranks.map((rank) => card(rank, "S"));
@@ -286,9 +286,11 @@ hands[1]; // => [card("2", "S"), card("4", "S"), card("6", "S")]
 remainder; // => [card("7", "S")]
 deck.length; // => 7
 
-// Packets of 3, then 2, as in Euchre.
-const euchre = deal(standard52(), 4, 5, { packetSize: 3 });
-euchre.hands[0]; // => [card("A", "H"), card("2", "H"), card("3", "H"), card("K", "H"), card("A", "C")]
+// A Euchre deck dealt to 4 hands of 5 in packets of 3, then 2, leaves a
+// remainder of 4.
+const dealt = deal(euchre(), 4, 5, { packetSize: 3 });
+dealt.hands[0]; // => [card("A", "H"), card("9", "H"), card("10", "H"), card("K", "D"), card("Q", "D")]
+dealt.remainder.length; // => 4
 
 // Each hand's cards all at once.
 deal(deck, 2, 3, { packetSize: PacketSize.HAND }).hands[0]; // => [card("A", "S"), card("2", "S"), card("3", "S")]
