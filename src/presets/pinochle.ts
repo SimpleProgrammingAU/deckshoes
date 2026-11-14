@@ -78,8 +78,9 @@ const decks = new Map<unknown, CardStack>();
  * @param options - Settings for the deck: its size. Leave it out for the
  * 48-card deck.
  * @returns The deck's cards, top first.
- * @throws {@link deckshoes!InvalidArgumentError} When `options` isn't an object
- * or is an array, or its `size` isn't 48, 64, 80 or 120.
+ * @throws {@link deckshoes!InvalidArgumentError | InvalidArgumentError} When
+ * `options` isn't an object or is an array, or its `size` isn't 48, 64, 80 or
+ * 120.
  *
  * @example
  * ```ts
