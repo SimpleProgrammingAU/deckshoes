@@ -57,10 +57,10 @@ const config: ViteUserConfig = defineConfig({
       provider: "v8",
       reporter: ["text", "json-summary", "html"],
       thresholds: {
-        branches: 90,
-        functions: 90,
-        lines: 90,
-        statements: 90,
+        branches: 99,
+        functions: 99,
+        lines: 99,
+        statements: 99,
       },
     },
     projects: [
