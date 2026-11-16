@@ -3,13 +3,13 @@
     "name": "deckshoes (everything)",
     "path": "dist/index.js",
     "import": "*",
-    "limit": "5 kB"
+    "limit": "4950 B"
   },
   {
     "name": "deckshoes (errors only)",
     "path": "dist/index.js",
     "import": "{ isDeckshoesError }",
-    "limit": "1 kB"
+    "limit": "200 B"
   },
   {
     "name": "deckshoes (shuffle only, no chain)",
@@ -21,12 +21,12 @@
     "name": "deckshoes/presets (everything)",
     "path": "dist/presets.js",
     "import": "*",
-    "limit": "1 kB"
+    "limit": "1000 B"
   },
   {
     "name": "deckshoes/presets (standard52 only)",
     "path": "dist/presets.js",
     "import": "{ standard52 }",
-    "limit": "1 kB"
+    "limit": "650 B"
   }
 ]
