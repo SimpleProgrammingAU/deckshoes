@@ -21,7 +21,7 @@ import { newDeckOrder } from "../internal/new-deck-order.ts";
  * count(deck, (c) => c === card("A", "S")); // => 4
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface PinochleOptions {
   /**
@@ -117,7 +117,7 @@ const decks = /* @__PURE__ */ new Map<unknown, CardStack>();
  * deck[0] === card("A", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function pinochle(options: PinochleOptions = {}): CardStack {
   const problem = optionsProblem(options, "{ size: 80 }");

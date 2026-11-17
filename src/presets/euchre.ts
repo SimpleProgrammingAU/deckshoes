@@ -43,7 +43,7 @@ let deck: CardStack | undefined;
  * deck[0] === card("A", "H"); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function euchre(): CardStack {
   deck ??= newDeckOrder(["2", "3", "4", "5", "6", "7", "8"]);
