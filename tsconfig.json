@@ -35,5 +35,12 @@
       "deckshoes/presets": ["./src/presets/index.ts"]
     }
   },
-  "include": ["src", "scripts", "test", ".doctest/**/*.ts", "*.ts"]
+  "include": [
+    "src",
+    "scripts",
+    "test",
+    "eslint-plugin",
+    ".doctest/**/*.ts",
+    "*.ts"
+  ]
 }

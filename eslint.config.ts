@@ -12,6 +12,8 @@ import globals from "globals";
 import { builtinModules } from "node:module";
 import tseslint from "typescript-eslint";
 
+import deckshoes from "./eslint-plugin/index.ts";
+
 /** Virtual files that eslint-plugin-jsdoc's processor creates for `@example` code. */
 const EXAMPLES = "**/*.ts/*.ts";
 const BENCHMARKS = ["src/**/*.bench.ts"];
@@ -181,10 +183,12 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
     files: ["src/**/*.ts"],
     ignores: [EXAMPLES, ...TESTS],
     name: "deckshoes/library",
+    plugins: { deckshoes },
     rules: {
       // A stack is read by index, not through its iterator (ADR 0004), so an
       // index loop that only reads is the right loop for one.
       "@typescript-eslint/prefer-for-of": "off",
+      "deckshoes/pure-top-level-calls": "error",
       "no-restricted-imports": [
         "error",
         {
@@ -418,7 +422,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
   },
 
   {
-    files: ["scripts/**/*.ts", "*.ts"],
+    files: ["scripts/**/*.ts", "eslint-plugin/**/*.ts", "*.ts"],
     languageOptions: { globals: globals.node },
     name: "deckshoes/tooling",
     rules: {

@@ -46,13 +46,19 @@ describe("the rules ESLint applies to library code", () => {
     "src/internal/operation.ts",
     "src/presets/operation.ts",
   ])(
-    "restrict reading a stack in %s, and allow an index loop",
+    "restrict reading a stack in %s, allow an index loop, and require pure marks",
     async (file) => {
       const rules = await rulesFor(file);
       expect(rules["no-restricted-syntax"]).toEqual(restrictions);
       expect(rules["@typescript-eslint/prefer-for-of"]).toEqual([0]);
+      expect(rules["deckshoes/pure-top-level-calls"]).toEqual([2]);
     },
   );
+
+  it("leave pure marks out of tests", async () => {
+    const rules = await rulesFor("src/chain.test.ts");
+    expect(rules["deckshoes/pure-top-level-calls"]).toBeUndefined();
+  });
 });
 
 describe("reading a stack in library code", () => {
