@@ -100,6 +100,8 @@ describe("importing in library code", () => {
     'import { chain } from "./chain.ts";',
     'import { chain } from "../chain.ts";',
     'import { chain } from "./chain.js";',
+    'import { chain } from "./../chain.ts";',
+    'import { chain } from "../internal/../chain.ts";',
     'import { chain, type Chain } from "./chain.ts";',
     'import "./chain.ts";',
     'export { chain } from "./chain.ts";',

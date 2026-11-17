@@ -146,8 +146,9 @@ const NODE_BUILT_INS = {
  * operation, so a module that imported it would too (ADR 0001). A type import
  * bundles nothing, so it's allowed.
  *
- * The rule matches the import's text and can't resolve it, so it would also
- * catch another relative `chain.ts`, such as a `src/internal/chain.ts`; there
+ * The rule matches the import's text and can't resolve it, so it catches any
+ * relative path that ends in `chain.ts`, written however it gets there. That
+ * would include another `chain.ts`, such as a `src/internal/chain.ts`; there
  * isn't one. It doesn't see a dynamic `import()`, which the library doesn't
  * use, or the chain reached through an entry point (#74).
  */
@@ -155,7 +156,7 @@ const CHAIN = {
   allowTypeImports: true,
   message:
     "Only src/index.ts imports the chain: it bundles every stack operation, and so does any module that imports it (ADR 0001). A type import is fine.",
-  regex: String.raw`^(?:\./|(?:\.\./)+)chain\.[jt]s$`,
+  regex: String.raw`^\.{1,2}/(?:.*/)?chain\.[jt]s$`,
 };
 
 const importSorting: Linter.RulesRecord = {
