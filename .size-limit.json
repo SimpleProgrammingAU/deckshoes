@@ -12,7 +12,7 @@
     "limit": "200 B"
   },
   {
-    "name": "deckshoes (shuffle only, no chain)",
+    "name": "deckshoes (shuffle only)",
     "path": "dist/index.js",
     "import": "{ shuffle }",
     "limit": "900 B"
