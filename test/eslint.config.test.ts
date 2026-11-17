@@ -11,23 +11,43 @@ async function rulesFor(file: string): Promise<Partial<Linter.RulesRecord>> {
   return config.rules ?? {};
 }
 
-const LIBRARY_FILE = "src/operation.ts";
-const restrictions = (await rulesFor(LIBRARY_FILE))["no-restricted-syntax"];
-if (restrictions === undefined) {
-  throw new Error(`ESLint applies no no-restricted-syntax to ${LIBRARY_FILE}`);
+/** The settings ESLint gives a rule for a file, which must apply it. */
+async function ruleFor(file: string, rule: string): Promise<Linter.RuleEntry> {
+  const entry = (await rulesFor(file))[rule];
+  if (entry === undefined) {
+    throw new Error(`ESLint applies no ${rule} to ${file}`);
+  }
+  return entry;
 }
+
+const LIBRARY_FILE = "src/operation.ts";
+const ROOT_ENTRY_POINT = "src/index.ts";
+const restrictions = await ruleFor(LIBRARY_FILE, "no-restricted-syntax");
+const imports = await ruleFor(LIBRARY_FILE, "no-restricted-imports");
+const entryPointImports = await ruleFor(
+  ROOT_ENTRY_POINT,
+  "no-restricted-imports",
+);
 
 const linter = new Linter();
 
-/** The messages the library's restricted syntax gives for some code, including any parse error. */
-function problems(code: string): string[] {
+/** The library's restricted syntax, which most of these tests check. */
+const restrictedSyntax: Linter.RulesRecord = {
+  "no-restricted-syntax": restrictions,
+};
+
+/** The messages some rules give for some code, including any parse error. By default, the library's restricted syntax. */
+function problems(
+  code: string,
+  rules: Linter.RulesRecord = restrictedSyntax,
+): string[] {
   return linter
     .verify(
       code,
       {
         files: ["**/*.ts"],
         languageOptions: { parser: tseslint.parser },
-        rules: { "no-restricted-syntax": restrictions },
+        rules,
       },
       { filename: LIBRARY_FILE },
     )
@@ -40,24 +60,89 @@ const UNSAFE_READ = /override.*copyStack.*\(ADR 0004\)/u;
 /** What a stack parameter with a name the rule can't see is told. */
 const MISNAMED = /^Name a stack parameter.*copyStack.*\(ADR 0004\)/u;
 
+/** What a library module that imports the chain is told. #72 asks that it names ADR 0001. */
+const CHAIN_IMPORT = /Only src\/index\.ts imports the chain.*\(ADR 0001\)/u;
+
+/** What a library module that imports a Node built-in is told. */
+const NODE_IMPORT = /Node built-ins/u;
+
 describe("the rules ESLint applies to library code", () => {
   it.each([
     LIBRARY_FILE,
     "src/internal/operation.ts",
     "src/presets/operation.ts",
   ])(
-    "restrict reading a stack in %s, allow an index loop, and require pure marks",
+    "restrict reading a stack and imports in %s, allow an index loop, and require pure marks",
     async (file) => {
       const rules = await rulesFor(file);
       expect(rules["no-restricted-syntax"]).toEqual(restrictions);
+      expect(rules["no-restricted-imports"]).toEqual(imports);
       expect(rules["@typescript-eslint/prefer-for-of"]).toEqual([0]);
       expect(rules["deckshoes/pure-top-level-calls"]).toEqual([2]);
     },
   );
 
-  it("leave pure marks out of tests", async () => {
+  it("let the root entry point import the chain", () => {
+    expect(entryPointImports).not.toEqual(imports);
+  });
+
+  it("leave pure marks and imports alone in tests", async () => {
     const rules = await rulesFor("src/chain.test.ts");
     expect(rules["deckshoes/pure-top-level-calls"]).toBeUndefined();
+    expect(rules["no-restricted-imports"]).toBeUndefined();
+  });
+});
+
+describe("importing in library code", () => {
+  const libraryImports = { "no-restricted-imports": imports };
+
+  it.each([
+    'import { chain } from "./chain.ts";',
+    'import { chain } from "../chain.ts";',
+    'import { chain } from "./chain.js";',
+    'import { chain, type Chain } from "./chain.ts";',
+    'import "./chain.ts";',
+    'export { chain } from "./chain.ts";',
+    'export * from "./chain.ts";',
+  ])("rejects %s", (code) => {
+    const found = problems(code, libraryImports);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(CHAIN_IMPORT);
+  });
+
+  it.each([
+    'import type { Chain } from "./chain.ts";',
+    'export type { Chain } from "./chain.ts";',
+    'import { cut } from "./cut.ts";',
+    'import { copyStack } from "../internal/stack.ts";',
+    'import { chainable } from "./chainable.ts";',
+  ])("allows %s", (code) => {
+    expect(problems(code, libraryImports)).toEqual([]);
+  });
+
+  it("rejects a Node built-in", () => {
+    const found = problems('import fs from "node:fs";', libraryImports);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(NODE_IMPORT);
+  });
+});
+
+describe("importing in the root entry point", () => {
+  const entryPoint = { "no-restricted-imports": entryPointImports };
+
+  it("allows the chain", () => {
+    expect(
+      problems(
+        'export { chain, type Chain, type TerminatedChain } from "./chain.ts";',
+        entryPoint,
+      ),
+    ).toEqual([]);
+  });
+
+  it("rejects a Node built-in", () => {
+    const found = problems('import fs from "node:fs";', entryPoint);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(NODE_IMPORT);
   });
 });
 
