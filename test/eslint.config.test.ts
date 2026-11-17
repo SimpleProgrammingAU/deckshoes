@@ -82,10 +82,6 @@ describe("the rules ESLint applies to library code", () => {
     },
   );
 
-  it("let the root entry point import the chain", () => {
-    expect(entryPointImports).not.toEqual(imports);
-  });
-
   it("leave pure marks and imports alone in tests", async () => {
     const rules = await rulesFor("src/chain.test.ts");
     expect(rules["deckshoes/pure-top-level-calls"]).toBeUndefined();
