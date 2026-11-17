@@ -445,7 +445,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
   },
 
   {
-    files: ["scripts/**/*.ts", "eslint-plugin/**/*.ts", "*.ts"],
+    files: ["scripts/**/*.ts", "*.ts"],
     languageOptions: { globals: globals.node },
     name: "deckshoes/tooling",
     rules: {
