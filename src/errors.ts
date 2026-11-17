@@ -61,7 +61,7 @@ export type DeckshoesErrorCode = keyof DeckshoesErrorMap;
  * fields, so errors from another major must not be narrowed to this one's
  * types. Bump the suffix in every major release.
  */
-const BRAND: unique symbol = Symbol.for("deckshoes.error.v1");
+const BRAND: unique symbol = /* @__PURE__ */ Symbol.for("deckshoes.error.v1");
 
 /**
  * Base class for every error deckshoes throws.

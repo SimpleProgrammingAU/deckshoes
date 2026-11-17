@@ -38,7 +38,10 @@ type Size = NonNullable<PinochleOptions["size"]>;
 type Recipe = readonly [without: readonly Rank[], copies: number];
 
 /** Each size's recipe. {@link pinochle} checks a size by looking it up here, so a size is valid exactly when it has a recipe. */
-const RECIPES: ReadonlyMap<unknown, Recipe> = new Map<Size, Recipe>([
+const RECIPES: ReadonlyMap<unknown, Recipe> = /* @__PURE__ */ new Map<
+  Size,
+  Recipe
+>([
   [48, [["2", "3", "4", "5", "6", "7", "8"], 2]],
   [64, [["2", "3", "4", "5", "6"], 2]],
   [80, [["2", "3", "4", "5", "6", "7", "8", "9"], 4]],
@@ -46,7 +49,7 @@ const RECIPES: ReadonlyMap<unknown, Recipe> = new Map<Size, Recipe>([
 ]);
 
 /** The stacks {@link pinochle} returns, each built on the first call for its size. */
-const decks = new Map<unknown, CardStack>();
+const decks = /* @__PURE__ */ new Map<unknown, CardStack>();
 
 /**
  * Returns a Pinochle deck: by default 48 cards, two copies of each standard
