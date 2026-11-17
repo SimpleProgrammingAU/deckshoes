@@ -39,7 +39,7 @@ import { rankName, suitName } from "./names.ts";
  * Notation.UNICODE_CHARACTER; // => "unicode character"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const Notation: {
   /** The card's name, such as `"Ace of Spades"`. */
@@ -80,7 +80,7 @@ export const Notation: {
  * texts; // => ["QD", "Q♦", "Queen of Diamonds", "🃍"]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type Notation = (typeof Notation)[keyof typeof Notation];
 
@@ -95,7 +95,7 @@ export type Notation = (typeof Notation)[keyof typeof Notation];
  * formatCard(card("A", "S"), options); // => "Ace of Spades"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface FormatCardOptions {
   /**
@@ -153,7 +153,7 @@ export interface FormatCardOptions {
  * parseCard(input); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function parseCard(text: string): Card {
   const found = readCard(text);
@@ -185,7 +185,7 @@ export function parseCard(text: string): Card {
  * tryParseCard("Ace of Spade"); // => undefined
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function tryParseCard(text: string): Card | undefined {
   return readCard(text);
@@ -240,7 +240,7 @@ export function tryParseCard(text: string): Card | undefined {
  * formatCard(card(clone.rank, clone.suit)); // => "10H"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function formatCard(
   card: Card,

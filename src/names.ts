@@ -50,7 +50,7 @@ const SUIT_NAMES = /* @__PURE__ */ lookup<Suit, SuitNames>({
  * rankName("Q", options); // => "queen"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface RankNameOptions {
   /**
@@ -71,7 +71,7 @@ export interface RankNameOptions {
  * suitName("D", options); // => "diamond"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface SuitNameOptions {
   /**
@@ -119,7 +119,7 @@ export interface SuitNameOptions {
  * nameOf("T"); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function rankName(rank: Rank, options: RankNameOptions = {}): string {
   const name = RANK_NAMES.get(rank);
@@ -166,7 +166,7 @@ export function rankName(rank: Rank, options: RankNameOptions = {}): string {
  * `${rankName(ace.rank)} of ${suitName(ace.suit)}`; // => "Ace of Spades"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function suitName(suit: Suit, options: SuitNameOptions = {}): string {
   const names = SUIT_NAMES.get(suit);

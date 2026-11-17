@@ -35,7 +35,7 @@ import {
  * compareCards(card("10", "H"), card("K", "H"), pinochleOrder); // => 1
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type RankOrder<R = Rank> = readonly R[];
 
@@ -62,7 +62,7 @@ export type RankOrder<R = Rank> = readonly R[];
  * RankOrder.ACE_HIGH.indexOf("K"); // => 11
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const RankOrder: {
   /** The ranks from 2 to 10, then J, Q, K and A: the ace is highest. */
@@ -124,7 +124,7 @@ export const RankOrder: {
  * compareCards(card("3", "C"), card("3", "D"), RankOrder.ACE_HIGH, options); // => 1
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export type SuitOrder<S = Suit> = readonly S[];
 
@@ -152,7 +152,7 @@ export type SuitOrder<S = Suit> = readonly S[];
  * }); // => 1
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export const SuitOrder: {
   /** Clubs, diamonds, hearts, then spades: spades are highest. */
@@ -181,7 +181,7 @@ export const SuitOrder: {
  * compareCards(card("Q", "C"), card("Q", "D"), RankOrder.ACE_HIGH, options); // => -1
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface CompareCardsOptions<S = Suit> {
   /**
@@ -208,7 +208,7 @@ export interface CompareCardsOptions<S = Suit> {
  * sort(hand, RankOrder.ACE_HIGH, options); // => [card("Q", "C"), card("Q", "D")]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface SortOptions<S = Suit> {
   /**
@@ -280,7 +280,7 @@ export interface SortOptions<S = Suit> {
  * compareCards(card("2", "H"), ace, pinochleOrder); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function compareCards<C extends Readonly<Record<"rank", unknown>>>(
   a: C,
@@ -359,7 +359,7 @@ export function compareCards<C extends Readonly<Record<"rank", unknown>>>(
  * sort(hand, ["9", "J", "Q", "K", "10", "A"]); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function sort<C extends Readonly<Record<"rank", unknown>>>(
   stack: CardStack<C>,
@@ -420,7 +420,7 @@ export function sort<C extends Readonly<Record<"rank", unknown>>>(
  * pairs; // => [[card("7", "S"), card("7", "D")]]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function groupByRank<C extends Readonly<Record<"rank", unknown>>>(
   stack: CardStack<C>,
@@ -484,7 +484,7 @@ export function groupByRank<C extends Readonly<Record<"rank", unknown>>>(
  * bySuit; // => [card("3", "C"), card("9", "C"), card("Q", "H"), card("A", "H")]
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function groupBySuit<C extends Readonly<Record<"suit", unknown>>>(
   stack: CardStack<C>,
