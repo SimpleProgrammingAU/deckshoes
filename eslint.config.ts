@@ -130,6 +130,34 @@ const UNSAFE_STACK_READS = [
 /** A `CardStack` parameter with a name the rules above can't see. */
 const MISNAMED_STACK = stackParameter(`Identifier:not([name=${STACK_NAME}])`);
 
+/** Node built-ins, which the library can't import: it has to run in browsers and every JS runtime. */
+const NODE_BUILT_INS = {
+  group: [
+    "node:*",
+    ...builtinModules,
+    ...builtinModules.map((name) => `${name}/*`),
+  ],
+  message:
+    "The library must run in browsers and every JS runtime; don't import Node built-ins.",
+};
+
+/**
+ * The chain, which only the root entry point imports: it bundles every stack
+ * operation, so a module that imported it would too (ADR 0001). A type import
+ * bundles nothing, so it's allowed.
+ *
+ * The rule matches the import's text and can't resolve it, so it would also
+ * catch another relative `chain.ts`, such as a `src/internal/chain.ts`; there
+ * isn't one. It doesn't see a dynamic `import()`, which the library doesn't
+ * use, or the chain reached through an entry point (#74).
+ */
+const CHAIN = {
+  allowTypeImports: true,
+  message:
+    "Only src/index.ts imports the chain: it bundles every stack operation, and so does any module that imports it (ADR 0001). A type import is fine.",
+  regex: String.raw`^(?:\./|(?:\.\./)+)chain\.[jt]s$`,
+};
+
 const importSorting: Linter.RulesRecord = {
   "perfectionist/sort-exports": ["error", { type: "natural" }],
   "perfectionist/sort-imports": ["error", { type: "natural" }],
@@ -189,22 +217,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       // index loop that only reads is the right loop for one.
       "@typescript-eslint/prefer-for-of": "off",
       "deckshoes/pure-top-level-calls": "error",
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: [
-                "node:*",
-                ...builtinModules,
-                ...builtinModules.map((name) => `${name}/*`),
-              ],
-              message:
-                "The library must run in browsers and every JS runtime; don't import Node built-ins.",
-            },
-          ],
-        },
-      ],
+      "no-restricted-imports": ["error", { patterns: [NODE_BUILT_INS, CHAIN] }],
       "no-restricted-syntax": [
         "error",
         {
@@ -223,6 +236,15 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
           selector: MISNAMED_STACK,
         },
       ],
+    },
+  },
+
+  {
+    files: ["src/index.ts"],
+    name: "deckshoes/root-entry-point",
+    rules: {
+      // The root entry point exports the chain (ADR 0001).
+      "no-restricted-imports": ["error", { patterns: [NODE_BUILT_INS] }],
     },
   },
 
