@@ -49,7 +49,7 @@ Every change starts from a GitHub issue, so there's a record of why it was made.
 6. **Ready.** Mark the PR ready when CI is green and review is done.
 7. **Merge.** A maintainer rebase-merges it, which keeps your individual commits. The issue closes automatically.
 
-The maintainer works the same way with an AI agent: the agent plans, the plan is stress-tested and approved before any code is written, and the agent's draft PR gets an automated code review before a human reads it. `CLAUDE.md` spells out those steps for the agent.
+The maintainer works the same way with an AI agent: the agent plans, the plan is stress-tested and approved before any code is written, and the agent's draft PR gets two automated code reviews before a human reads it. `CLAUDE.md` spells out those steps for the agent.
 
 ## Changesets
 
