@@ -13,8 +13,10 @@ import {
   stackProblem,
 } from "./internal/checks.ts";
 import {
+  onTopOf,
   readShoe,
   readShuffleSettings,
+  SHOE_OPTIONS_EXAMPLE,
   shoeAfter,
   shuffledShoe,
 } from "./internal/shoe.ts";
@@ -322,7 +324,7 @@ export function shoe<C>(
   const problem =
     stackProblem(deck) ??
     countProblem(deckCount, "deck count", 1) ??
-    optionsProblem(options, "{ penetration: 0.75 }");
+    optionsProblem(options, SHOE_OPTIONS_EXAMPLE);
   if (problem !== undefined) throw problem;
   // One copy of the deck, so each of its cards is read once (ADR 0004), however
   // many copies the shoe holds.
@@ -567,10 +569,12 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
   const problem = countProblem(count) ?? shortfall(count, cards);
   if (problem !== undefined) throw problem;
   const drawn = draw(cards, count);
-  return shoeAfter(drawn.remainder, cutCard, count, [
-    ...drawn.cards,
-    ...discardPile,
-  ]);
+  return shoeAfter(
+    drawn.remainder,
+    cutCard,
+    count,
+    onTopOf(drawn.cards, discardPile),
+  );
 }
 
 /**
@@ -626,8 +630,11 @@ export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
   if (checked instanceof InvalidArgumentError) throw checked;
   const problem = cardsProblem(cards);
   if (problem !== undefined) throw problem;
-  const { cards: inShoe, cutCard, discardPile } = checked;
-  return shoeAfter(inShoe, cutCard, 0, [...copyStack(cards), ...discardPile]);
+  return Object.freeze({
+    cards: Object.freeze(checked.cards),
+    cutCard: checked.cutCard,
+    discardPile: Object.freeze(onTopOf(cards, checked.discardPile)),
+  });
 }
 
 /**
@@ -716,11 +723,11 @@ export function reshuffle<C>(
 ): Shoe<C> {
   const checked = readShoe(shoe);
   if (checked instanceof InvalidArgumentError) throw checked;
-  const problem = optionsProblem(options, "{ penetration: 0.75 }");
+  const problem = optionsProblem(options, SHOE_OPTIONS_EXAMPLE);
   if (problem !== undefined) throw problem;
   const settings = readShuffleSettings(options);
   if (settings instanceof InvalidArgumentError) throw settings;
   // The shoe's cards on top of the discard pile, then shuffled. This order is
   // fixed for 1.x (ADR 0013): changing it changes every seeded reshuffle.
-  return shuffledShoe([...checked.cards, ...checked.discardPile], settings);
+  return shuffledShoe(onTopOf(checked.cards, checked.discardPile), settings);
 }

@@ -11,6 +11,9 @@ import { copyStack } from "./stack.ts";
 /** The penetration a shoe gets when its options leave it out. */
 const DEFAULT_PENETRATION = 0.75;
 
+/** The options `shoe()` and `reshuffle()` show as an example when theirs aren't an object. */
+export const SHOE_OPTIONS_EXAMPLE = "{ penetration: 0.75 }";
+
 /** What a shoe is shuffled with: the penetration to put its cut card at, and the random source. */
 export interface ShuffleSettings {
   readonly penetration: number;
@@ -52,7 +55,7 @@ export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
   );
 }
 
-/** The shoe left once `taken` cards come off the top: the remainder, with the cut card moved up by as many, stopping at 0, and the discard pile `pile`, all frozen. Both stacks must be the library's own arrays, since they're frozen in place. */
+/** The shoe left once `taken` cards come off the top: the remainder, already frozen, with the cut card moved up by as many, stopping at 0, and the discard pile `pile`, an array of the library's own that's frozen in place. */
 export function shoeAfter<C>(
   remainder: CardStack<C>,
   cutCard: number,
@@ -60,10 +63,21 @@ export function shoeAfter<C>(
   pile: CardStack<C>,
 ): Shoe<C> {
   return Object.freeze({
-    cards: Object.freeze(remainder),
+    cards: remainder,
     cutCard: Math.max(0, cutCard - taken),
     discardPile: Object.freeze(pile),
   });
+}
+
+/** `cards` on top of `pile`, each in its order, as one new plain array filled by index, as `copyStack` fills one, so each of `cards` and its length are read once. */
+export function onTopOf<C>(cards: CardStack<C>, pile: CardStack<C>): C[] {
+  const above = cards.length;
+  const below = pile.length;
+  // eslint-disable-next-line unicorn/no-new-array -- sized up front, as copyStack does
+  const stacked = new Array<C>(above + below);
+  for (let i = 0; i < above; i++) stacked[i] = cards[i] as C;
+  for (let i = 0; i < below; i++) stacked[above + i] = pile[i] as C;
+  return stacked;
 }
 
 /** Reads the penetration and random source from the options of `shoe()` or `reshuffle()`, which must already be an object, once each and as `unknown`, so a JavaScript caller's value is checked and a getter can't give the check one value and the shuffle another. Returns them, or the error for one that's wrong. */
