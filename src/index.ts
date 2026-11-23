@@ -65,5 +65,14 @@ export {
 } from "./order.ts";
 export { type RandomSource, seededRandom } from "./random.ts";
 export { contains, count, remove } from "./remove.ts";
+export {
+  dealFromShoe,
+  drawFromShoe,
+  type Shoe,
+  shoe,
+  type ShoeDealResult,
+  type ShoeDrawResult,
+  type ShoeOptions,
+} from "./shoe.ts";
 export { shuffle, type ShuffleOptions } from "./shuffle.ts";
 export { type CardStack } from "./stack.ts";
