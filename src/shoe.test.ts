@@ -10,6 +10,7 @@ import {
   sameValues,
   seeds,
   stacks,
+  tally,
   thrownBy,
 } from "../test/helpers.ts";
 import { type Card, card } from "./card.ts";
@@ -45,13 +46,6 @@ function asShoeOptions(value: unknown): ShoeOptions {
 /** The copies of a deck one on top of another, as a shoe holds them before its shuffle. */
 function stackedCopies<C>(deck: readonly C[], deckCount: number): C[] {
   return Array.from({ length: deckCount }, () => deck).flat();
-}
-
-/** How many times each value appears in a stack. */
-function tally<C>(stack: readonly C[]): Map<C, number> {
-  const counts = new Map<C, number>();
-  for (const value of stack) counts.set(value, (counts.get(value) ?? 0) + 1);
-  return counts;
 }
 
 /** Shoes of standard cards with the cut card anywhere in them, top to bottom. */
