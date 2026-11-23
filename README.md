@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do shoes with a cut card and the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: shoes with a cut card and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: burn cards, a discard pile and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -333,6 +333,55 @@ hands.map((hand) => hand[0]); // => [card("7", "H"), card("6", "C"), card("10", 
 
 chain(remainder).draw().value().cards; // => [card("2", "C")]
 ```
+
+## Shoes
+
+`shoe(deck, deckCount)` builds a shoe, like the ones casinos deal blackjack and baccarat from: copies of a deck shuffled together, with a cut card that marks when to reshuffle. It returns a frozen `{ cards, cutCard }`: the cards in the shoe, top first, and the cut card's position among them. The deck you passed in doesn't change. Two settings go in the options:
+
+- **`penetration`** sets how far into the shoe the cut card goes, as the proportion of cards dealt before it's reached: a number from 0 to 1, 0.75 unless you say otherwise, rounded to the nearest card.
+- **`random`** is the random source for the shuffle, as for `shuffle`.
+
+`drawFromShoe(shoe, count)` and `dealFromShoe(shoe, handCount, handSize)` take cards out as `draw` and `deal` do, with the same settings. They return the cards or hands and the shoe left, with its cut card moved up by the cards taken. Once `cutCard` is 0, the cut card has been reached and the shoe is due for a reshuffle: finish the round, then build a new shoe. Dealing can go on past the cut card until the shoe runs out.
+
+```ts
+import {
+  card,
+  count,
+  dealFromShoe,
+  drawFromShoe,
+  peek,
+  seededRandom,
+  shoe,
+} from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const sixDecks = shoe(standard52(), 6, { random: seededRandom(42) });
+sixDecks.cards.length; // => 312
+sixDecks.cutCard; // => 234
+
+// Two cards each to three players and the dealer, then a card for the first
+// player.
+const dealt = dealFromShoe(sixDecks, 4, 2);
+dealt.hands[0]; // => [card("Q", "S"), card("2", "H")]
+const hit = drawFromShoe(dealt.shoe);
+hit.cards; // => [card("A", "C")]
+hit.shoe.cutCard; // => 225
+
+// Stack operations read a shoe's cards.
+peek(hit.shoe.cards, 2); // => [card("3", "S"), card("2", "S")]
+count(hit.shoe.cards, ({ rank }) => rank === "A"); // => 23
+
+// Deal round after round until the cut card is reached, then build a new shoe.
+let current = hit.shoe;
+while (current.cutCard > 0) {
+  current = dealFromShoe(current, 4, 2).shoe;
+}
+current.cards.length; // => 71
+current = shoe(standard52(), 6, { random: seededRandom(7) });
+current.cutCard; // => 234
+```
+
+A shoe isn't a stack, so stack operations and `chain` don't take one: anything that takes cards out of a shoe has to move its cut card as well. `chain(shoe.cards)` reads a shoe's cards like any other stack.
 
 ## Cutting, inserting and removing
 
