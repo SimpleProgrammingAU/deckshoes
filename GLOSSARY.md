@@ -86,7 +86,7 @@ The stack left after cards are drawn or dealt from it.
 _Avoid_: rest, remaining
 
 **Shoe**:
-Several decks combined and dealt from as one, with a cut card that marks when to reshuffle.
+One or more decks combined and dealt from as one, with a cut card that marks when to reshuffle.
 _Avoid_: multi-deck
 
 **Preset**:
@@ -155,7 +155,7 @@ _Avoid_: bucket, partition, pile
 ## Shoes
 
 **Cut card**:
-A marker in a shoe. Dealing past it means the shoe is due for a reshuffle.
+A marker in a shoe. Once it's reached, the shoe is due for a reshuffle.
 _Avoid_: stop card
 
 **Penetration**:
