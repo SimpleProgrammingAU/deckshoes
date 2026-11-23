@@ -1140,3 +1140,103 @@ describe("drawFromShoe and dealFromShoe together", () => {
     );
   });
 });
+
+describe("a shoe in play", () => {
+  /** One step of play: taking cards out, discarding cards taken, or reshuffling. */
+  type Step =
+    | { readonly count: number; readonly kind: "burn" | "discard" | "draw" }
+    | {
+        readonly handCount: number;
+        readonly handSize: number;
+        readonly kind: "deal";
+      }
+    | { readonly kind: "reshuffle" };
+
+  const steps: Arbitrary<Step[]> = fc.array(
+    fc.oneof(
+      fc.record({
+        count: fc.nat({ max: 6 }),
+        kind: fc.constantFrom(
+          "burn" as const,
+          "discard" as const,
+          "draw" as const,
+        ),
+      }),
+      fc.record({
+        handCount: fc.integer({ max: 4, min: 1 }),
+        handSize: fc.integer({ max: 3, min: 1 }),
+        kind: fc.constant("deal" as const),
+      }),
+      fc.constant({ kind: "reshuffle" as const }),
+    ),
+    { maxLength: 40 },
+  );
+
+  it("loses and gains no card across draws, deals, burns, discards and reshuffles", () => {
+    fc.assert(
+      fc.property(
+        stacks(),
+        fc.integer({ max: 4, min: 1 }),
+        seeds,
+        steps,
+        (deck, deckCount, seed, play) => {
+          const random = seededRandom(seed);
+          const start = shoe(deck, deckCount, { random });
+          let current = start;
+          // The cards taken out and not yet discarded, as players hold them.
+          const held: Card[] = [];
+          for (const step of play) {
+            const before = current;
+            let taken = 0;
+            switch (step.kind) {
+              case "draw": {
+                const result = drawFromShoe(
+                  current,
+                  Math.min(step.count, current.cards.length),
+                );
+                held.push(...result.cards);
+                taken = result.cards.length;
+                current = result.shoe;
+                break;
+              }
+              case "deal": {
+                const result = dealFromShoe(
+                  current,
+                  step.handCount,
+                  step.handSize,
+                  { runOut: RunOut.STOP },
+                );
+                for (const hand of result.hands) held.push(...hand);
+                taken = before.cards.length - result.shoe.cards.length;
+                current = result.shoe;
+                break;
+              }
+              case "burn": {
+                taken = Math.min(step.count, current.cards.length);
+                current = burn(current, taken);
+                break;
+              }
+              case "discard": {
+                current = discard(current, held.splice(0, step.count));
+                break;
+              }
+              case "reshuffle": {
+                current = reshuffle(current, { random });
+                break;
+              }
+            }
+
+            expect(
+              tally([...current.cards, ...current.discardPile, ...held]),
+            ).toStrictEqual(tally(start.cards));
+            expect(current.cutCard).toBe(
+              step.kind === "reshuffle"
+                ? Math.round(0.75 * current.cards.length) || 0
+                : Math.max(0, before.cutCard - taken),
+            );
+          }
+        },
+      ),
+    );
+  });
+});
