@@ -133,6 +133,9 @@ _Avoid_: batch, block
 To move cards from the top to the discard pile without using them.
 _Avoid_: discard
 
+**Discard**:
+To put cards that are finished with onto the discard pile.
+
 **Cut**:
 To move cards from the top of a stack to the bottom, keeping their order.
 _Avoid_: rotate, split
@@ -161,6 +164,13 @@ _Avoid_: stop card
 **Penetration**:
 How far into a shoe the cut card sits, as the proportion of cards dealt before it's reached.
 _Avoid_: depth
+
+**Discard pile**:
+The pile in a shoe that burned and discarded cards go to. They're out of play until a reshuffle returns them to the shoe.
+_Avoid_: discards, muck
+
+**Reshuffle**:
+To shuffle the discard pile back in with the cards left in a shoe, and put the cut card back in.
 
 ## Ordering
 
