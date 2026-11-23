@@ -854,6 +854,23 @@ describe("discard", () => {
     },
   );
 
+  it("names which cards are wrong: the shoe's or the ones discarded", () => {
+    expect(
+      thrownBy(() =>
+        discard(asShoe({ cards: "AS", cutCard: 0, discardPile: [] }), [ACE]),
+      ),
+    ).toMatchObject({
+      message: expect.stringMatching(/^Invalid shoe cards /) as unknown,
+    });
+    expect(
+      thrownBy(() =>
+        discard({ cards: [ACE], cutCard: 0, discardPile: [] }, asStack("AS")),
+      ),
+    ).toMatchObject({
+      message: expect.stringMatching(/^Invalid cards /) as unknown,
+    });
+  });
+
   it.each(nonArrays())("rejects %s as the cards", (_label, cards) => {
     expect(
       thrownBy(() =>
@@ -1004,6 +1021,15 @@ describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
     const { reads, stack } = countingReads([ACE, KING, TEN]);
     use({ cards: [ACE, KING], cutCard: 1, discardPile: stack });
     expect(reads).toStrictEqual({ length: 1, positions: [1, 1, 1] });
+  });
+
+  it("never gives a cut card of -0, even for a shoe whose cut card is -0", () => {
+    const { cutCard } = use({
+      cards: [ACE, KING],
+      cutCard: -0,
+      discardPile: [],
+    });
+    expect(Object.is(cutCard, -0)).toBe(false);
   });
 
   it("reads a discard pile that's left out or undefined as an empty one", () => {
