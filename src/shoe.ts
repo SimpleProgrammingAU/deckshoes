@@ -335,6 +335,9 @@ export function shoe<C>(
  * Leave `count` out, or pass `undefined`, to draw one card. `cards` is a stack
  * either way, so it holds that one card rather than being the card.
  *
+ * To take cards out without using them, putting them on the discard pile, use
+ * {@link burn}.
+ *
  * @typeParam C - The type of card in the shoe.
  * @param shoe - The shoe to draw from.
  * @param count - How many cards to draw, an integer of 0 or more: 1 if it's
@@ -470,4 +473,73 @@ export function dealFromShoe<C>(
       discardPile,
     ),
   });
+}
+
+/**
+ * Burns cards from the top of a shoe: moves them to the discard pile without
+ * using them, returning the shoe left, with its cut card moved up by the cards
+ * burned.
+ *
+ * The burned cards go on top of the discard pile, in the order they had in the
+ * shoe, so peeking at `discardPile` shows them, as a dealer turns up a burn
+ * card. The cut card's position stops at 0, which means it's been reached and
+ * the shoe is due for a reshuffle. Burning can go on past it, until the shoe
+ * runs out.
+ *
+ * The shoe is left untouched. The shoe left, its cards and its discard pile are
+ * new and frozen. The shoe can come from {@link deckshoes!shoe | shoe()}, or be
+ * any object with the same shape.
+ *
+ * Leave `count` out, or pass `undefined`, to burn one card.
+ *
+ * Only a shoe has a discard pile, so there's no `burn` for stacks: to take
+ * cards off a stack without using them, {@link draw} them and keep the
+ * remainder. A one-deck game that burns cards, such as hold'em, can use a shoe
+ * of one deck.
+ *
+ * @typeParam C - The type of card in the shoe.
+ * @param shoe - The shoe to burn cards from.
+ * @param count - How many cards to burn, an integer of 0 or more: 1 if it's
+ * left out or `undefined`.
+ * @returns The shoe left, a new frozen shoe, with the burned cards on top of
+ * its discard pile.
+ * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
+ * array of `cards`, a `cutCard` that's an integer from 0 to the number of
+ * cards, and a `discardPile` that's an array or left out, or `count` isn't an
+ * integer of 0 or more.
+ * @throws {@link InsufficientCardsError} When `count` is more than the shoe
+ * holds.
+ *
+ * @example
+ * ```ts
+ * import { burn, card, seededRandom, shoe } from "deckshoes";
+ * import { standard52 } from "deckshoes/presets";
+ *
+ * const sixDecks = shoe(standard52(), 6, { random: seededRandom(42) });
+ *
+ * // Burn the top card, as a blackjack dealer does after shuffling.
+ * const burned = burn(sixDecks);
+ * burned.discardPile[0] === card("Q", "S"); // => true
+ * burned.cards.length; // => 311
+ * burned.cutCard; // => 233
+ *
+ * // Burned cards go on top of the pile, in the order they had in the shoe.
+ * burn(burned, 2).discardPile; // => [card("7", "D"), card("8", "D"), card("Q", "S")]
+ *
+ * burn(sixDecks, 313); // throws INSUFFICIENT_CARDS
+ * ```
+ *
+ * @since NEXT
+ */
+export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
+  const checked = readShoe(shoe);
+  if (checked instanceof InvalidArgumentError) throw checked;
+  const { cards, cutCard, discardPile } = checked;
+  const problem = countProblem(count) ?? shortfall(count, cards);
+  if (problem !== undefined) throw problem;
+  const drawn = draw(cards, count);
+  return shoeAfter(drawn.remainder, cutCard, count, [
+    ...drawn.cards,
+    ...discardPile,
+  ]);
 }

@@ -66,6 +66,7 @@ export {
 export { type RandomSource, seededRandom } from "./random.ts";
 export { contains, count, remove } from "./remove.ts";
 export {
+  burn,
   dealFromShoe,
   drawFromShoe,
   type Shoe,
