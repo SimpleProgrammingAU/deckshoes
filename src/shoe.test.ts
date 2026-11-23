@@ -1,5 +1,5 @@
 import fc, { type Arbitrary } from "fast-check";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   arraySubclasses,
@@ -49,6 +49,25 @@ function stackedCopies<C>(deck: readonly C[], deckCount: number): C[] {
   return Array.from({ length: deckCount }, () => deck).flat();
 }
 
+/** Wraps a stack in a Proxy that counts the reads of its length and of each of its positions. */
+function countingReads<C>(stack: readonly C[]): {
+  reads: { length: number; positions: number[] };
+  stack: readonly C[];
+} {
+  const reads = { length: 0, positions: stack.map(() => 0) };
+  const proxy = new Proxy(stack, {
+    get(target, key, receiver) {
+      if (key === "length") reads.length += 1;
+      if (typeof key === "string" && /^\d+$/.test(key)) {
+        const position = Number(key);
+        reads.positions[position] = (reads.positions[position] ?? 0) + 1;
+      }
+      return Reflect.get(target, key, receiver) as unknown;
+    },
+  });
+  return { reads, stack: proxy };
+}
+
 /** Shoes of standard cards with the cut card anywhere in them, top to bottom. */
 function shoes(): Arbitrary<Shoe> {
   return stacksWithCounts().map(({ count, stack }) => ({
@@ -58,6 +77,10 @@ function shoes(): Arbitrary<Shoe> {
 }
 
 describe("shoe", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("holds deckCount copies of every card in the deck", () => {
     fc.assert(
       fc.property(
@@ -218,10 +241,37 @@ describe("shoe", () => {
   );
 
   it("shuffles with a secure source, and uses the default penetration, when the options are left out", () => {
+    const spy = vi.spyOn(crypto, "getRandomValues");
     const built = shoe(standard52(), 2);
-    expect(built.cards).toHaveLength(104);
-    expect(tally(built.cards).get(ACE)).toBe(2);
+    expect(spy).toHaveBeenCalledOnce();
+    expect(sameValues(built.cards, stackedCopies(standard52(), 2))).toBe(false);
+    expect(tally(built.cards)).toStrictEqual(
+      tally(stackedCopies(standard52(), 2)),
+    );
     expect(built.cutCard).toBe(78);
+  });
+
+  it("reads each card of the deck once, however many copies it makes", () => {
+    const { reads, stack } = countingReads([ACE, KING, TEN]);
+    shoe(stack, 4, { random: seededRandom(1) });
+    expect(reads).toStrictEqual({ length: 1, positions: [1, 1, 1] });
+  });
+
+  it("makes its copies of the deck from one read of each card", () => {
+    let calls = 0;
+    const changing = new Proxy([ACE, KING], {
+      get(target, key, receiver) {
+        if (key === "0") {
+          calls += 1;
+          return calls === 1 ? ACE : TEN;
+        }
+        return Reflect.get(target, key, receiver) as unknown;
+      },
+    });
+    const built = shoe(changing, 4, { random: seededRandom(1) });
+    expect(tally(built.cards)).toStrictEqual(
+      tally(stackedCopies([ACE, KING], 4)),
+    );
   });
 
   it("reads each option once", () => {
@@ -273,6 +323,15 @@ describe("shoe", () => {
     });
     expect(thrownBy(() => shoe([ACE], 2 ** 32))).toMatchObject({
       code: "INVALID_ARGUMENT",
+    });
+  });
+
+  it("says card for a one-card deck, and cards otherwise, when the deck count is too big", () => {
+    expect(thrownBy(() => shoe([ACE], 2 ** 32))).toMatchObject({
+      message: expect.stringContaining("decks of 1 card would") as unknown,
+    });
+    expect(thrownBy(() => shoe(standard52(), 2 ** 32))).toMatchObject({
+      message: expect.stringContaining("decks of 52 cards would") as unknown,
     });
   });
 
@@ -537,6 +596,12 @@ describe.each<
     };
     takeFrom(fromGetters);
     expect(reads).toStrictEqual({ cards: 1, cutCard: 1 });
+  });
+
+  it("reads the length and each card of the shoe's cards once", () => {
+    const { reads, stack } = countingReads([ACE, KING, TEN]);
+    takeFrom({ cards: stack, cutCard: 1 });
+    expect(reads).toStrictEqual({ length: 1, positions: [1, 1, 1] });
   });
 
   it.each([

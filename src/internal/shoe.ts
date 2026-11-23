@@ -4,8 +4,9 @@ import type { CardStack } from "../stack.ts";
 import { InvalidArgumentError } from "../errors.ts";
 import { cardsProblem, countProblem } from "./checks.ts";
 import { display } from "./display.ts";
+import { copyStack } from "./stack.ts";
 
-/** Reads a shoe's cards and cut card once each, so a getter can't give the check one value and the operation another, and returns them, or the error for something that isn't a shoe. */
+/** Reads a shoe's cards and cut card once each, the cards through `copyStack`, so a getter or a Proxy can't give the check one value and the operation another, and returns them, or the error for something that isn't a shoe. */
 export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
   const value: unknown = shoe;
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -20,10 +21,12 @@ export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
     cards?: unknown;
     cutCard?: unknown;
   }> = value;
+  const problem = cardsProblem(cards);
+  if (problem !== undefined) return problem;
+  const copied = copyStack(cards as CardStack<C>);
   return (
-    cardsProblem(cards) ??
-    countProblem(cutCard, "cut card", 0, (cards as CardStack<C>).length) ?? {
-      cards: cards as CardStack<C>,
+    countProblem(cutCard, "cut card", 0, copied.length) ?? {
+      cards: copied,
       cutCard: cutCard as number,
     }
   );
