@@ -85,7 +85,7 @@ describe("deal", () => {
       packetSize: HandSize.MAXIMIZE,
     });
     expectTypeOf(deal).toBeCallableWith(standard52(), 4, 5, {
-      // @ts-expect-error Reshuffling isn't a setting (#29).
+      // @ts-expect-error Dealing on from a discard pile isn't a setting (#80).
       runOut: "reshuffle",
     });
     // @ts-expect-error Counts stay positional (ADR 0009).
