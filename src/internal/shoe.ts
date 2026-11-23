@@ -41,7 +41,7 @@ export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
   );
 }
 
-/** The shoe left once `taken` cards come off the top: the remainder, with the cut card moved up by as many, stopping at 0, and the discard pile `pile`, frozen. */
+/** The shoe left once `taken` cards come off the top: the remainder, with the cut card moved up by as many, stopping at 0, and the discard pile `pile`, all frozen. Both stacks must be the library's own arrays, since they're frozen in place. */
 export function shoeAfter<C>(
   remainder: CardStack<C>,
   cutCard: number,
@@ -49,7 +49,7 @@ export function shoeAfter<C>(
   pile: CardStack<C>,
 ): Shoe<C> {
   return Object.freeze({
-    cards: remainder,
+    cards: Object.freeze(remainder),
     cutCard: Math.max(0, cutCard - taken),
     discardPile: Object.freeze(pile),
   });

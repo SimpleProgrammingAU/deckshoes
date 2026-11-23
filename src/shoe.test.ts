@@ -24,6 +24,7 @@ import { seededRandom } from "./random.ts";
 import {
   burn,
   dealFromShoe,
+  discard,
   drawFromShoe,
   type Shoe,
   shoe,
@@ -762,10 +763,92 @@ describe("burn", () => {
   });
 });
 
+describe("discard", () => {
+  it("puts the cards on top of the discard pile, leaving the shoe's cards and cut card alone", () => {
+    fc.assert(
+      fc.property(shoes(), stacks(), (original, cards) => {
+        const played = discard(original, cards);
+        expect(sameValues(played.cards, original.cards)).toBe(true);
+        expect(played.cutCard).toBe(original.cutCard);
+        expect(
+          sameValues(played.discardPile, [...cards, ...original.discardPile]),
+        ).toBe(true);
+      }),
+    );
+  });
+
+  it("puts the cards on the pile in the order given", () => {
+    const played = discard({ cards: [ACE], cutCard: 1, discardPile: [TEN] }, [
+      KING,
+      ACE,
+    ]);
+    expect(played).toStrictEqual({
+      cards: [ACE],
+      cutCard: 1,
+      discardPile: [KING, ACE, TEN],
+    });
+  });
+
+  it("gives a new shoe holding the same cards when there's nothing to discard", () => {
+    const original = { cards: [ACE, KING], cutCard: 1, discardPile: [TEN] };
+    const played = discard(original, []);
+    expect(played).toStrictEqual(original);
+    expect(played).not.toBe(original);
+  });
+
+  it("returns a frozen shoe holding plain frozen stacks", () => {
+    const played = discard({ cards: [ACE], cutCard: 0, discardPile: [] }, [
+      KING,
+    ]);
+    expect(Object.isFrozen(played)).toBe(true);
+    expect(Object.getPrototypeOf(played)).toBe(Object.prototype);
+    expect(isPlainFrozen(played.cards)).toBe(true);
+    expect(isPlainFrozen(played.discardPile)).toBe(true);
+  });
+
+  it("leaves the cards unchanged, frozen or not", () => {
+    fc.assert(
+      fc.property(stacks(), fc.boolean(), (original, frozen) => {
+        const cards = frozen ? Object.freeze([...original]) : [...original];
+        discard({ cards: [ACE], cutCard: 0, discardPile: [] }, cards);
+        expect(sameValues(cards, original)).toBe(true);
+        expect(Object.isFrozen(cards)).toBe(frozen);
+      }),
+    );
+  });
+
+  it("reads the length and each of the cards once", () => {
+    const { reads, stack } = countingReads([ACE, KING, TEN]);
+    discard({ cards: [], cutCard: 0, discardPile: [] }, stack);
+    expect(reads).toStrictEqual({ length: 1, positions: [1, 1, 1] });
+  });
+
+  it.each(arraySubclasses())(
+    "reads the cards of %s by index",
+    (_label, make) => {
+      const played = discard(
+        { cards: [], cutCard: 0, discardPile: [TEN] },
+        make([ACE, KING]),
+      );
+      expect(played.discardPile).toStrictEqual([ACE, KING, TEN]);
+      expect(isPlainFrozen(played.discardPile)).toBe(true);
+    },
+  );
+
+  it.each(nonArrays())("rejects %s as the cards", (_label, cards) => {
+    expect(
+      thrownBy(() =>
+        discard({ cards: [ACE], cutCard: 0, discardPile: [] }, asStack(cards)),
+      ),
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+});
+
 describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
   ["drawFromShoe", (from) => drawFromShoe(from, 1).shoe],
   ["dealFromShoe", (from) => dealFromShoe(from, 1, 1).shoe],
   ["burn", (from) => burn(from, 1)],
+  ["discard", (from) => discard(from, [ACE])],
 ])("%s", (_name, use) => {
   it("takes a shoe written by hand, whose stacks are array subclasses", () => {
     const expected = use({

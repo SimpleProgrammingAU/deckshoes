@@ -68,6 +68,7 @@ export { contains, count, remove } from "./remove.ts";
 export {
   burn,
   dealFromShoe,
+  discard,
   drawFromShoe,
   type Shoe,
   shoe,
