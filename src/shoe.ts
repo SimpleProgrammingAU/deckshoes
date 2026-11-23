@@ -6,6 +6,7 @@ import { deal, type DealOptions, type HandSize } from "./deal.ts";
 import { draw } from "./draw.ts";
 import { InvalidArgumentError } from "./errors.ts";
 import {
+  cardsProblem,
   countProblem,
   optionsProblem,
   randomProblem,
@@ -542,4 +543,61 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
     ...drawn.cards,
     ...discardPile,
   ]);
+}
+
+/**
+ * Discards cards that are finished with, such as the hands from a round,
+ * putting them on a shoe's discard pile and returning the shoe left.
+ *
+ * The cards go on top of the discard pile, in the order given. The shoe's
+ * cards and its cut card don't change. Discard every hand once the round is
+ * over, as `discard(shoe, hands.flat())`, so that {@link reshuffle} takes them
+ * back in.
+ *
+ * Nothing checks that the cards came from the shoe, so discarding a hand twice
+ * puts its cards on the pile twice, and the shoe gains cards. Discard only the
+ * cards taken from the shoe, once each.
+ *
+ * The shoe and the cards are left untouched, frozen or not. The shoe left, its
+ * cards and its discard pile are new and frozen. The shoe can come from
+ * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
+ *
+ * @typeParam C - The type of card in the shoe.
+ * @param shoe - The shoe whose discard pile takes the cards.
+ * @param cards - The cards to discard, top first, of the same type as the
+ * shoe's.
+ * @returns The shoe left, a new frozen shoe, with the cards on top of its
+ * discard pile.
+ * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
+ * array of `cards`, a `cutCard` that's an integer from 0 to the number of
+ * cards, and a `discardPile` that's an array or left out, or `cards` isn't an
+ * array.
+ *
+ * @example
+ * ```ts
+ * import { card, dealFromShoe, discard, seededRandom, shoe } from "deckshoes";
+ * import { standard52 } from "deckshoes/presets";
+ *
+ * const sixDecks = shoe(standard52(), 6, { random: seededRandom(42) });
+ * const { hands, shoe: dealt } = dealFromShoe(sixDecks, 4, 2);
+ *
+ * // Once the round is over, every hand goes on the discard pile.
+ * const played = discard(dealt, hands.flat());
+ * played.discardPile.length; // => 8
+ * played.discardPile[0] === card("Q", "S"); // => true
+ *
+ * // The cards in the shoe, and its cut card, don't change.
+ * played.cards.length; // => 304
+ * played.cutCard; // => 226
+ * ```
+ *
+ * @since NEXT
+ */
+export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
+  const checked = readShoe(shoe);
+  if (checked instanceof InvalidArgumentError) throw checked;
+  const problem = cardsProblem(cards);
+  if (problem !== undefined) throw problem;
+  const { cards: inShoe, cutCard, discardPile } = checked;
+  return shoeAfter(inShoe, cutCard, 0, [...copyStack(cards), ...discardPile]);
 }

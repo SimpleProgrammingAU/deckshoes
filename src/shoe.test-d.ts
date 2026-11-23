@@ -11,6 +11,7 @@ import { seededRandom } from "./random.ts";
 import {
   burn,
   dealFromShoe,
+  discard,
   drawFromShoe,
   type Shoe,
   shoe,
@@ -135,5 +136,27 @@ describe("burn", () => {
     expectTypeOf(burn).toBeCallableWith(sixDecks, "1");
     // @ts-expect-error a stack isn't a shoe
     expectTypeOf(burn).toBeCallableWith(standard52());
+  });
+});
+
+describe("discard", () => {
+  it("gives back a shoe of the same kind of card", () => {
+    const sixDecks = shoe(standard52(), 6);
+    expectTypeOf(discard(sixDecks, standard52())).toEqualTypeOf<Shoe>();
+    expectTypeOf(discard(shoe([1, 2, 3], 2), [1])).toEqualTypeOf<
+      Shoe<number>
+    >();
+  });
+
+  it("takes only a stack of the shoe's kind of card", () => {
+    const numbers = shoe([1, 2, 3], 2);
+    // @ts-expect-error a stack of strings isn't a stack of numbers
+    discard(numbers, ["a"]);
+    // @ts-expect-error a stack of numbers isn't a stack of cards
+    discard(shoe(standard52(), 6), [1]);
+    // @ts-expect-error the cards are required
+    discard(numbers);
+    // @ts-expect-error a stack isn't a shoe
+    expectTypeOf(discard).toBeCallableWith(standard52(), standard52());
   });
 });
