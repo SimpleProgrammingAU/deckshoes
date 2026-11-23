@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do shoes with a cut card and the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do shoes with a cut card, burn cards and a discard pile, and the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: burn cards, a discard pile and serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Planned for 1.0: serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -336,26 +336,37 @@ chain(remainder).draw().value().cards; // => [card("2", "C")]
 
 ## Shoes
 
-`shoe(deck, deckCount)` builds a shoe, like the ones casinos deal blackjack and baccarat from: copies of a deck shuffled together, with a cut card that marks when to reshuffle. It returns a frozen `{ cards, cutCard }`: the cards in the shoe, top first, and the cut card's position among them. The deck you passed in doesn't change. Two settings go in the options:
+`shoe(deck, deckCount)` builds a shoe, like the ones casinos deal blackjack and baccarat from: copies of a deck shuffled together, with a cut card that marks when to reshuffle, and a discard pile. It returns a frozen `{ cards, cutCard, discardPile }`: the cards in the shoe, top first, the cut card's position among them, and the cards burned and discarded since the last reshuffle, which starts empty. The deck you passed in doesn't change. Two settings go in the options:
 
 - **`penetration`** sets how far into the shoe the cut card goes, as the proportion of cards dealt before it's reached: a number from 0 to 1, 0.75 unless you say otherwise, rounded to the nearest card. Near 1, there may be too few cards behind the cut card to finish a round.
 - **`random`** is the random source for the shuffle, as for `shuffle`.
 
-`drawFromShoe(shoe, count)` and `dealFromShoe(shoe, handCount, handSize)` take cards out as `draw` and `deal` do, with the same settings. They return the cards or hands and the shoe left, with its cut card moved up by the cards taken. Once `cutCard` is 0, the cut card has been reached and the shoe is due for a reshuffle: finish the round, then build a new shoe. Dealing can go on past the cut card until the shoe runs out.
+`drawFromShoe(shoe, count)` and `dealFromShoe(shoe, handCount, handSize)` take cards out as `draw` and `deal` do, with the same settings. They return the cards or hands and the shoe left, with its cut card moved up by the cards taken. Once `cutCard` is 0, the cut card has been reached and the shoe is due for a reshuffle. Dealing can go on past the cut card until the shoe runs out.
+
+Three more functions move cards around a shoe, each returning the new shoe:
+
+- **`burn(shoe, count)`** moves cards from the top to the discard pile without using them, and moves the cut card up as well. They go on top of the pile, so `peek(shoe.discardPile)` shows them.
+- **`discard(shoe, cards)`** puts cards that are finished with, such as a round's hands, on top of the discard pile. Nothing checks that they came from the shoe, so discard only the cards you took, once each.
+- **`reshuffle(shoe, options)`** shuffles the discard pile back in with the cards left in the shoe and puts the cut card back in. A shoe doesn't remember its penetration, so pass `reshuffle` the options you built the shoe with. Cards still in players' hands aren't part of it, so discard them first.
 
 ```ts
 import {
+  burn,
   card,
   count,
   dealFromShoe,
+  discard,
   drawFromShoe,
   peek,
+  reshuffle,
   seededRandom,
   shoe,
 } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
 
-const sixDecks = shoe(standard52(), 6, { random: seededRandom(42) });
+// One options object for the shoe and every reshuffle.
+const rules = { random: seededRandom(42) };
+const sixDecks = shoe(standard52(), 6, rules);
 sixDecks.cards.length; // => 312
 sixDecks.cutCard; // => 234
 
@@ -367,21 +378,49 @@ const hit = drawFromShoe(dealt.shoe);
 hit.cards; // => [card("A", "C")]
 hit.shoe.cutCard; // => 225
 
-// Stack operations read a shoe's cards.
+// Stack operations read a shoe's cards and its pile.
 peek(hit.shoe.cards, 2); // => [card("3", "S"), card("2", "S")]
 count(hit.shoe.cards, ({ rank }) => rank === "A"); // => 23
 
-// Deal round after round until the cut card is reached, then build a new shoe.
-let current = hit.shoe;
+// Once the round is over, its cards go on the discard pile.
+let current = discard(hit.shoe, [...dealt.hands.flat(), ...hit.cards]);
+current.discardPile.length; // => 9
+
+// Play rounds until the cut card is reached, then reshuffle and burn a card.
 while (current.cutCard > 0) {
-  current = dealFromShoe(current, 4, 2).shoe;
+  const round = dealFromShoe(current, 4, 2);
+  current = discard(round.shoe, round.hands.flat());
 }
 current.cards.length; // => 71
-current = shoe(standard52(), 6, { random: seededRandom(7) });
-current.cutCard; // => 234
+current = burn(reshuffle(current, rules));
+current.cards.length; // => 311
+current.cutCard; // => 233
+current.discardPile.length; // => 1
 ```
 
-A shoe isn't a stack, so stack operations and `chain` don't take one: anything that takes cards out of a shoe has to move its cut card as well. `chain(shoe.cards)` reads a shoe's cards like any other stack.
+Only a shoe has a discard pile, so a one-deck game that burns cards, such as hold'em, deals from a shoe of one deck:
+
+```ts
+import {
+  burn,
+  dealFromShoe,
+  drawFromShoe,
+  seededRandom,
+  shoe,
+} from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+// Two cards each to six players, then burn one and deal the flop.
+const deck = shoe(standard52(), 1, { penetration: 1, random: seededRandom(1) });
+const { hands, shoe: dealt } = dealFromShoe(deck, 6, 2);
+hands.length; // => 6
+const flop = drawFromShoe(burn(dealt), 3);
+flop.cards.length; // => 3
+flop.shoe.cards.length; // => 36
+flop.shoe.discardPile.length; // => 1
+```
+
+A shoe isn't a stack, so stack operations and `chain` don't take one: anything that takes cards out of a shoe has to move its cut card as well. `chain(shoe.cards)` reads a shoe's cards like any other stack, and `chain(shoe.discardPile)` its pile.
 
 ## Cutting, inserting and removing
 
