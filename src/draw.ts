@@ -42,6 +42,8 @@ export interface DrawResult<C = Card> {
  * Leave `count` out, or pass `undefined`, to draw one card. `cards` is a stack
  * either way, so it holds that one card rather than being the card.
  *
+ * To draw from a shoe, moving its cut card as well, use {@link drawFromShoe}.
+ *
  * @typeParam C - The type of card in the stack.
  * @param stack - The stack to draw from, top first.
  * @param count - How many cards to draw, an integer of 0 or more: 1 if it's

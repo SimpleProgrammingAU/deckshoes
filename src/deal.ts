@@ -262,6 +262,8 @@ export interface DealResult<C = Card> {
  * and frozen, as are `hands` and the result itself. Any stack works, including
  * one with copies or with cards that aren't standard cards.
  *
+ * To deal from a shoe, moving its cut card as well, use {@link dealFromShoe}.
+ *
  * @typeParam C - The type of card in the deck.
  * @param deck - The stack to deal from, top first.
  * @param handCount - How many hands to deal, an integer from 1 to 2³² − 1.
