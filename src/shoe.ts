@@ -39,7 +39,8 @@ const DEFAULT_PENETRATION = 0.75;
  * takes cards out of a shoe has to move its cut card too.
  *
  * Any object with this shape works as a shoe, so one can be written by hand.
- * Every function that takes a shoe checks it.
+ * Every function that takes a shoe checks it, and gives back a shoe holding
+ * only `cards` and `cutCard`, so no other field on it is carried over.
  *
  * @typeParam C - The type of card the shoe holds: a standard {@link Card}
  * unless you say otherwise.
@@ -98,7 +99,9 @@ export interface ShoeOptions {
    * card, with a tie going to the later card (`Math.round`). Leave it out, or
    * pass `undefined`, for 0.75. At 0 the cut card is reached straight away, so
    * every round is the last before a reshuffle, and at 1 the whole shoe is
-   * dealt first.
+   * dealt first. Near 1, too few cards may be left behind the cut card to
+   * finish a round, so check `cards.length` before dealing one, or deal with
+   * `RunOut.STOP`.
    */
   readonly penetration?: number | undefined;
 

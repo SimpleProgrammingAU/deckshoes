@@ -6,7 +6,7 @@
 [![Bundle size](https://img.shields.io/bundlejs/size/deckshoes)](https://bundlejs.com/?q=deckshoes)
 [![License: MIT](https://img.shields.io/npm/l/deckshoes)](./LICENSE)
 
-A lightweight, fully typed library for playing cards: decks, multi-deck shoes, shuffling, dealing and more. No runtime dependencies, tree-shakeable, and it runs anywhere JavaScript does.
+A lightweight, fully typed library for playing cards: decks, shoes, shuffling, dealing and more. No runtime dependencies, tree-shakeable, and it runs anywhere JavaScript does.
 
 > [!WARNING]
 > **deckshoes 1.0 is a rewrite and is under active development.** The 1.0 API is arriving piece by piece in alpha releases (`deckshoes@alpha`) and may change between them. The last stable release is 0.4.0; see [Migrating from 0.4](#migrating-from-04).
@@ -338,7 +338,7 @@ chain(remainder).draw().value().cards; // => [card("2", "C")]
 
 `shoe(deck, deckCount)` builds a shoe, like the ones casinos deal blackjack and baccarat from: copies of a deck shuffled together, with a cut card that marks when to reshuffle. It returns a frozen `{ cards, cutCard }`: the cards in the shoe, top first, and the cut card's position among them. The deck you passed in doesn't change. Two settings go in the options:
 
-- **`penetration`** sets how far into the shoe the cut card goes, as the proportion of cards dealt before it's reached: a number from 0 to 1, 0.75 unless you say otherwise, rounded to the nearest card.
+- **`penetration`** sets how far into the shoe the cut card goes, as the proportion of cards dealt before it's reached: a number from 0 to 1, 0.75 unless you say otherwise, rounded to the nearest card. Near 1, there may be too few cards behind the cut card to finish a round.
 - **`random`** is the random source for the shuffle, as for `shuffle`.
 
 `drawFromShoe(shoe, count)` and `dealFromShoe(shoe, handCount, handSize)` take cards out as `draw` and `deal` do, with the same settings. They return the cards or hands and the shoe left, with its cut card moved up by the cards taken. Once `cutCard` is 0, the cut card has been reached and the shoe is due for a reshuffle: finish the round, then build a new shoe. Dealing can go on past the cut card until the shoe runs out.

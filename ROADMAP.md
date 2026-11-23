@@ -19,7 +19,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 
 ## M2: Stable (`1.0.0`)
 
-- `Shoe`: several decks dealt together, with a cut card or penetration, burn cards, a discard pile and a reshuffle trigger.
+- `Shoe`: one or more decks dealt together, with a cut card or penetration, burn cards, a discard pile and a reshuffle trigger.
 - Serialisation to JSON and to a compact string.
 - Published API reference site.
 - Migration guide from 0.4, naming what 1.0.0 doesn't cover: jokers, the 500 deck, and 0.4's French-suited Spanish deck, which is the standard 52 without the 10s.
