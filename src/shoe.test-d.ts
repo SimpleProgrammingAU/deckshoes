@@ -19,18 +19,28 @@ import {
 } from "./shoe.ts";
 
 describe("Shoe", () => {
-  it("holds a stack that can't be changed and the cut card's position", () => {
+  it("holds stacks that can't be changed and the cut card's position", () => {
     expectTypeOf<Shoe<number>>().toEqualTypeOf<{
       readonly cards: CardStack<number>;
       readonly cutCard: number;
+      readonly discardPile: CardStack<number>;
     }>();
     expectTypeOf<Shoe["cards"]>().toEqualTypeOf<readonly Card[]>();
     expectTypeOf<Shoe["cards"]>().not.toHaveProperty("push");
+    expectTypeOf<Shoe["discardPile"]>().toEqualTypeOf<readonly Card[]>();
+    expectTypeOf<Shoe["discardPile"]>().not.toHaveProperty("push");
   });
 
-  it("can be written by hand", () => {
-    const threeCards: Shoe = { cards: standard52().slice(0, 3), cutCard: 2 };
+  it("can be written by hand, with a discard pile", () => {
+    const threeCards: Shoe = {
+      cards: standard52().slice(0, 3),
+      cutCard: 2,
+      discardPile: [],
+    };
     expectTypeOf(drawFromShoe(threeCards)).toEqualTypeOf<ShoeDrawResult>();
+    // @ts-expect-error a shoe written in TypeScript needs its discard pile
+    const noPile: Shoe = { cards: standard52().slice(0, 3), cutCard: 2 };
+    expectTypeOf(noPile).toEqualTypeOf<Shoe>();
   });
 });
 

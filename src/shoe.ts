@@ -25,22 +25,24 @@ const DEFAULT_PENETRATION = 0.75;
 
 /**
  * A shoe: copies of a deck dealt from as one, with a cut card that marks when
- * to reshuffle. {@link shoe} builds one.
+ * to reshuffle, and a discard pile. {@link shoe} builds one.
  *
  * It's a frozen plain object holding the `cards` still in the shoe, top first,
- * and the `cutCard`'s position among them. {@link drawFromShoe} and
- * {@link dealFromShoe} take cards out and move the cut card up by as many.
- * Once its position is 0, the cut card has been reached and the shoe is due
- * for a reshuffle.
+ * the `cutCard`'s position among them, and the `discardPile`.
+ * {@link drawFromShoe} and {@link dealFromShoe} take cards out and move the
+ * cut card up by as many. Once its position is 0, the cut card has been
+ * reached and the shoe is due for a reshuffle.
  *
- * `cards` is a stack, so any stack operation can read it, such as
- * {@link peek} or {@link count}, and so can a {@link chain}. The shoe itself
- * isn't a stack, so stack operations and `chain` don't take it: anything that
- * takes cards out of a shoe has to move its cut card too.
+ * `cards` and `discardPile` are stacks, so any stack operation can read them,
+ * such as {@link peek} or {@link count}, and so can a {@link chain}. The shoe
+ * itself isn't a stack, so stack operations and `chain` don't take it:
+ * anything that takes cards out of a shoe has to move its cut card too.
  *
  * Any object with this shape works as a shoe, so one can be written by hand.
- * Every function that takes a shoe checks it, and gives back a shoe holding
- * only `cards` and `cutCard`, so no other field on it is carried over.
+ * A shoe without a `discardPile`, such as one written in JavaScript or saved
+ * before shoes had one, is read as having an empty one. Every function that
+ * takes a shoe checks it, and gives back a shoe holding only `cards`, `cutCard`
+ * and `discardPile`, so no other field on it is carried over.
  *
  * @typeParam C - The type of card the shoe holds: a standard {@link Card}
  * unless you say otherwise.
@@ -49,15 +51,18 @@ const DEFAULT_PENETRATION = 0.75;
  * ```ts
  * import { card, chain, drawFromShoe, peek, type Shoe } from "deckshoes";
  *
- * // Three cards, top first, with two of them above the cut card.
+ * // Three cards, top first, with two of them above the cut card, and one card
+ * // on the discard pile.
  * const threeCards: Shoe = {
  *   cards: [card("A", "S"), card("K", "H"), card("10", "D")],
  *   cutCard: 2,
+ *   discardPile: [card("2", "C")],
  * };
  *
- * // Stack operations read a shoe's cards, chained or not.
+ * // Stack operations read a shoe's cards and its pile, chained or not.
  * peek(threeCards.cards); // => [card("A", "S")]
  * chain(threeCards.cards).count(({ suit }) => suit === "H").value(); // => 1
+ * peek(threeCards.discardPile); // => [card("2", "C")]
  *
  * // Drawing moves the cut card up, and 0 means it's been reached.
  * drawFromShoe(threeCards, 2).shoe.cutCard; // => 0
@@ -75,6 +80,13 @@ export interface Shoe<C = Card> {
    * goes on past it.
    */
   readonly cutCard: number;
+
+  /**
+   * The discard pile, top first: the cards burned and discarded since the last
+   * reshuffle, which are out of play until the next one. It's empty in a new
+   * shoe.
+   */
+  readonly discardPile: CardStack<C>;
 }
 
 /**
@@ -129,10 +141,11 @@ export interface ShoeOptions {
  * const threeCards = {
  *   cards: [card("A", "S"), card("K", "H"), card("10", "D")],
  *   cutCard: 2,
+ *   discardPile: [],
  * };
  * const result: ShoeDrawResult = drawFromShoe(threeCards);
  * result.cards; // => [card("A", "S")]
- * result.shoe; // => { cards: [card("K", "H"), card("10", "D")], cutCard: 1 }
+ * result.shoe; // => { cards: [card("K", "H"), card("10", "D")], cutCard: 1, discardPile: [] }
  * Object.isFrozen(result); // => true
  * ```
  *
@@ -161,10 +174,11 @@ export interface ShoeDrawResult<C = Card> {
  * const threeCards = {
  *   cards: [card("A", "S"), card("K", "H"), card("10", "D")],
  *   cutCard: 2,
+ *   discardPile: [],
  * };
  * const result: ShoeDealResult = dealFromShoe(threeCards, 2, 1);
  * result.hands; // => [[card("A", "S")], [card("K", "H")]]
- * result.shoe; // => { cards: [card("10", "D")], cutCard: 0 }
+ * result.shoe; // => { cards: [card("10", "D")], cutCard: 0, discardPile: [] }
  * Object.isFrozen(result.hands); // => true
  * ```
  *
@@ -193,8 +207,8 @@ export interface ShoeDealResult<C = Card> {
  * `shoe.cards`. Once the cut card's position is 0, it's been reached, and the
  * shoe is due for a reshuffle: build a new one.
  *
- * The deck is left untouched, frozen or not, and the shoe and its cards are
- * new and frozen. Any deck works, including one with copies or with cards that
+ * The deck is left untouched, frozen or not, and the shoe, its cards and its
+ * discard pile, which starts empty, are new and frozen. Any deck works, including one with copies or with cards that
  * aren't standard cards. An empty deck gives an empty shoe, whose cut card has
  * already been reached.
  *
@@ -212,8 +226,8 @@ export interface ShoeDealResult<C = Card> {
  * @param deckCount - How many copies of the deck the shoe holds, an integer of
  * 1 or more.
  * @param options - Settings for the shoe: its penetration and random source.
- * @returns A new frozen shoe, holding the shuffled `cards` and the `cutCard`'s
- * position.
+ * @returns A new frozen shoe, holding the shuffled `cards`, the `cutCard`'s
+ * position and an empty `discardPile`.
  * @throws {@link InvalidArgumentError} When `deck` isn't an array, `deckCount`
  * isn't an integer of 1 or more or makes a shoe of more than 2³² − 1 cards,
  * `options` isn't an object or is an array, its `penetration` isn't a number
@@ -301,6 +315,7 @@ export function shoe<C>(
     cards: shuffle(stacked, { random: random as RandomSource | undefined }),
     // `|| 0` turns the -0 that a penetration of -0 gives into 0.
     cutCard: Math.round((penetration as number) * size) || 0,
+    discardPile: Object.freeze([]),
   });
 }
 
@@ -313,7 +328,8 @@ export function shoe<C>(
  * the round in play, until the shoe runs out.
  *
  * The shoe is left untouched. The cards drawn, the shoe left and the result
- * holding them are new and frozen. The shoe can come from
+ * holding them are new and frozen, and the shoe left keeps the discard pile.
+ * The shoe can come from
  * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
  *
  * Leave `count` out, or pass `undefined`, to draw one card. `cards` is a stack
@@ -326,8 +342,9 @@ export function shoe<C>(
  * @returns A frozen object holding the `cards` drawn, a new frozen stack, top
  * first, and the `shoe` left, a new frozen shoe.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
- * array of `cards` and a `cutCard` that's an integer from 0 to the number of
- * cards, or `count` isn't an integer of 0 or more.
+ * array of `cards`, a `cutCard` that's an integer from 0 to the number of
+ * cards, and a `discardPile` that's an array or left out, or `count` isn't an
+ * integer of 0 or more.
  * @throws {@link InsufficientCardsError} When `count` is more than the shoe
  * holds.
  *
@@ -349,8 +366,9 @@ export function shoe<C>(
  * const nearlyDone: Shoe = {
  *   cards: [card("A", "S"), card("K", "H"), card("10", "D")],
  *   cutCard: 1,
+ *   discardPile: [],
  * };
- * drawFromShoe(nearlyDone, 2).shoe; // => { cards: [card("10", "D")], cutCard: 0 }
+ * drawFromShoe(nearlyDone, 2).shoe; // => { cards: [card("10", "D")], cutCard: 0, discardPile: [] }
  *
  * drawFromShoe(sixDecks, 313); // throws INSUFFICIENT_CARDS
  * ```
@@ -360,13 +378,13 @@ export function shoe<C>(
 export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
   const checked = readShoe(shoe);
   if (checked instanceof InvalidArgumentError) throw checked;
-  const { cards, cutCard } = checked;
+  const { cards, cutCard, discardPile } = checked;
   const problem = countProblem(count) ?? shortfall(count, cards);
   if (problem !== undefined) throw problem;
   const drawn = draw(cards, count);
   return Object.freeze({
     cards: drawn.cards,
-    shoe: shoeAfter(drawn.remainder, cutCard, count),
+    shoe: shoeAfter(drawn.remainder, cutCard, count, discardPile),
   });
 }
 
@@ -383,7 +401,8 @@ export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
  * the round in play, until the shoe runs out.
  *
  * The shoe is left untouched. Every hand, the shoe left and the result holding
- * them are new and frozen, as is `hands`. The shoe can come from
+ * them are new and frozen, as is `hands`, and the shoe left keeps the discard
+ * pile. The shoe can come from
  * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
  *
  * @typeParam C - The type of card in the shoe.
@@ -395,8 +414,9 @@ export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
  * to, each a new frozen stack, top first, and the `shoe` left, a new frozen
  * shoe.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
- * array of `cards` and a `cutCard` that's an integer from 0 to the number of
- * cards, or when {@link deal} would.
+ * array of `cards`, a `cutCard` that's an integer from 0 to the number of
+ * cards, and a `discardPile` that's an array or left out, or when
+ * {@link deal} would.
  * @throws {@link InsufficientCardsError} When {@link deal} would: when the
  * shoe holds too few cards for the deal, unless `runOut` is `RunOut.STOP`.
  *
@@ -436,13 +456,18 @@ export function dealFromShoe<C>(
 ): ShoeDealResult<C> {
   const checked = readShoe(shoe);
   if (checked instanceof InvalidArgumentError) throw checked;
-  const { cards, cutCard } = checked;
+  const { cards, cutCard, discardPile } = checked;
   // deal checks the hand count, hand size and options itself, reading each
   // option once. Checking them here too would read them twice, so @throws
   // documents deal's errors instead of this body throwing them.
   const { hands, remainder } = deal(cards, handCount, handSize, options);
   return Object.freeze({
     hands,
-    shoe: shoeAfter(remainder, cutCard, cards.length - remainder.length),
+    shoe: shoeAfter(
+      remainder,
+      cutCard,
+      cards.length - remainder.length,
+      discardPile,
+    ),
   });
 }

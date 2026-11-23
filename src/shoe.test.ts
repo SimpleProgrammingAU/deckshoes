@@ -68,12 +68,15 @@ function countingReads<C>(stack: readonly C[]): {
   return { reads, stack: proxy };
 }
 
-/** Shoes of standard cards with the cut card anywhere in them, top to bottom. */
+/** Shoes of standard cards with the cut card anywhere in them, top to bottom, and any discard pile. */
 function shoes(): Arbitrary<Shoe> {
-  return stacksWithCounts().map(({ count, stack }) => ({
-    cards: stack,
-    cutCard: count,
-  }));
+  return fc
+    .tuple(stacksWithCounts(), stacks())
+    .map(([{ count, stack }, discardPile]) => ({
+      cards: stack,
+      cutCard: count,
+      discardPile,
+    }));
 }
 
 describe("shoe", () => {
@@ -196,11 +199,19 @@ describe("shoe", () => {
   });
 
   it("builds an empty shoe from an empty deck, with its cut card reached", () => {
-    expect(shoe([], 6)).toStrictEqual({ cards: [], cutCard: 0 });
+    expect(shoe([], 6)).toStrictEqual({
+      cards: [],
+      cutCard: 0,
+      discardPile: [],
+    });
   });
 
   it("builds an empty shoe from an empty deck however many copies it takes", () => {
-    expect(shoe([], 2 ** 40)).toStrictEqual({ cards: [], cutCard: 0 });
+    expect(shoe([], 2 ** 40)).toStrictEqual({
+      cards: [],
+      cutCard: 0,
+      discardPile: [],
+    });
   });
 
   it("builds a shoe from a deck with copies of its own", () => {
@@ -209,11 +220,25 @@ describe("shoe", () => {
     expect(tally(twoPinochleDecks.cards).get(ACE)).toBe(4);
   });
 
-  it("returns a frozen plain object holding a plain frozen stack", () => {
+  it("starts with an empty discard pile", () => {
+    fc.assert(
+      fc.property(
+        stacks(),
+        fc.integer({ max: 4, min: 1 }),
+        (deck, deckCount) => {
+          const built = shoe(deck, deckCount, { random: seededRandom(1) });
+          expect(built.discardPile).toStrictEqual([]);
+        },
+      ),
+    );
+  });
+
+  it("returns a frozen plain object holding plain frozen stacks", () => {
     const built = shoe(standard52(), 2, { random: seededRandom(1) });
     expect(Object.isFrozen(built)).toBe(true);
     expect(Object.getPrototypeOf(built)).toBe(Object.prototype);
     expect(isPlainFrozen(built.cards)).toBe(true);
+    expect(isPlainFrozen(built.discardPile)).toBe(true);
     expect(isPlainFrozen(shoe([], 1).cards)).toBe(true);
   });
 
@@ -403,13 +428,16 @@ describe("drawFromShoe", () => {
           expect(result.shoe.cutCard).toBe(
             Math.max(0, original.cutCard - count),
           );
+          expect(
+            sameValues(result.shoe.discardPile, original.discardPile),
+          ).toBe(true);
         },
       ),
     );
   });
 
   it("draws one card when the count is left out or undefined", () => {
-    const threeCards = { cards: [ACE, KING, TEN], cutCard: 2 };
+    const threeCards = { cards: [ACE, KING, TEN], cutCard: 2, discardPile: [] };
     expect(drawFromShoe(threeCards)).toStrictEqual(drawFromShoe(threeCards, 1));
     expect(drawFromShoe(threeCards, undefined)).toStrictEqual(
       drawFromShoe(threeCards, 1),
@@ -418,23 +446,34 @@ describe("drawFromShoe", () => {
   });
 
   it("counts -0 as 0", () => {
-    const threeCards = { cards: [ACE, KING, TEN], cutCard: 2 };
+    const threeCards = { cards: [ACE, KING, TEN], cutCard: 2, discardPile: [] };
     expect(drawFromShoe(threeCards, -0)).toStrictEqual(
       drawFromShoe(threeCards, 0),
     );
   });
 
   it("draws past the cut card, keeping it at 0", () => {
-    const reached = drawFromShoe({ cards: [ACE, KING, TEN], cutCard: 1 }, 2);
-    expect(reached.shoe).toStrictEqual({ cards: [TEN], cutCard: 0 });
+    const reached = drawFromShoe(
+      { cards: [ACE, KING, TEN], cutCard: 1, discardPile: [] },
+      2,
+    );
+    expect(reached.shoe).toStrictEqual({
+      cards: [TEN],
+      cutCard: 0,
+      discardPile: [],
+    });
     expect(drawFromShoe(reached.shoe).shoe).toStrictEqual({
       cards: [],
       cutCard: 0,
+      discardPile: [],
     });
   });
 
   it("returns frozen results holding plain frozen stacks", () => {
-    const result = drawFromShoe({ cards: [ACE, KING, TEN], cutCard: 2 }, 2);
+    const result = drawFromShoe(
+      { cards: [ACE, KING, TEN], cutCard: 2, discardPile: [] },
+      2,
+    );
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.shoe)).toBe(true);
     expect(isPlainFrozen(result.cards)).toBe(true);
@@ -443,9 +482,13 @@ describe("drawFromShoe", () => {
 
   it("leaves the shoe unchanged", () => {
     const cards = [ACE, KING, TEN];
-    const threeCards = { cards, cutCard: 2 };
+    const threeCards = { cards, cutCard: 2, discardPile: [] };
     drawFromShoe(threeCards, 2);
-    expect(threeCards).toStrictEqual({ cards: [ACE, KING, TEN], cutCard: 2 });
+    expect(threeCards).toStrictEqual({
+      cards: [ACE, KING, TEN],
+      cutCard: 2,
+      discardPile: [],
+    });
     expect(threeCards.cards).toBe(cards);
   });
 
@@ -475,7 +518,10 @@ describe("drawFromShoe", () => {
   ])("rejects %s as the count", (_label, count) => {
     expect(
       thrownBy(() =>
-        drawFromShoe({ cards: [ACE, KING], cutCard: 1 }, count as number),
+        drawFromShoe(
+          { cards: [ACE, KING], cutCard: 1, discardPile: [] },
+          count as number,
+        ),
       ),
     ).toMatchObject({ code: "INVALID_ARGUMENT" });
   });
@@ -489,11 +535,16 @@ describe("dealFromShoe", () => {
           fc.record({
             args: fc.constant(args),
             cutCard: fc.nat({ max: args.deck.length }),
+            discardPile: stacks(),
           }),
         ),
-        ({ args: { deck, handCount, handSize, packetSize }, cutCard }) => {
+        ({
+          args: { deck, handCount, handSize, packetSize },
+          cutCard,
+          discardPile,
+        }) => {
           const result = dealFromShoe(
-            { cards: deck, cutCard },
+            { cards: deck, cutCard, discardPile },
             handCount,
             handSize,
             { packetSize },
@@ -504,39 +555,66 @@ describe("dealFromShoe", () => {
           expect(result.shoe.cutCard).toBe(
             Math.max(0, cutCard - handCount * handSize),
           );
+          expect(sameValues(result.shoe.discardPile, discardPile)).toBe(true);
         },
       ),
     );
   });
 
   it("moves the cut card by the cards actually dealt with RunOut.STOP", () => {
-    const result = dealFromShoe({ cards: [ACE, KING, TEN], cutCard: 3 }, 2, 2, {
-      runOut: RunOut.STOP,
-    });
+    const result = dealFromShoe(
+      { cards: [ACE, KING, TEN], cutCard: 3, discardPile: [] },
+      2,
+      2,
+      {
+        runOut: RunOut.STOP,
+      },
+    );
     expect(result.hands).toStrictEqual([[ACE, TEN], [KING]]);
-    expect(result.shoe).toStrictEqual({ cards: [], cutCard: 0 });
+    expect(result.shoe).toStrictEqual({
+      cards: [],
+      cutCard: 0,
+      discardPile: [],
+    });
   });
 
   it("moves the cut card by the cards actually dealt with HandSize.MAXIMIZE", () => {
     const result = dealFromShoe(
-      { cards: [ACE, KING, TEN, ACE], cutCard: 2 },
+      { cards: [ACE, KING, TEN, ACE], cutCard: 2, discardPile: [] },
       3,
       HandSize.MAXIMIZE,
     );
     expect(result.hands.map((hand) => hand.length)).toStrictEqual([2, 1, 1]);
-    expect(result.shoe).toStrictEqual({ cards: [], cutCard: 0 });
+    expect(result.shoe).toStrictEqual({
+      cards: [],
+      cutCard: 0,
+      discardPile: [],
+    });
   });
 
   it("leaves the cut card where it is when nothing is dealt", () => {
-    const result = dealFromShoe({ cards: [], cutCard: 0 }, 2, 1, {
-      runOut: RunOut.STOP,
-    });
+    const result = dealFromShoe(
+      { cards: [], cutCard: 0, discardPile: [] },
+      2,
+      1,
+      {
+        runOut: RunOut.STOP,
+      },
+    );
     expect(result.hands).toStrictEqual([[], []]);
-    expect(result.shoe).toStrictEqual({ cards: [], cutCard: 0 });
+    expect(result.shoe).toStrictEqual({
+      cards: [],
+      cutCard: 0,
+      discardPile: [],
+    });
   });
 
   it("returns frozen results holding plain frozen stacks", () => {
-    const result = dealFromShoe({ cards: [ACE, KING, TEN], cutCard: 2 }, 2, 1);
+    const result = dealFromShoe(
+      { cards: [ACE, KING, TEN], cutCard: 2, discardPile: [] },
+      2,
+      1,
+    );
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.hands)).toBe(true);
     expect(Object.isFrozen(result.shoe)).toBe(true);
@@ -546,14 +624,18 @@ describe("dealFromShoe", () => {
 
   it("leaves the shoe unchanged", () => {
     const cards = [ACE, KING, TEN];
-    const threeCards = { cards, cutCard: 2 };
+    const threeCards = { cards, cutCard: 2, discardPile: [] };
     dealFromShoe(threeCards, 2, 1);
-    expect(threeCards).toStrictEqual({ cards: [ACE, KING, TEN], cutCard: 2 });
+    expect(threeCards).toStrictEqual({
+      cards: [ACE, KING, TEN],
+      cutCard: 2,
+      discardPile: [],
+    });
     expect(threeCards.cards).toBe(cards);
   });
 
   it("throws what deal throws", () => {
-    const threeCards = { cards: [ACE, KING, TEN], cutCard: 2 };
+    const threeCards = { cards: [ACE, KING, TEN], cutCard: 2, discardPile: [] };
     expect(thrownBy(() => dealFromShoe(threeCards, 2, 2))).toMatchObject({
       available: 3,
       code: "INSUFFICIENT_CARDS",
@@ -576,14 +658,22 @@ describe.each<
 ])("%s", (_name, takeFrom) => {
   it("takes a shoe written by hand, whose cards are an array subclass", () => {
     for (const [, make] of arraySubclasses()) {
-      const result = takeFrom({ cards: make([ACE, KING]), cutCard: 1 });
-      expect(result.shoe).toStrictEqual({ cards: [KING], cutCard: 0 });
+      const result = takeFrom({
+        cards: make([ACE, KING]),
+        cutCard: 1,
+        discardPile: [],
+      });
+      expect(result.shoe).toStrictEqual({
+        cards: [KING],
+        cutCard: 0,
+        discardPile: [],
+      });
       expect(isPlainFrozen(result.shoe.cards)).toBe(true);
     }
   });
 
-  it("reads the shoe's cards and cut card once each", () => {
-    const reads = { cards: 0, cutCard: 0 };
+  it("reads the shoe's cards, cut card and discard pile once each", () => {
+    const reads = { cards: 0, cutCard: 0, discardPile: 0 };
     const fromGetters = {
       get cards() {
         reads.cards++;
@@ -593,15 +683,59 @@ describe.each<
         reads.cutCard++;
         return 1;
       },
+      get discardPile() {
+        reads.discardPile++;
+        return [TEN];
+      },
     };
     takeFrom(fromGetters);
-    expect(reads).toStrictEqual({ cards: 1, cutCard: 1 });
+    expect(reads).toStrictEqual({ cards: 1, cutCard: 1, discardPile: 1 });
   });
 
   it("reads the length and each card of the shoe's cards once", () => {
     const { reads, stack } = countingReads([ACE, KING, TEN]);
-    takeFrom({ cards: stack, cutCard: 1 });
+    takeFrom({ cards: stack, cutCard: 1, discardPile: [] });
     expect(reads).toStrictEqual({ length: 1, positions: [1, 1, 1] });
+  });
+
+  it("reads the length and each card of the discard pile once", () => {
+    const { reads, stack } = countingReads([ACE, KING, TEN]);
+    takeFrom({ cards: [ACE, KING], cutCard: 1, discardPile: stack });
+    expect(reads).toStrictEqual({ length: 1, positions: [1, 1, 1] });
+  });
+
+  it("keeps the discard pile, as a plain frozen stack", () => {
+    for (const [, make] of arraySubclasses()) {
+      const pile = make([TEN, ACE]);
+      const result = takeFrom({
+        cards: [ACE, KING],
+        cutCard: 1,
+        discardPile: pile,
+      });
+      expect(result.shoe.discardPile).toStrictEqual([TEN, ACE]);
+      expect(isPlainFrozen(result.shoe.discardPile)).toBe(true);
+    }
+  });
+
+  it("reads a discard pile that's left out or undefined as an empty one", () => {
+    const leftOut = takeFrom(asShoe({ cards: [ACE, KING], cutCard: 1 }));
+    expect(leftOut.shoe).toStrictEqual({
+      cards: [KING],
+      cutCard: 0,
+      discardPile: [],
+    });
+    expect(isPlainFrozen(leftOut.shoe.discardPile)).toBe(true);
+    const asUndefined = takeFrom(
+      asShoe({ cards: [ACE, KING], cutCard: 1, discardPile: undefined }),
+    );
+    expect(asUndefined.shoe).toStrictEqual(leftOut.shoe);
+  });
+
+  it("leaves the discard pile unchanged", () => {
+    const discardPile = [TEN];
+    takeFrom({ cards: [ACE, KING], cutCard: 1, discardPile });
+    expect(discardPile).toStrictEqual([TEN]);
+    expect(Object.isFrozen(discardPile)).toBe(false);
   });
 
   it.each([
@@ -611,14 +745,41 @@ describe.each<
     ["a number", 1],
     ["a stack of cards", [ACE, KING]],
     ["an empty object", {}],
-    ["cards that aren't an array", { cards: "AS KH", cutCard: 0 }],
-    ["cards left out", { cutCard: 0 }],
+    [
+      "cards that aren't an array",
+      { cards: "AS KH", cutCard: 0, discardPile: [] },
+    ],
+    ["cards left out", { cutCard: 0, discardPile: [] }],
     ["a cut card left out", { cards: [ACE, KING] }],
-    ["a negative cut card", { cards: [ACE, KING], cutCard: -1 }],
-    ["a cut card below the bottom", { cards: [ACE, KING], cutCard: 3 }],
-    ["a fractional cut card", { cards: [ACE, KING], cutCard: 0.5 }],
-    ["a NaN cut card", { cards: [ACE, KING], cutCard: NaN }],
-    ["a cut card that's a string", { cards: [ACE, KING], cutCard: "1" }],
+    [
+      "a negative cut card",
+      { cards: [ACE, KING], cutCard: -1, discardPile: [] },
+    ],
+    [
+      "a cut card below the bottom",
+      { cards: [ACE, KING], cutCard: 3, discardPile: [] },
+    ],
+    [
+      "a fractional cut card",
+      { cards: [ACE, KING], cutCard: 0.5, discardPile: [] },
+    ],
+    ["a NaN cut card", { cards: [ACE, KING], cutCard: NaN, discardPile: [] }],
+    [
+      "a cut card that's a string",
+      { cards: [ACE, KING], cutCard: "1", discardPile: [] },
+    ],
+    [
+      "a discard pile that's null",
+      { cards: [ACE, KING], cutCard: 1, discardPile: null },
+    ],
+    [
+      "a discard pile that's a string",
+      { cards: [ACE, KING], cutCard: 1, discardPile: "10D" },
+    ],
+    [
+      "a discard pile that's an object",
+      { cards: [ACE, KING], cutCard: 1, discardPile: {} },
+    ],
   ])("rejects %s as the shoe", (_label, value) => {
     expect(thrownBy(() => takeFrom(asShoe(value)))).toMatchObject({
       code: "INVALID_ARGUMENT",
