@@ -138,7 +138,8 @@ describe("shoe", () => {
 
   it("rounds a penetration that falls between cards to the nearest card", () => {
     const random = seededRandom(1);
-    // 0.8 × 52 = 41.6, 0.29 × 100 = 28.999…, 0.5 × 3 = 1.5
+    // 0.8 × 52 = 41.6, 0.29 × 100 = 28.999…, 0.5 × 3 = 1.5, and 0.58 × 25 =
+    // 14.4999…, because 0.58 is held as a little less than 0.58 (ADR 0013).
     expect(shoe(standard52(), 1, { penetration: 0.8, random }).cutCard).toBe(
       42,
     );
@@ -147,6 +148,8 @@ describe("shoe", () => {
     expect(
       shoe([ACE, KING, TEN], 1, { penetration: 0.5, random }).cutCard,
     ).toBe(2);
+    const twentyFive = Array.from({ length: 25 }, () => ACE);
+    expect(shoe(twentyFive, 1, { penetration: 0.58, random }).cutCard).toBe(14);
   });
 
   it("gives the same six-deck shoe for the same seed", () => {

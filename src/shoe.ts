@@ -94,9 +94,10 @@ export interface ShoeOptions {
   /**
    * How far into the shoe the cut card goes, as the proportion of its cards
    * dealt before it's reached: a number from 0 to 1, rounded to the nearest
-   * card. Leave it out, or pass `undefined`, for 0.75. At 0 the cut card is
-   * reached straight away, so every round is the last before a reshuffle, and
-   * at 1 the whole shoe is dealt first.
+   * card, with a tie going to the later card (`Math.round`). Leave it out, or
+   * pass `undefined`, for 0.75. At 0 the cut card is reached straight away, so
+   * every round is the last before a reshuffle, and at 1 the whole shoe is
+   * dealt first.
    */
   readonly penetration?: number | undefined;
 
