@@ -10,6 +10,7 @@ import {
   sameValues,
   seeds,
   stacks,
+  stacksWithCounts,
   tally,
   thrownBy,
 } from "../test/helpers.ts";
@@ -50,12 +51,10 @@ function stackedCopies<C>(deck: readonly C[], deckCount: number): C[] {
 
 /** Shoes of standard cards with the cut card anywhere in them, top to bottom. */
 function shoes(): Arbitrary<Shoe> {
-  return stacks().chain((cards) =>
-    fc.record({
-      cards: fc.constant(cards),
-      cutCard: fc.nat({ max: cards.length }),
-    }),
-  );
+  return stacksWithCounts().map(({ count, stack }) => ({
+    cards: stack,
+    cutCard: count,
+  }));
 }
 
 describe("shoe", () => {
@@ -117,7 +116,8 @@ describe("shoe", () => {
   });
 
   it("uses a penetration of 0.75 when it's left out or undefined", () => {
-    for (const options of [undefined, {}, { penetration: undefined }]) {
+    for (const penetration of [{}, { penetration: undefined }]) {
+      const options = { ...penetration, random: seededRandom(1) };
       expect(shoe(standard52(), 6, options).cutCard).toBe(234);
     }
   });
@@ -214,10 +214,11 @@ describe("shoe", () => {
     },
   );
 
-  it("shuffles with a secure source when random is left out", () => {
+  it("shuffles with a secure source, and uses the default penetration, when the options are left out", () => {
     const built = shoe(standard52(), 2);
     expect(built.cards).toHaveLength(104);
     expect(tally(built.cards).get(ACE)).toBe(2);
+    expect(built.cutCard).toBe(78);
   });
 
   it("reads each option once", () => {
