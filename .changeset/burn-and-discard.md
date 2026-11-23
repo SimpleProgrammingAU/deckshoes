@@ -2,7 +2,7 @@
 "deckshoes": minor
 ---
 
-Add burning, discarding and reshuffling to shoes. A shoe now holds a `discardPile` as well as its `cards` and `cutCard`, which starts empty:
+Add burning, discarding and reshuffling to shoes. A shoe now holds a `discardPile`, which starts empty, as well as its `cards` and `cutCard`:
 
 - `burn(shoe, count)` moves cards from the top to the discard pile without using them, moving the cut card up as well.
 - `discard(shoe, cards)` puts cards that are finished with, such as a round's hands, on the discard pile.
