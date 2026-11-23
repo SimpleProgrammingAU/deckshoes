@@ -14,6 +14,7 @@ import {
 } from "./internal/checks.ts";
 import { display } from "./internal/display.ts";
 import { readShoe, shoeAfter } from "./internal/shoe.ts";
+import { copyStack } from "./internal/stack.ts";
 import { shuffle } from "./shuffle.ts";
 
 /** The most cards a shoe can hold: the longest an array can be. */
@@ -257,11 +258,15 @@ export function shoe<C>(
     countProblem(deckCount, "deck count", 1) ??
     optionsProblem(options, "{ penetration: 0.75 }");
   if (problem !== undefined) throw problem;
-  const deckSize = deck.length;
+  // One copy of the deck, so each of its cards is read once (ADR 0004), however
+  // many copies the shoe holds.
+  const copied = copyStack(deck);
+  const deckSize = copied.length;
   const size = deckSize * deckCount;
   if (size > MAX_CARDS) {
+    const decks = `${String(deckCount)} decks of ${String(deckSize)} ${deckSize === 1 ? "card" : "cards"}`;
     throw new InvalidArgumentError(
-      `Invalid deck count ${String(deckCount)}: ${String(deckCount)} decks of ${String(deckSize)} cards are more than an array can hold`,
+      `Invalid deck count ${String(deckCount)}: ${decks} would hold more cards than an array can`,
     );
   }
 
@@ -282,12 +287,12 @@ export function shoe<C>(
         )) ?? randomProblem(random);
   if (settingProblem !== undefined) throw settingProblem;
 
-  // The copies one on top of another, read by index (ADR 0004), then
-  // shuffled. This order and the rounding below are fixed for 1.x (ADR 0013):
-  // changing either changes every seeded shoe.
+  // The copies one on top of another, then shuffled. This order and the
+  // rounding below are fixed for 1.x (ADR 0013): changing either changes every
+  // seeded shoe.
   const stacked = Array.from(
     { length: size },
-    (_, i) => deck[i % deckSize] as C,
+    (_, i) => copied[i % deckSize] as C,
   );
   return Object.freeze({
     cards: shuffle(stacked, { random: random as RandomSource | undefined }),
