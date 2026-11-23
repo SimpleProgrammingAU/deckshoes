@@ -4,6 +4,7 @@ import type { Card } from "./card.ts";
 import type { RandomSource } from "./random.ts";
 import type { CardStack } from "./stack.ts";
 
+import { insert } from "./cut.ts";
 import { HandSize, PacketSize, RunOut } from "./deal.ts";
 import { pinochle } from "./presets/pinochle.ts";
 import { standard52 } from "./presets/standard52.ts";
@@ -150,12 +151,20 @@ describe("discard", () => {
     >();
   });
 
-  it("takes only a stack of the shoe's kind of card", () => {
+  it("takes a stack of the shoe's kind of card, and widens the shoe for a wider one", () => {
     const numbers = shoe([1, 2, 3], 2);
     // @ts-expect-error a stack of strings isn't a stack of numbers
     discard(numbers, ["a"]);
     // @ts-expect-error a stack of numbers isn't a stack of cards
     discard(shoe(standard52(), 6), [1]);
+    // A wider kind of card widens the shoe, as insert widens a stack.
+    const withJokers: readonly (Card | "joker")[] = [];
+    expectTypeOf(discard(shoe(standard52(), 6), withJokers)).toEqualTypeOf<
+      Shoe<Card | "joker">
+    >();
+    expectTypeOf(insert(standard52(), withJokers)).toEqualTypeOf<
+      CardStack<Card | "joker">
+    >();
     // @ts-expect-error the cards are required
     discard(numbers);
     // @ts-expect-error a stack isn't a shoe
