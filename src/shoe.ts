@@ -304,8 +304,8 @@ export function shoe<C>(
  * the round in play, until the shoe runs out.
  *
  * The shoe is left untouched. The cards drawn, the shoe left and the result
- * holding them are new and frozen. The shoe can come from {@link shoe}, or be
- * any object with the same shape.
+ * holding them are new and frozen. The shoe can come from
+ * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
  *
  * Leave `count` out, or pass `undefined`, to draw one card. `cards` is a stack
  * either way, so it holds that one card rather than being the card.
@@ -375,7 +375,7 @@ export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
  *
  * The shoe is left untouched. Every hand, the shoe left and the result holding
  * them are new and frozen, as is `hands`. The shoe can come from
- * {@link shoe}, or be any object with the same shape.
+ * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
  *
  * @typeParam C - The type of card in the shoe.
  * @param shoe - The shoe to deal from.
