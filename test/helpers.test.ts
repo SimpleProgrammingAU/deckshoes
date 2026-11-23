@@ -12,6 +12,7 @@ import {
   stacks,
   stacksWithCards,
   stacksWithCounts,
+  tally,
   thrownBy,
 } from "./helpers.ts";
 
@@ -53,6 +54,22 @@ describe("sameValues", () => {
     holey[1] = "a";
     expect(sameValues(holey, [undefined, "a"])).toBe(true);
     expect(sameValues(holey, ["b", "a"])).toBe(false);
+  });
+});
+
+describe("tally", () => {
+  it("counts each value, matching values as Map keys do", () => {
+    const ace = { rank: "A" };
+    const counts = tally([ace, NaN, ace, 0, NaN, -0, ace]);
+    expect([...counts]).toStrictEqual([
+      [ace, 3],
+      [NaN, 2],
+      [0, 2],
+    ]);
+  });
+
+  it("gives an empty map for no values", () => {
+    expect(tally([]).size).toBe(0);
   });
 });
 

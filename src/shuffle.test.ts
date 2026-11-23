@@ -12,19 +12,13 @@ import {
   short,
   sparseStacks,
   stacks,
+  tally,
   thrownBy,
 } from "../test/helpers.ts";
 import { card } from "./card.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
 import { shuffle } from "./shuffle.ts";
-
-/** Counts how often each value appears, matching values the way `Map` keys do. */
-function tally(values: readonly unknown[]): Map<unknown, number> {
-  const counts = new Map<unknown, number>();
-  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
-  return counts;
-}
 
 describe("shuffle", () => {
   afterEach(() => {

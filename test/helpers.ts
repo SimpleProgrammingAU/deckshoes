@@ -32,6 +32,13 @@ export function sameValues(
   return true;
 }
 
+/** Counts how often each value appears, matching values the way `Map` keys do. */
+export function tally<T>(values: readonly T[]): Map<T, number> {
+  const counts = new Map<T, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return counts;
+}
+
 /** Writes a card as its rank and suit, such as "10H", to compare whole stacks. */
 export function short({ rank, suit }: Card): string {
   return `${rank}${suit}`;
