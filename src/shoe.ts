@@ -349,9 +349,9 @@ export function shoe<C>(
  * @since NEXT
  */
 export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
-  const parts = readShoe(shoe);
-  if (parts instanceof InvalidArgumentError) throw parts;
-  const { cards, cutCard } = parts;
+  const checked = readShoe(shoe);
+  if (checked instanceof InvalidArgumentError) throw checked;
+  const { cards, cutCard } = checked;
   const problem = countProblem(count) ?? shortfall(count, cards);
   if (problem !== undefined) throw problem;
   const drawn = draw(cards, count);
@@ -425,9 +425,12 @@ export function dealFromShoe<C>(
   handSize: HandSize,
   options?: DealOptions,
 ): ShoeDealResult<C> {
-  const parts = readShoe(shoe);
-  if (parts instanceof InvalidArgumentError) throw parts;
-  const { cards, cutCard } = parts;
+  const checked = readShoe(shoe);
+  if (checked instanceof InvalidArgumentError) throw checked;
+  const { cards, cutCard } = checked;
+  // deal checks the hand count, hand size and options itself, reading each
+  // option once. Checking them here too would read them twice, so @throws
+  // documents deal's errors instead of this body throwing them.
   const { hands, remainder } = deal(cards, handCount, handSize, options);
   return Object.freeze({
     hands,
