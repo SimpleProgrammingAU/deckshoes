@@ -9,6 +9,7 @@ import { pinochle } from "./presets/pinochle.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
 import {
+  burn,
   dealFromShoe,
   drawFromShoe,
   type Shoe,
@@ -118,5 +119,21 @@ describe("drawFromShoe and dealFromShoe", () => {
     expectTypeOf(drawFromShoe).toBeCallableWith(standard52());
     // @ts-expect-error a stack isn't a shoe
     expectTypeOf(dealFromShoe).toBeCallableWith(standard52(), 4, 2);
+  });
+});
+
+describe("burn", () => {
+  it("gives back a shoe of the same kind of card", () => {
+    expectTypeOf(burn(shoe(standard52(), 6))).toEqualTypeOf<Shoe>();
+    expectTypeOf(burn(shoe([1, 2, 3], 2), 2)).toEqualTypeOf<Shoe<number>>();
+  });
+
+  it("takes an optional count, and no stack", () => {
+    const sixDecks = shoe(standard52(), 6);
+    expectTypeOf(burn).toBeCallableWith(sixDecks, undefined);
+    // @ts-expect-error a count is a number
+    expectTypeOf(burn).toBeCallableWith(sixDecks, "1");
+    // @ts-expect-error a stack isn't a shoe
+    expectTypeOf(burn).toBeCallableWith(standard52());
   });
 });
