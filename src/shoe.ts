@@ -512,8 +512,8 @@ export function dealFromShoe<C>(
  * burned.
  *
  * The burned cards go on top of the discard pile, in the order they had in the
- * shoe, so peeking at `discardPile` shows them, as a dealer turns up a burn
- * card. The cut card's position stops at 0, which means it's been reached and
+ * shoe, so peeking at the top of `discardPile` shows them, as a dealer turns
+ * up a burn card. The cut card's position stops at 0, which means it's been reached and
  * the shoe is due for a reshuffle. Burning can go on past it, until the shoe
  * runs out.
  *
@@ -582,9 +582,10 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
  * putting them on a shoe's discard pile and returning the shoe left.
  *
  * The cards go on top of the discard pile, in the order given. The shoe's
- * cards and its cut card don't change. Discard every hand once the round is
- * over, as `discard(shoe, hands.flat())`, so that {@link reshuffle} takes them
- * back in.
+ * cards and its cut card don't change. A stack of a wider kind of card, such
+ * as cards and jokers, gives a shoe of that wider kind, as {@link insert} does
+ * for a stack. Discard every hand once the round is over, as
+ * `discard(shoe, hands.flat())`, so that {@link reshuffle} takes them back in.
  *
  * Nothing checks that the cards came from the shoe, so discarding a hand twice
  * puts its cards on the pile twice, and the shoe gains cards. Discard only the

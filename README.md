@@ -345,7 +345,7 @@ chain(remainder).draw().value().cards; // => [card("2", "C")]
 
 Three more functions move cards around a shoe, each returning the new shoe:
 
-- **`burn(shoe, count)`** moves cards from the top to the discard pile without using them, and moves the cut card up as well. They go on top of the pile, so `peek(shoe.discardPile)` shows them.
+- **`burn(shoe, count)`** moves cards from the top to the discard pile without using them, and moves the cut card up as well. They go on top of the pile, so `peek(shoe.discardPile, count)` shows them.
 - **`discard(shoe, cards)`** puts cards that are finished with, such as a round's hands, on top of the discard pile. Nothing checks that they came from the shoe, so discard only the cards you took, once each.
 - **`reshuffle(shoe, options)`** shuffles the discard pile back in with the cards left in the shoe and puts the cut card back in. A shoe doesn't remember its penetration, so pass `reshuffle` the options you built the shoe with. Cards still in players' hands aren't part of it, so discard them first.
 
@@ -378,7 +378,7 @@ const hit = drawFromShoe(dealt.shoe);
 hit.cards; // => [card("A", "C")]
 hit.shoe.cutCard; // => 225
 
-// Stack operations read a shoe's cards and its pile.
+// Stack operations read a shoe's cards.
 peek(hit.shoe.cards, 2); // => [card("3", "S"), card("2", "S")]
 count(hit.shoe.cards, ({ rank }) => rank === "A"); // => 23
 
