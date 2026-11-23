@@ -26,6 +26,7 @@ import {
   dealFromShoe,
   discard,
   drawFromShoe,
+  reshuffle,
   type Shoe,
   shoe,
   type ShoeOptions,
@@ -68,6 +69,11 @@ function countingReads<C>(stack: readonly C[]): {
     },
   });
   return { reads, stack: proxy };
+}
+
+/** Six decks, 312 cards, with 100 of them burned onto the discard pile. */
+function sixDecksPartBurned(): Shoe {
+  return burn(shoe(standard52(), 6, { random: seededRandom(3) }), 100);
 }
 
 /** Shoes of standard cards with the cut card anywhere in them, top to bottom, and any discard pile. */
@@ -141,27 +147,6 @@ describe("shoe", () => {
         },
       ),
     );
-  });
-
-  it("uses a penetration of 0.75 when it's left out or undefined", () => {
-    for (const penetration of [{}, { penetration: undefined }]) {
-      const options = { ...penetration, random: seededRandom(1) };
-      expect(shoe(standard52(), 6, options).cutCard).toBe(234);
-    }
-  });
-
-  it("puts the cut card on top at 0, and at the bottom at 1", () => {
-    const random = seededRandom(1);
-    expect(shoe(standard52(), 2, { penetration: 0, random }).cutCard).toBe(0);
-    expect(shoe(standard52(), 2, { penetration: 1, random }).cutCard).toBe(104);
-  });
-
-  it("puts the cut card at 0, not -0, for a penetration of -0", () => {
-    const { cutCard } = shoe(standard52(), 2, {
-      penetration: -0,
-      random: seededRandom(1),
-    });
-    expect(Object.is(cutCard, 0)).toBe(true);
   });
 
   it("rounds a penetration that falls between cards to the nearest card", () => {
@@ -301,22 +286,6 @@ describe("shoe", () => {
     );
   });
 
-  it("reads each option once", () => {
-    const reads = { penetration: 0, random: 0 };
-    const options = {
-      get penetration() {
-        reads.penetration++;
-        return 0.5;
-      },
-      get random() {
-        reads.random++;
-        return seededRandom(1);
-      },
-    };
-    shoe(standard52(), 2, options);
-    expect(reads).toStrictEqual({ penetration: 1, random: 1 });
-  });
-
   it.each(nonArrays())("rejects %s as the deck", (_label, deck) => {
     expect(thrownBy(() => shoe(asStack(deck), 2))).toMatchObject({
       code: "INVALID_ARGUMENT",
@@ -362,15 +331,73 @@ describe("shoe", () => {
     });
   });
 
+  it("isn't a stack, so chain rejects it", () => {
+    const built = shoe(standard52(), 2, { random: seededRandom(1) });
+    expect(thrownBy(() => chain(asStack(built)))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
+    expect(chain(built.cards).value()).toBe(built.cards);
+  });
+});
+
+describe.each<readonly [name: string, build: (options?: ShoeOptions) => Shoe]>([
+  ["shoe", (options) => shoe(standard52(), 6, options)],
+  ["reshuffle", (options) => reshuffle(sixDecksPartBurned(), options)],
+])("%s, given options for 312 cards,", (_name, build) => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("uses a penetration of 0.75 when it's left out or undefined", () => {
+    for (const penetration of [{}, { penetration: undefined }]) {
+      const options = { ...penetration, random: seededRandom(1) };
+      expect(build(options).cutCard).toBe(234);
+    }
+  });
+
+  it("puts the cut card on top at 0, and at the bottom at 1", () => {
+    const random = seededRandom(1);
+    expect(build({ penetration: 0, random }).cutCard).toBe(0);
+    expect(build({ penetration: 1, random }).cutCard).toBe(312);
+  });
+
+  it("puts the cut card at 0, not -0, for a penetration of -0", () => {
+    const { cutCard } = build({ penetration: -0, random: seededRandom(1) });
+    expect(Object.is(cutCard, 0)).toBe(true);
+  });
+
+  it("shuffles with a secure source when the options are left out", () => {
+    const spy = vi.spyOn(crypto, "getRandomValues");
+    const built = build();
+    expect(spy).toHaveBeenCalled();
+    expect(built.cutCard).toBe(234);
+  });
+
+  it("reads each option once", () => {
+    const reads = { penetration: 0, random: 0 };
+    const options = {
+      get penetration() {
+        reads.penetration++;
+        return 0.5;
+      },
+      get random() {
+        reads.random++;
+        return seededRandom(1);
+      },
+    };
+    build(options);
+    expect(reads).toStrictEqual({ penetration: 1, random: 1 });
+  });
+
   it.each([
     ["null", null],
     ["a number", 0.75],
     ["a string", "0.75"],
     ["an array", [0.75]],
   ])("rejects %s as the options", (_label, options) => {
-    expect(
-      thrownBy(() => shoe(standard52(), 2, asShoeOptions(options))),
-    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    expect(thrownBy(() => build(asShoeOptions(options)))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
   });
 
   it.each([
@@ -382,9 +409,9 @@ describe("shoe", () => {
     ["null", null],
     ["a bigint", 1n],
   ])("rejects %s as the penetration", (_label, penetration) => {
-    expect(
-      thrownBy(() => shoe(standard52(), 2, asShoeOptions({ penetration }))),
-    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    expect(thrownBy(() => build(asShoeOptions({ penetration })))).toMatchObject(
+      { code: "INVALID_ARGUMENT" },
+    );
   });
 
   it.each([
@@ -392,23 +419,15 @@ describe("shoe", () => {
     ["a string", "seeded"],
     ["null", null],
   ])("rejects %s as the random source", (_label, random) => {
-    expect(
-      thrownBy(() => shoe(standard52(), 2, asShoeOptions({ random }))),
-    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    expect(thrownBy(() => build(asShoeOptions({ random })))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
   });
 
   it("rejects a random source that returns something other than a number from 0 up to 1", () => {
-    expect(
-      thrownBy(() => shoe(standard52(), 2, { random: () => 1 })),
-    ).toMatchObject({ code: "INVALID_ARGUMENT" });
-  });
-
-  it("isn't a stack, so chain rejects it", () => {
-    const built = shoe(standard52(), 2, { random: seededRandom(1) });
-    expect(thrownBy(() => chain(asStack(built)))).toMatchObject({
+    expect(thrownBy(() => build({ random: () => 1 }))).toMatchObject({
       code: "INVALID_ARGUMENT",
     });
-    expect(chain(built.cards).value()).toBe(built.cards);
   });
 });
 
@@ -844,11 +863,98 @@ describe("discard", () => {
   });
 });
 
+describe("reshuffle", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("shuffles the shoe's cards stacked on top of its discard pile, as shuffle does", () => {
+    fc.assert(
+      fc.property(shoes(), seeds, (original, seed) => {
+        const next = reshuffle(original, { random: seededRandom(seed) });
+        const shuffled = shuffle([...original.cards, ...original.discardPile], {
+          random: seededRandom(seed),
+        });
+        expect(sameValues(next.cards, shuffled)).toBe(true);
+        expect(next.discardPile).toStrictEqual([]);
+      }),
+    );
+  });
+
+  it("puts the cut card back in at the penetration of every card it takes in", () => {
+    fc.assert(
+      fc.property(
+        shoes(),
+        fc.double({ max: 1, min: 0, noNaN: true }),
+        (original, penetration) => {
+          const { cutCard } = reshuffle(original, {
+            penetration,
+            random: seededRandom(1),
+          });
+          const size = original.cards.length + original.discardPile.length;
+          expect(cutCard).toBe(Math.round(penetration * size) || 0);
+          expect(Object.is(cutCard, -0)).toBe(false);
+        },
+      ),
+    );
+  });
+
+  it("takes in every card in the shoe and on its pile, once the round's hands are discarded", () => {
+    const start = shoe(standard52(), 2, { random: seededRandom(5) });
+    const { hands, shoe: dealt } = dealFromShoe(start, 4, 5);
+    const next = reshuffle(burn(discard(dealt, hands.flat())), {
+      random: seededRandom(6),
+    });
+    expect(tally(next.cards)).toStrictEqual(tally(start.cards));
+    expect(next.cutCard).toBe(78);
+  });
+
+  it("reshuffles an empty shoe into an empty shoe, with its cut card reached", () => {
+    expect(reshuffle({ cards: [], cutCard: 0, discardPile: [] })).toStrictEqual(
+      {
+        cards: [],
+        cutCard: 0,
+        discardPile: [],
+      },
+    );
+  });
+
+  it("returns a frozen shoe holding plain frozen stacks", () => {
+    const next = reshuffle(sixDecksPartBurned(), { random: seededRandom(1) });
+    expect(Object.isFrozen(next)).toBe(true);
+    expect(Object.getPrototypeOf(next)).toBe(Object.prototype);
+    expect(isPlainFrozen(next.cards)).toBe(true);
+    expect(isPlainFrozen(next.discardPile)).toBe(true);
+  });
+
+  it("gives the same reshuffle for the same seed, and a different one as a seeded source moves on", () => {
+    const partBurned = sixDecksPartBurned();
+    const once = reshuffle(partBurned, { random: seededRandom(42) });
+    expect(reshuffle(partBurned, { random: seededRandom(42) })).toStrictEqual(
+      once,
+    );
+    const random = seededRandom(42);
+    const first = reshuffle(partBurned, { random });
+    const second = reshuffle(partBurned, { random });
+    expect(first).toStrictEqual(once);
+    expect(sameValues(second.cards, first.cards)).toBe(false);
+  });
+
+  it("takes a shoe whose discard pile is left out, reshuffling only its cards", () => {
+    const next = reshuffle(asShoe({ cards: [ACE, KING, TEN], cutCard: 0 }), {
+      random: seededRandom(1),
+    });
+    expect(tally(next.cards)).toStrictEqual(tally([ACE, KING, TEN]));
+    expect(next.cutCard).toBe(2);
+  });
+});
+
 describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
   ["drawFromShoe", (from) => drawFromShoe(from, 1).shoe],
   ["dealFromShoe", (from) => dealFromShoe(from, 1, 1).shoe],
   ["burn", (from) => burn(from, 1)],
   ["discard", (from) => discard(from, [ACE])],
+  ["reshuffle", (from) => reshuffle(from, { random: seededRandom(1) })],
 ])("%s", (_name, use) => {
   it("takes a shoe written by hand, whose stacks are array subclasses", () => {
     const expected = use({

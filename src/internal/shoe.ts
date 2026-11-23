@@ -1,10 +1,21 @@
+import type { RandomSource } from "../random.ts";
 import type { Shoe } from "../shoe.ts";
 import type { CardStack } from "../stack.ts";
 
 import { InvalidArgumentError } from "../errors.ts";
-import { cardsProblem, countProblem } from "./checks.ts";
+import { shuffle } from "../shuffle.ts";
+import { cardsProblem, countProblem, randomProblem } from "./checks.ts";
 import { display } from "./display.ts";
 import { copyStack } from "./stack.ts";
+
+/** The penetration a shoe gets when its options leave it out. */
+const DEFAULT_PENETRATION = 0.75;
+
+/** What a shoe is shuffled with: the penetration to put its cut card at, and the random source. */
+export interface ShuffleSettings {
+  readonly penetration: number;
+  readonly random: RandomSource | undefined;
+}
 
 /** Reads a shoe's cards, cut card and discard pile once each, the stacks through `copyStack`, so a getter or a Proxy can't give the check one value and the operation another, and returns them, or the error for something that isn't a shoe. A missing discard pile is read as an empty one (ADR 0013). */
 export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
@@ -52,5 +63,39 @@ export function shoeAfter<C>(
     cards: Object.freeze(remainder),
     cutCard: Math.max(0, cutCard - taken),
     discardPile: Object.freeze(pile),
+  });
+}
+
+/** Reads the penetration and random source from the options of `shoe()` or `reshuffle()`, which must already be an object, once each and as `unknown`, so a JavaScript caller's value is checked and a getter can't give the check one value and the shuffle another. Returns them, or the error for one that's wrong. */
+export function readShuffleSettings(
+  options: Readonly<{ penetration?: unknown; random?: unknown }>,
+): InvalidArgumentError | ShuffleSettings {
+  const { penetration = DEFAULT_PENETRATION, random } = options;
+  if (
+    typeof penetration !== "number" ||
+    !(penetration >= 0 && penetration <= 1)
+  ) {
+    return new InvalidArgumentError(
+      `Invalid penetration option ${display(penetration)}: expected a number from 0 to 1`,
+    );
+  }
+  return (
+    randomProblem(random) ?? {
+      penetration,
+      random: random as RandomSource | undefined,
+    }
+  );
+}
+
+/** Shuffles `cards`, an array of the library's own, into a new frozen shoe with its cut card at the penetration and an empty discard pile. The rounding is fixed for 1.x (ADR 0013): changing it changes every seeded shoe. */
+export function shuffledShoe<C>(
+  cards: CardStack<C>,
+  { penetration, random }: ShuffleSettings,
+): Shoe<C> {
+  return Object.freeze({
+    cards: shuffle(cards, { random }),
+    // `|| 0` turns the -0 that a penetration of -0 gives into 0.
+    cutCard: Math.round(penetration * cards.length) || 0,
+    discardPile: Object.freeze([]),
   });
 }
