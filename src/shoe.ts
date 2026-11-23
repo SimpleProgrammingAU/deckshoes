@@ -596,8 +596,7 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
  *
  * @typeParam C - The type of card in the shoe.
  * @param shoe - The shoe whose discard pile takes the cards.
- * @param cards - The cards to discard, top first, of the same type as the
- * shoe's.
+ * @param cards - The cards to discard, top first.
  * @returns The shoe left, a new frozen shoe, with the cards on top of its
  * discard pile.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
