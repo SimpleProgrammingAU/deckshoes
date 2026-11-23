@@ -70,6 +70,8 @@ export {
   dealFromShoe,
   discard,
   drawFromShoe,
+  reshuffle,
+  type ReshuffleOptions,
   type Shoe,
   shoe,
   type ShoeDealResult,

@@ -13,6 +13,8 @@ import {
   dealFromShoe,
   discard,
   drawFromShoe,
+  reshuffle,
+  type ReshuffleOptions,
   type Shoe,
   shoe,
   type ShoeDealResult,
@@ -158,5 +160,37 @@ describe("discard", () => {
     discard(numbers);
     // @ts-expect-error a stack isn't a shoe
     expectTypeOf(discard).toBeCallableWith(standard52(), standard52());
+  });
+});
+
+describe("ReshuffleOptions", () => {
+  it("has the same optional penetration and random source as ShoeOptions", () => {
+    expectTypeOf<ReshuffleOptions>().toEqualTypeOf<{
+      readonly penetration?: number | undefined;
+      readonly random?: RandomSource | undefined;
+    }>();
+    expectTypeOf<ShoeOptions>().toEqualTypeOf<ReshuffleOptions>();
+  });
+});
+
+describe("reshuffle", () => {
+  it("gives back a shoe of the same kind of card", () => {
+    expectTypeOf(reshuffle(shoe(standard52(), 6))).toEqualTypeOf<Shoe>();
+    expectTypeOf(reshuffle(shoe([1, 2, 3], 2))).toEqualTypeOf<Shoe<number>>();
+  });
+
+  it("takes options that are all optional, and the options a shoe was built with", () => {
+    const rules: ShoeOptions = { penetration: 0.8, random: seededRandom(42) };
+    const sixDecks = shoe(standard52(), 6, rules);
+    expectTypeOf(reshuffle).toBeCallableWith(sixDecks, {});
+    expectTypeOf(reshuffle).toBeCallableWith(sixDecks, rules);
+    expectTypeOf(reshuffle).toBeCallableWith(sixDecks, {
+      penetration: undefined,
+      random: undefined,
+    });
+    // @ts-expect-error penetration is a number
+    reshuffle(sixDecks, { penetration: "0.8" });
+    // @ts-expect-error a stack isn't a shoe
+    expectTypeOf(reshuffle).toBeCallableWith(standard52());
   });
 });

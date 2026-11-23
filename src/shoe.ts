@@ -9,20 +9,19 @@ import {
   cardsProblem,
   countProblem,
   optionsProblem,
-  randomProblem,
   shortfall,
   stackProblem,
 } from "./internal/checks.ts";
-import { display } from "./internal/display.ts";
-import { readShoe, shoeAfter } from "./internal/shoe.ts";
+import {
+  readShoe,
+  readShuffleSettings,
+  shoeAfter,
+  shuffledShoe,
+} from "./internal/shoe.ts";
 import { copyStack } from "./internal/stack.ts";
-import { shuffle } from "./shuffle.ts";
 
 /** The most cards a shoe can hold: the longest an array can be. */
 const MAX_CARDS = 2 ** 32 - 1;
-
-/** The penetration a shoe gets when its options leave it out. */
-const DEFAULT_PENETRATION = 0.75;
 
 /**
  * A shoe: copies of a deck dealt from as one, with a cut card that marks when
@@ -32,7 +31,9 @@ const DEFAULT_PENETRATION = 0.75;
  * the `cutCard`'s position among them, and the `discardPile`.
  * {@link drawFromShoe} and {@link dealFromShoe} take cards out and move the
  * cut card up by as many. Once its position is 0, the cut card has been
- * reached and the shoe is due for a reshuffle.
+ * reached and the shoe is due for a reshuffle. {@link burn} moves cards from
+ * the top to the discard pile, {@link discard} puts cards that are finished
+ * with on it, and {@link reshuffle} shuffles it back in.
  *
  * `cards` and `discardPile` are stacks, so any stack operation can read them,
  * such as {@link peek} or {@link count}, and so can a {@link chain}. The shoe
@@ -129,6 +130,52 @@ export interface ShoeOptions {
 }
 
 /**
+ * Settings for {@link reshuffle}. They're the same as {@link ShoeOptions}, so
+ * one options object can build a shoe and reshuffle it, keeping its
+ * penetration.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   burn,
+ *   reshuffle,
+ *   type ReshuffleOptions,
+ *   seededRandom,
+ *   shoe,
+ * } from "deckshoes";
+ * import { standard52 } from "deckshoes/presets";
+ *
+ * // Two decks, with the cut card 80% of the way in after every reshuffle.
+ * const rules: ReshuffleOptions = { penetration: 0.8, random: seededRandom(42) };
+ * const burned = burn(shoe(standard52(), 2, rules), 10);
+ * reshuffle(burned, rules).cutCard; // => 83
+ * ```
+ *
+ * @since NEXT
+ */
+export interface ReshuffleOptions {
+  /**
+   * How far into the reshuffled shoe the cut card goes, as the proportion of
+   * its cards dealt before it's reached: a number from 0 to 1, rounded to the
+   * nearest card, as {@link ShoeOptions.penetration} is. Leave it out, or pass
+   * `undefined`, for 0.75, whatever penetration the shoe was built with: a
+   * shoe doesn't remember its penetration, so pass the same options to
+   * {@link deckshoes!shoe | shoe()} and `reshuffle`.
+   */
+  readonly penetration?: number | undefined;
+
+  /**
+   * The random source to shuffle with. Leave it out, or pass `undefined`, to
+   * use a secure source backed by `crypto.getRandomValues`, made fresh for each
+   * reshuffle. Pass a {@link seededRandom} source to make reshuffles
+   * reproducible: a seeded source moves on with each use, so passing the one
+   * the shoe was built with gives a different shuffle each time, and the same
+   * shuffles every run.
+   */
+  readonly random?: RandomSource | undefined;
+}
+
+/**
  * What {@link drawFromShoe} gives: the cards drawn and the shoe left, as a
  * frozen object holding a new frozen stack and a new frozen shoe.
  *
@@ -206,7 +253,8 @@ export interface ShoeDealResult<C = Card> {
  * cards out with {@link drawFromShoe} and {@link dealFromShoe}, which move the
  * cut card up as they go, and read them with any stack operation on
  * `shoe.cards`. Once the cut card's position is 0, it's been reached, and the
- * shoe is due for a reshuffle: build a new one.
+ * shoe is due for a reshuffle: {@link discard} the hands in play, then
+ * {@link reshuffle} it.
  *
  * The deck is left untouched, frozen or not, and the shoe, its cards and its
  * discard pile, which starts empty, are new and frozen. Any deck works, including one with copies or with cards that
@@ -288,36 +336,16 @@ export function shoe<C>(
     );
   }
 
-  // Read each option once, as `unknown`: JavaScript callers can pass anything,
-  // and a getter could give the check one value and the shoe another.
-  const {
-    penetration = DEFAULT_PENETRATION,
-    random,
-  }: Readonly<{
-    penetration?: unknown;
-    random?: unknown;
-  }> = options;
-  const settingProblem =
-    (typeof penetration === "number" && penetration >= 0 && penetration <= 1
-      ? undefined
-      : new InvalidArgumentError(
-          `Invalid penetration option ${display(penetration)}: expected a number from 0 to 1`,
-        )) ?? randomProblem(random);
-  if (settingProblem !== undefined) throw settingProblem;
+  const settings = readShuffleSettings(options);
+  if (settings instanceof InvalidArgumentError) throw settings;
 
-  // The copies one on top of another, then shuffled. This order and the
-  // rounding below are fixed for 1.x (ADR 0013): changing either changes every
-  // seeded shoe.
+  // The copies one on top of another, then shuffled. This order is fixed for
+  // 1.x (ADR 0013): changing it changes every seeded shoe.
   const stacked = Array.from(
     { length: size },
     (_, i) => copied[i % deckSize] as C,
   );
-  return Object.freeze({
-    cards: shuffle(stacked, { random: random as RandomSource | undefined }),
-    // `|| 0` turns the -0 that a penetration of -0 gives into 0.
-    cutCard: Math.round((penetration as number) * size) || 0,
-    discardPile: Object.freeze([]),
-  });
+  return shuffledShoe(stacked, settings);
 }
 
 /**
@@ -600,4 +628,99 @@ export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
   if (problem !== undefined) throw problem;
   const { cards: inShoe, cutCard, discardPile } = checked;
   return shoeAfter(inShoe, cutCard, 0, [...copyStack(cards), ...discardPile]);
+}
+
+/**
+ * Reshuffles a shoe: shuffles its discard pile back in with the cards left in
+ * it, and puts the cut card back in, returning the new shoe, with an empty
+ * discard pile.
+ *
+ * The cards left in the shoe are stacked on top of the discard pile and
+ * shuffled together, with every order equally likely, as {@link shuffle} does.
+ * The cut card goes in at the `penetration`, as {@link deckshoes!shoe | shoe()}
+ * puts it: three quarters of the way in unless you say otherwise. A shoe
+ * doesn't remember the penetration it was built with, so pass the same
+ * options to `shoe()` and `reshuffle`.
+ *
+ * A shoe can be reshuffled at any time, not only once its cut card has been
+ * reached. Only the cards in the shoe and on its discard pile go back in, so
+ * {@link discard} the hands still in play first: cards discarded after a
+ * reshuffle wait on the pile for the next one.
+ *
+ * The shoe is left untouched. The shoe returned, its cards and its empty
+ * discard pile are new and frozen. The shoe can come from `shoe()`, or be any
+ * object with the same shape.
+ *
+ * The shuffle gets its randomness from the `random` option. Leave the option
+ * out to use a secure source, backed by `crypto.getRandomValues`. Pass a
+ * {@link seededRandom} source to make the reshuffle reproducible: the same
+ * seed gives the same cards and cut card in every runtime and every 1.x
+ * release.
+ *
+ * Where the runtime has no `crypto.getRandomValues`, such as React Native
+ * without a polyfill, reshuffling a shoe of two or more cards without a
+ * `random` option throws the runtime's own error, not a deckshoes error.
+ *
+ * @typeParam C - The type of card in the shoe.
+ * @param shoe - The shoe to reshuffle.
+ * @param options - Settings for the reshuffle: its penetration and random
+ * source.
+ * @returns A new frozen shoe, holding every card that was in the shoe or on
+ * its discard pile, shuffled, the `cutCard`'s new position and an empty
+ * `discardPile`.
+ * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
+ * array of `cards`, a `cutCard` that's an integer from 0 to the number of
+ * cards, and a `discardPile` that's an array or left out, `options` isn't an
+ * object or is an array, its `penetration` isn't a number from 0 to 1, or its
+ * `random` option isn't a function. Also when the random source returns
+ * something other than a number from 0 up to 1, or keeps returning values that
+ * have to be rejected.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   dealFromShoe,
+ *   discard,
+ *   reshuffle,
+ *   seededRandom,
+ *   shoe,
+ * } from "deckshoes";
+ * import { standard52 } from "deckshoes/presets";
+ *
+ * // One options object for the shoe and every reshuffle.
+ * const rules = { penetration: 0.8, random: seededRandom(42) };
+ * let current = shoe(standard52(), 6, rules);
+ *
+ * // Deal rounds, discarding the hands, until the cut card is reached.
+ * while (current.cutCard > 0) {
+ *   const { hands, shoe: dealt } = dealFromShoe(current, 4, 2);
+ *   current = discard(dealt, hands.flat());
+ * }
+ * current.cards.length; // => 56
+ * current.discardPile.length; // => 256
+ *
+ * // Every card goes back in, and so does the cut card.
+ * const next = reshuffle(current, rules);
+ * next.cards.length; // => 312
+ * next.cutCard; // => 250
+ * next.discardPile; // => []
+ *
+ * reshuffle(current, { penetration: 2 }); // throws INVALID_ARGUMENT
+ * ```
+ *
+ * @since NEXT
+ */
+export function reshuffle<C>(
+  shoe: Shoe<C>,
+  options: ReshuffleOptions = {},
+): Shoe<C> {
+  const checked = readShoe(shoe);
+  if (checked instanceof InvalidArgumentError) throw checked;
+  const problem = optionsProblem(options, "{ penetration: 0.75 }");
+  if (problem !== undefined) throw problem;
+  const settings = readShuffleSettings(options);
+  if (settings instanceof InvalidArgumentError) throw settings;
+  // The shoe's cards on top of the discard pile, then shuffled. This order is
+  // fixed for 1.x (ADR 0013): changing it changes every seeded reshuffle.
+  return shuffledShoe([...checked.cards, ...checked.discardPile], settings);
 }
