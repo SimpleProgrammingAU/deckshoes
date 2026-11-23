@@ -259,9 +259,9 @@ export interface ShoeDealResult<C = Card> {
  * {@link reshuffle} it.
  *
  * The deck is left untouched, frozen or not, and the shoe, its cards and its
- * discard pile, which starts empty, are new and frozen. Any deck works, including one with copies or with cards that
- * aren't standard cards. An empty deck gives an empty shoe, whose cut card has
- * already been reached.
+ * discard pile, which starts empty, are new and frozen. Any deck works,
+ * including one with copies or with cards that aren't standard cards. An empty
+ * deck gives an empty shoe, whose cut card has already been reached.
  *
  * The shuffle gets its randomness from the `random` option. Leave the option
  * out to use a secure source, backed by `crypto.getRandomValues`. Pass a fresh
@@ -360,8 +360,8 @@ export function shoe<C>(
  *
  * The shoe is left untouched. The cards drawn, the shoe left and the result
  * holding them are new and frozen, and the shoe left keeps the discard pile.
- * The shoe can come from
- * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
+ * The shoe can come from {@link deckshoes!shoe | shoe()}, or be any object
+ * with the same shape.
  *
  * Leave `count` out, or pass `undefined`, to draw one card. `cards` is a stack
  * either way, so it holds that one card rather than being the card.
@@ -436,8 +436,8 @@ export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
  *
  * The shoe is left untouched. Every hand, the shoe left and the result holding
  * them are new and frozen, as is `hands`, and the shoe left keeps the discard
- * pile. The shoe can come from
- * {@link deckshoes!shoe | shoe()}, or be any object with the same shape.
+ * pile. The shoe can come from {@link deckshoes!shoe | shoe()}, or be any
+ * object with the same shape.
  *
  * @typeParam C - The type of card in the shoe.
  * @param shoe - The shoe to deal from.

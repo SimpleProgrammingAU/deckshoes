@@ -411,8 +411,11 @@ import {
 import { standard52 } from "deckshoes/presets";
 
 // Two cards each to six players, then burn one and deal the flop.
-const deck = shoe(standard52(), 1, { penetration: 1, random: seededRandom(1) });
-const { hands, shoe: dealt } = dealFromShoe(deck, 6, 2);
+const oneDeck = shoe(standard52(), 1, {
+  penetration: 1,
+  random: seededRandom(1),
+});
+const { hands, shoe: dealt } = dealFromShoe(oneDeck, 6, 2);
 hands.length; // => 6
 const flop = drawFromShoe(burn(dealt), 3);
 flop.cards.length; // => 3
