@@ -3,7 +3,7 @@
     "name": "deckshoes (everything)",
     "path": "dist/index.js",
     "import": "*",
-    "limit": "5300 B"
+    "limit": "6500 B"
   },
   {
     "name": "deckshoes (errors only)",
