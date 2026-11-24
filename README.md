@@ -708,7 +708,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 
 ## Migrating from 0.4
 
-1.0 replaces the 0.x classes (`PlayingCard`, `Deck`, `Shoe`) with a new API. 1.0.0 covers the 52 standard cards. 0.4's jokers and 500 deck come back after 1.0 with custom decks. 0.4's Spanish deck used French suits, so it's the standard 52 without the 10s; custom decks bring Spanish decks with Spanish suits instead. A full migration guide will be published with 1.0.0. Until then, 0.4.0 stays the `latest` release on npm, so `npm install deckshoes` still gives you 0.4.
+1.0 replaces 0.4's classes (`PlayingCard`, `Deck`, `Shoe`) with functions over frozen data. The [migration guide](./MIGRATING.md) maps every 0.4 class, method and constant to its 1.0 equivalent, and names what 1.0.0 doesn't cover yet: jokers, the 500 deck, and 0.4's Spanish deck, which the guide rebuilds from the standard 52.
 
 ## Contributing
 
