@@ -66,8 +66,7 @@ export interface FormatStackOptions {
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, `options`
  * isn't an object or is an array, its `notation` isn't `Notation.SHORT`,
  * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`, or the stack's compact
- * string would be longer than the runtime's longest string: about 2²⁹
- * characters in Node.js.
+ * string would be longer than the runtime allows.
  * @throws {@link InvalidCardError} When a card in `stack` isn't one of the
  * cards this install's `card()` returns, such as a cloned card.
  *
@@ -237,8 +236,7 @@ export interface FormatShoeOptions {
  * discard pile together hold more than 2³² − 1 cards. Also when `options`
  * isn't an object or is an array, its `notation` isn't `Notation.SHORT`,
  * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`, or the shoe's compact
- * string would be longer than the runtime's longest string, as for
- * {@link formatStack}.
+ * string would be longer than the runtime allows.
  * @throws {@link InvalidCardError} When a card in the shoe isn't one of the
  * cards this install's `card()` returns, such as a cloned card.
  *

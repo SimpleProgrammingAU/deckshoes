@@ -34,7 +34,7 @@ export interface TextOwner {
   readonly value: unknown;
 }
 
-/** Returns the error for a stack or shoe whose compact string would be longer than the runtime's longest string. The limit differs between runtimes and nothing reports it, so it's found by the `RangeError` a concatenation throws. */
+/** Returns the error for a stack or shoe whose compact string would be longer than the runtime's longest string. The limit differs between runtimes and nothing reports it, so it's found by the error a concatenation throws: a `RangeError` in V8 and JavaScriptCore, but an `InternalError` in SpiderMonkey, so the `catch`es that call this take any error. */
 function tooLong({ name, value }: TextOwner): InvalidArgumentError {
   return new InvalidArgumentError(
     `Invalid ${name} ${display(value)}: its compact string would be longer than this runtime allows`,
@@ -59,7 +59,8 @@ export function writeStack(
     }
     const piece = write(card);
     // Only the concatenation is tried, so an error from reading the stack,
-    // such as a getter's, isn't mistaken for the text being too long.
+    // such as a getter's, isn't mistaken for the text being too long. The
+    // catch takes any error, since SpiderMonkey's isn't a RangeError.
     try {
       text += i === 0 ? piece : ` ${piece}`;
     } catch {
