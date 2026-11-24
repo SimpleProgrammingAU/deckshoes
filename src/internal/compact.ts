@@ -10,7 +10,7 @@ import { display } from "./display.ts";
 import { readCard, WRITERS } from "./notation-table.ts";
 
 /** What separates the parts of a shoe's compact string: its cards, its cut card's position and its discard pile. */
-export const SHOE_PART_SEPARATOR = " | ";
+const SHOE_PART_SEPARATOR = " | ";
 
 /** The options `formatStack` and `formatShoe` show as an example when theirs aren't an object. */
 export const FORMAT_OPTIONS_EXAMPLE = "{ notation: Notation.SYMBOL }";
