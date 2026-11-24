@@ -10,7 +10,7 @@ When the user says at step 13 to start the next issue, from the repo root:
 2. From the worktree: `claude --bg --name deckshoes-<N> "Commence #<N>. It is stacked on <this branch>, PR #<n>, which is in review."`
 3. Give the user the session's name: `claude attach deckshoes-<N>` opens it, and `claude agents` lists them all.
 
-If the parent has merged by then, branch from `origin/main` and leave the stacking out of the message: the issue starts in a worktree, but nothing is stacked.
+If the parent has merged by then, branch from `origin/main` with `--no-track`, so the new branch doesn't take `main` as its upstream, and leave the stacking out of the message: the issue starts in a worktree, but nothing is stacked.
 
 ## Working on one
 
