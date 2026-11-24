@@ -139,6 +139,16 @@ export function asStack(value: unknown): CardStack {
   return value as CardStack;
 }
 
+/** Lets a test pass a value that isn't a shoe, as untyped callers can. */
+export function asShoe(value: unknown): Shoe {
+  return value as Shoe;
+}
+
+/** Lets a test pass a value that isn't text, as untyped callers can. */
+export function asText(value: unknown): string {
+  return value as string;
+}
+
 /** Lets a test pass options that aren't `ShuffleOptions`, as untyped callers can. */
 export function asShuffleOptions(value: unknown): ShuffleOptions {
   return value as ShuffleOptions;

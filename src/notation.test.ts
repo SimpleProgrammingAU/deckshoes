@@ -1,7 +1,7 @@
 import fc, { type Arbitrary } from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import { standardPairs, thrownBy } from "../test/helpers.ts";
+import { asText, standardPairs, thrownBy } from "../test/helpers.ts";
 import { type Card, card, type Rank, type Suit } from "./card.ts";
 import { isDeckshoesError } from "./errors.ts";
 import { rankName, suitName } from "./names.ts";
@@ -87,11 +87,6 @@ const NOTATIONS = [
   Notation.NAME,
   Notation.UNICODE_CHARACTER,
 ] as const;
-
-/** Lets a test pass a value that isn't text, as untyped callers can. */
-function asText(value: unknown): string {
-  return value as string;
-}
 
 /** Lets a test pass a value that isn't a card, as untyped callers can. */
 function asCard(value: unknown): Card {
