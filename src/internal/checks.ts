@@ -13,7 +13,7 @@ import { display } from "./display.ts";
 // The `unknown…` functions and `notInOrder` only build the error, for a value
 // a lookup has already failed to find.
 
-/** The longest an array can be, 2³² − 1: the most cards a stack or shoe can hold, and the most hands a deal can give. */
+/** The longest the spec lets an array be, 2³² − 1: the most cards a stack or shoe can hold, and the most hands a deal can give. Engines can cap arrays that aren't all holes lower, as V8 does at 2²⁷ − 3 elements (#91). */
 export const MAX_ARRAY_LENGTH: number = 2 ** 32 - 1;
 
 /** Writes a number of cards for an error message, such as "1 card" or "52 cards". */
