@@ -19,6 +19,7 @@ import { type Card, card } from "./card.ts";
 import { chain } from "./chain.ts";
 import { deal, HandSize, RunOut } from "./deal.ts";
 import { draw } from "./draw.ts";
+import { shoeFromJSON } from "./json.ts";
 import { pinochle } from "./presets/pinochle.ts";
 import { standard52 } from "./presets/standard52.ts";
 import { seededRandom } from "./random.ts";
@@ -943,6 +944,7 @@ describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
   ["burn", (from) => burn(from, 1)],
   ["discard", (from) => discard(from, [ACE])],
   ["reshuffle", (from) => reshuffle(from, { random: seededRandom(1) })],
+  ["shoeFromJSON", (from) => shoeFromJSON(from)],
 ])("%s", (_name, use) => {
   it("takes a shoe written by hand, whose stacks are array subclasses", () => {
     const expected = use({

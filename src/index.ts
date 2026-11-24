@@ -40,6 +40,7 @@ export {
   InvalidCardError,
   isDeckshoesError,
 } from "./errors.ts";
+export { cardFromJSON, shoeFromJSON, stackFromJSON } from "./json.ts";
 export {
   rankName,
   type RankNameOptions,
