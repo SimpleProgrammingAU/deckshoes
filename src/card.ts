@@ -82,8 +82,9 @@ declare class CardBrand {
  *
  * A cloned card, such as one sent with `postMessage`, kept in storage or made
  * by `structuredClone`, is a plain object too, even where TypeScript still
- * types it as a `Card`. Pass its rank and suit back through {@link card} to
- * get the real card.
+ * types it as a `Card`, and so is a card read from JSON. Load it with
+ * {@link cardFromJSON}, or a whole stack with {@link stackFromJSON}, to get
+ * the real cards.
  *
  * @example
  * ```ts
