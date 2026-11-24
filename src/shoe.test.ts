@@ -403,6 +403,21 @@ describe.each<readonly [name: string, build: (options?: ShoeOptions) => Shoe]>([
 });
 
 describe("drawFromShoe", () => {
+  it("says how many cards are in a shoe and on its discard pile when there are too many", () => {
+    expect(
+      thrownBy(() =>
+        drawFromShoe({
+          cards: holes(2 ** 31),
+          cutCard: 0,
+          discardPile: holes(2 ** 31),
+        }),
+      ),
+    ).toMatchObject({
+      message:
+        "Invalid shoe (object): a shoe with 2147483648 cards in it and 2147483648 cards on its discard pile would hold more cards than an array can",
+    });
+  });
+
   it("draws what draw would, and moves the cut card up by as many, stopping at 0", () => {
     fc.assert(
       fc.property(
@@ -868,9 +883,20 @@ describe("discard", () => {
           holes(2 ** 32 - 1),
         ),
       ),
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+
+  it("says what the shoe holds and how many were discarded when they won't fit", () => {
+    expect(
+      thrownBy(() =>
+        discard(
+          { cards: [ACE], cutCard: 0, discardPile: [] },
+          holes(2 ** 32 - 1),
+        ),
+      ),
     ).toMatchObject({
       message:
-        "Invalid cards (array): a shoe of 1 card and a discard pile of 0 cards, with 4294967295 discarded, would hold more cards than an array can",
+        "Invalid cards (array): a shoe with 1 card in it and 0 cards on its discard pile, with 4294967295 discarded, would hold more cards than an array can",
     });
   });
 });
@@ -993,11 +1019,7 @@ describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
       thrownBy(() =>
         use({ cards: holes(2 ** 31), cutCard: 0, discardPile: holes(2 ** 31) }),
       ),
-    ).toMatchObject({
-      code: "INVALID_ARGUMENT",
-      message:
-        "Invalid shoe (object): a shoe of 2147483648 cards and a discard pile of 2147483648 cards would hold more cards than an array can",
-    });
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
   });
 
   it("reads the shoe's cards, cut card and discard pile once each", () => {

@@ -5,10 +5,10 @@ import type { CardStack } from "../stack.ts";
 import { InvalidArgumentError } from "../errors.ts";
 import { shuffle } from "../shuffle.ts";
 import {
-  cardCount,
+  cardCountText,
+  cardTotalProblem,
   countProblem,
   randomProblem,
-  tooManyCards,
 } from "./checks.ts";
 import { display } from "./display.ts";
 import { copyStack } from "./stack.ts";
@@ -47,20 +47,20 @@ export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
     stackFieldProblem(discardPile, "discard pile");
   if (problem !== undefined) return problem;
   const size = (cards as CardStack<C>).length;
-  const piled = (discardPile as CardStack<C>).length;
+  const pileSize = (discardPile as CardStack<C>).length;
   return (
-    tooManyCards(
-      size + piled,
+    cardTotalProblem(
+      size + pileSize,
       "shoe",
       value,
       () =>
-        `a shoe of ${cardCount(size)} and a discard pile of ${cardCount(piled)}`,
+        `a shoe with ${cardCountText(size)} in it and ${cardCountText(pileSize)} on its discard pile`,
     ) ??
     countProblem(cutCard, "cut card", 0, size) ?? {
       cards: copyStack(cards as CardStack<C>, 0, size),
       // `|| 0` turns a cut card of -0 into 0, as every shoe function gives.
       cutCard: (cutCard as number) || 0,
-      discardPile: copyStack(discardPile as CardStack<C>, 0, piled),
+      discardPile: copyStack(discardPile as CardStack<C>, 0, pileSize),
     }
   );
 }

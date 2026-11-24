@@ -2,14 +2,14 @@ import type { RandomSource } from "./random.ts";
 import type { CardStack } from "./stack.ts";
 
 import {
-  cardCount,
+  cardCountText,
   cardsProblem,
+  cardTotalProblem,
   optionsProblem,
   positionProblem,
   RANDOM_OPTIONS_EXAMPLE,
   randomProblem,
   stackProblem,
-  tooManyCards,
 } from "./internal/checks.ts";
 import { randomPosition } from "./internal/random.ts";
 
@@ -251,9 +251,8 @@ export function cut<C>(
  * `position` isn't an integer from 0 to the stack's size, `Position.BOTTOM` or
  * `Position.RANDOM`, `options` isn't an object or is an array, its `random`
  * option isn't a function, or the stack and `cards` together hold more than
- * 2³² − 1 cards. Also when the random source returns
- * something other than a number from 0 up to 1, or keeps returning values that
- * have to be rejected.
+ * 2³² − 1 cards. Also when the random source returns something other than a
+ * number from 0 up to 1, or keeps returning values that have to be rejected.
  *
  * @example
  * ```ts
@@ -292,11 +291,11 @@ export function insert<C>(
 
   const size = stack.length;
   const count = cards.length;
-  const tooBig = tooManyCards(
+  const tooBig = cardTotalProblem(
     size + count,
     "cards",
     cards,
-    () => `a stack of ${cardCount(size)} with ${String(count)} put into it`,
+    () => `a stack of ${cardCountText(size)} with ${String(count)} put into it`,
   );
   if (tooBig !== undefined) throw tooBig;
   const above =

@@ -37,15 +37,15 @@ export interface TextOwner {
 /** Returns the error for a stack or shoe whose compact string would be longer than the runtime's longest string. The limit differs between runtimes and nothing reports it, so it's found by the `RangeError` a concatenation throws. */
 function tooLong({ name, value }: TextOwner): InvalidArgumentError {
   return new InvalidArgumentError(
-    `Invalid ${name} ${display(value)}: its compact string would be longer than this runtime's longest string`,
+    `Invalid ${name} ${display(value)}: its compact string would be longer than this runtime allows`,
   );
 }
 
-/** Writes each card of a stack, read by index, with `write`, separated by single spaces, or returns the error for the first that isn't one of this install's cards, or for text longer than the runtime's longest string; `name` names the stack in a card's error, such as "the discard pile", and `owner` is what a too-long error names. */
+/** Writes each card of a stack, read by index, with `write`, separated by single spaces, or returns the error for the first that isn't one of this install's cards, or for text longer than the runtime's longest string; `stackName` names the stack in a card's error, such as "the discard pile", and `owner` is what a too-long error names. */
 export function writeStack(
   stack: CardStack<unknown>,
   write: (card: Card) => string,
-  name: string,
+  stackName: string,
   owner: TextOwner,
 ): InvalidArgumentError | InvalidCardError | string {
   let text = "";
@@ -54,7 +54,7 @@ export function writeStack(
     const card = stack[i];
     if (!isCard(card)) {
       return new InvalidCardError(
-        `Invalid card ${display(card)} at position ${String(i)} of ${name}: expected one of the cards card() returns`,
+        `Invalid card ${display(card)} at position ${String(i)} of ${stackName}: expected one of the cards card() returns`,
       );
     }
     const piece = write(card);
