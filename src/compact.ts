@@ -228,7 +228,8 @@ export interface FormatShoeOptions {
  * by `" | "`.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
  * array of `cards` and a `cutCard` that's an integer from 0 to the number of
- * cards, or its `discardPile` is there but isn't an array. Also when `options`
+ * cards, or its `discardPile` is there but isn't an array, or its cards and
+ * discard pile together hold more than 2³² − 1 cards. Also when `options`
  * isn't an object or is an array, or its `notation` isn't `Notation.SHORT`,
  * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`.
  * @throws {@link InvalidCardError} When a card in the shoe isn't one of the
