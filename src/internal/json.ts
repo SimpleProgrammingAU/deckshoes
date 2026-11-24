@@ -13,7 +13,7 @@ export function loadCard(
 ): Card | InvalidCardError {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return new InvalidCardError(
-      `Invalid card ${display(value)}${where}: expected an object holding a rank, suit and color, as JSON.stringify writes a card`,
+      `Invalid card ${display(value)}${where}: expected an object with rank, suit and color fields, as JSON.stringify writes a card`,
     );
   }
   const {

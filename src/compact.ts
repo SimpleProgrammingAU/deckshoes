@@ -3,13 +3,17 @@ import type { Shoe } from "./shoe.ts";
 import type { CardStack } from "./stack.ts";
 
 import { InvalidArgumentError, InvalidCardError } from "./errors.ts";
-import { optionsProblem, stackProblem } from "./internal/checks.ts";
+import {
+  optionsProblem,
+  stackProblem,
+  textProblem,
+} from "./internal/checks.ts";
 import {
   FORMAT_OPTIONS_EXAMPLE,
   readShoeText,
   readStackText,
   readWriter,
-  textProblem,
+  SHOE_PART_SEPARATOR,
   writeStack,
 } from "./internal/compact.ts";
 import { readShoe } from "./internal/shoe.ts";
@@ -262,12 +266,14 @@ export function formatShoe(
   if (problem !== undefined) throw problem;
   const write = readWriter(options);
   if (write instanceof InvalidArgumentError) throw write;
-  const cards = writeStack(checked.cards, write, "the shoe's cards");
-  if (cards instanceof InvalidCardError) throw cards;
-  const pile = writeStack(checked.discardPile, write, "the discard pile");
-  if (pile instanceof InvalidCardError) throw pile;
-  const text = `${cards} | ${String(checked.cutCard)}`;
-  return checked.discardPile.length === 0 ? text : `${text} | ${pile}`;
+  const cardText = writeStack(checked.cards, write, "the shoe's cards");
+  if (cardText instanceof InvalidCardError) throw cardText;
+  const pileText = writeStack(checked.discardPile, write, "the discard pile");
+  if (pileText instanceof InvalidCardError) throw pileText;
+  const text = `${cardText}${SHOE_PART_SEPARATOR}${String(checked.cutCard)}`;
+  return checked.discardPile.length === 0
+    ? text
+    : `${text}${SHOE_PART_SEPARATOR}${pileText}`;
 }
 
 /**

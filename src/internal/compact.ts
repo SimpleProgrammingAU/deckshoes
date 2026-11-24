@@ -9,6 +9,9 @@ import { countProblem } from "./checks.ts";
 import { display } from "./display.ts";
 import { readCard, WRITERS } from "./notation-table.ts";
 
+/** What separates the parts of a shoe's compact string: its cards, its cut card's position and its discard pile. */
+export const SHOE_PART_SEPARATOR = " | ";
+
 /** The options `formatStack` and `formatShoe` show as an example when theirs aren't an object. */
 export const FORMAT_OPTIONS_EXAMPLE = "{ notation: Notation.SYMBOL }";
 
@@ -45,18 +48,6 @@ export function writeStack(
   return text;
 }
 
-/** Returns the error for compact-string text that isn't a string, or `undefined` for text that is; `example` shows valid text in the message. */
-export function textProblem(
-  value: unknown,
-  example: string,
-): InvalidArgumentError | undefined {
-  return typeof value === "string"
-    ? undefined
-    : new InvalidArgumentError(
-        `Invalid text ${display(value)}: expected a string, such as ${JSON.stringify(example)}`,
-      );
-}
-
 /** Reads cards written as a compact string into a new frozen stack, or returns the error for the first piece between spaces that isn't a card; `name` names the stack in the error, such as "the stack". An empty string is an empty stack. */
 export function readStackText(
   text: string,
@@ -84,14 +75,14 @@ export function readStackText(
 /** How a shoe's compact string writes its cut card's position: a whole number with no sign or leading zeros. */
 const POSITION = /^(?:0|[1-9]\d*)$/u;
 
-/** Reads a shoe written as a compact string, its cards, cut card's position and discard pile separated by " | ", with an empty pile left out, into a new frozen shoe, or returns the error for text that isn't one. */
+/** Reads a shoe written as a compact string, its cards, cut card's position and discard pile separated by {@link SHOE_PART_SEPARATOR}, with an empty pile left out, into a new frozen shoe, or returns the error for text that isn't one. */
 export function readShoeText(
   text: string,
 ): InvalidArgumentError | InvalidCardError | Shoe {
-  const parts = text.split(" | ");
+  const parts = text.split(SHOE_PART_SEPARATOR);
   if (parts.length < 2 || parts.length > 3 || parts[2] === "") {
     return new InvalidArgumentError(
-      `Invalid shoe text ${display(text)}: expected the shoe's cards, its cut card's position and, if it isn't empty, its discard pile, separated by " | ", such as "AS 10H KD | 2 | 2C"`,
+      `Invalid shoe text ${display(text)}: expected the shoe's cards, its cut card's position and, if it isn't empty, its discard pile, separated by ${JSON.stringify(SHOE_PART_SEPARATOR)}, such as "AS 10H KD | 2 | 2C"`,
     );
   }
   const [cardText = "", position = "", pileText = ""] = parts;
