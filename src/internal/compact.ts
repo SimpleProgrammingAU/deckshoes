@@ -61,15 +61,23 @@ export function readStackText(
     const found = readCard(piece);
     if (found === undefined) {
       const where = `at position ${String(i)} of ${name}`;
-      return new InvalidCardError(
-        piece === ""
-          ? `Extra space ${where}: separate cards with one space, with none around them`
-          : `Unknown card ${display(piece)} ${where}: expected a card such as "AS", "10H", "A♠" or "🂡"`,
-      );
+      return new InvalidCardError(pieceProblem(piece, where));
     }
     cards[i] = found;
   }
   return Object.freeze(cards);
+}
+
+/** Says what's wrong with a piece of a compact string, between spaces, that isn't a card; `where` says where it was, such as "at position 3 of the stack". */
+function pieceProblem(piece: string, where: string): string {
+  if (piece === "") {
+    return `Extra space ${where}: separate cards with one space, with none around them`;
+  }
+  // A space such as U+00A0, which text copied from a web page can hold, shows
+  // in the message as an ordinary one, so the message has to name it.
+  return /\s/u.test(piece)
+    ? `Unknown card ${display(piece)} ${where}: separate cards with an ordinary space (U+0020), not another kind of space`
+    : `Unknown card ${display(piece)} ${where}: expected a card such as "AS", "10H", "A♠" or "🂡"`;
 }
 
 /** How a shoe's compact string writes its cut card's position: a whole number with no sign or leading zeros. */
@@ -81,8 +89,13 @@ export function readShoeText(
 ): InvalidArgumentError | InvalidCardError | Shoe {
   const parts = text.split(SHOE_PART_SEPARATOR);
   if (parts.length < 2 || parts.length > 3 || parts[2] === "") {
+    // The text can be too long to show, so say what was found in it.
+    const found =
+      parts.length === 3
+        ? "an empty discard pile"
+        : `${String(parts.length)} ${parts.length === 1 ? "part" : "parts"}`;
     return new InvalidArgumentError(
-      `Invalid shoe text ${display(text)}: expected the shoe's cards, its cut card's position and, if it isn't empty, its discard pile, separated by ${JSON.stringify(SHOE_PART_SEPARATOR)}, such as "AS 10H KD | 2 | 2C"`,
+      `Invalid shoe text ${display(text)}: expected the shoe's cards, its cut card's position and, if it isn't empty, its discard pile, separated by ${JSON.stringify(SHOE_PART_SEPARATOR)}, such as "AS 10H KD | 2 | 2C", but found ${found}`,
     );
   }
   const [cardText = "", position = "", pileText = ""] = parts;

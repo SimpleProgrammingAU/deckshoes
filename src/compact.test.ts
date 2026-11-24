@@ -273,6 +273,22 @@ describe("parseStack and tryParseStack", () => {
     expect(tryParseStack(asText(value))).toBeUndefined();
   });
 
+  it.each([
+    ["a no-break space", "\u{A0}"],
+    ["a narrow no-break space", "\u{202F}"],
+    ["a tab", "\t"],
+  ])(
+    "say when cards are separated by %s, not an ordinary space",
+    (_label, space) => {
+      expect(thrownBy(() => parseStack(`AS${space}KH`))).toMatchObject({
+        code: "INVALID_CARD",
+        message: expect.stringMatching(
+          /^Unknown card .* at position 0 of the stack: separate cards with an ordinary space \(U\+0020\)/u,
+        ) as unknown,
+      });
+    },
+  );
+
   it("name the piece that isn't a card, and its position", () => {
     expect(thrownBy(() => parseStack("AS XX KH"))).toMatchObject({
       message: expect.stringMatching(
@@ -537,6 +553,19 @@ describe("parseShoe and tryParseShoe", () => {
       code: "INVALID_ARGUMENT",
     });
     expect(tryParseShoe(asText(value))).toBeUndefined();
+  });
+
+  it.each([
+    ["1 part", "AS KH|1"],
+    ["4 parts", "AS | 1 | KH | 10D"],
+    ["an empty discard pile", "AS KH | 1 | "],
+  ])("say they found %s where a shoe's parts should be", (found, text) => {
+    expect(thrownBy(() => parseShoe(text))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message: expect.stringMatching(
+        new RegExp(`^Invalid shoe text .*, but found ${found}$`, "u"),
+      ) as unknown,
+    });
   });
 
   it("name what's wrong, and where", () => {
