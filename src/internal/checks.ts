@@ -13,6 +13,14 @@ import { display } from "./display.ts";
 // The `unknown…` functions and `notInOrder` only build the error, for a value
 // a lookup has already failed to find.
 
+/** The longest an array can be, 2³² − 1: the most cards a stack or shoe can hold, and the most hands a deal can give. */
+export const MAX_ARRAY_LENGTH: number = 2 ** 32 - 1;
+
+/** Writes a number of cards for an error message, such as "1 card" or "52 cards". */
+export function cardCount(count: number): string {
+  return `${String(count)} ${count === 1 ? "card" : "cards"}`;
+}
+
 /** Whether a value is an integer from `min` to `max`, the one test behind every count and size check. */
 function isInteger(value: unknown, min: number, max = Infinity): boolean {
   return (
@@ -146,6 +154,20 @@ export function textProblem(
     : new InvalidArgumentError(
         `Invalid text ${display(value)}: expected a string, such as ${JSON.stringify(example)}`,
       );
+}
+
+/** Returns the error for `value`, named `name` in the message, when `total` cards are more than an array can hold, or `undefined` when they fit; `describe` says what would hold them, such as "6 decks of 52 cards", and is called only when they don't fit. */
+export function tooManyCards(
+  total: number,
+  name: string,
+  value: unknown,
+  describe: () => string,
+): InvalidArgumentError | undefined {
+  return total > MAX_ARRAY_LENGTH
+    ? new InvalidArgumentError(
+        `Invalid ${name} ${display(value)}: ${describe()} would hold more cards than an array can`,
+      )
+    : undefined;
 }
 
 /** A trait of a card that an order lists: its rank or its suit. */

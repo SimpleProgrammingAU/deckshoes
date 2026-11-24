@@ -8,6 +8,7 @@ import {
   arraySubclasses,
   asStack,
   counted,
+  holes,
   isPlainFrozen,
   nonArrays,
   sameValues,
@@ -506,6 +507,31 @@ describe("insert", () => {
   it.each(nonArrays())("rejects %s as the cards", (_label, cards) => {
     expect(thrownBy(() => insert(hand, asStack(cards), 0))).toMatchObject({
       code: "INVALID_ARGUMENT",
+    });
+  });
+
+  it.each([
+    ["at the top", 0],
+    ["at the bottom", Position.BOTTOM],
+    ["at random", Position.RANDOM],
+  ] as const)(
+    "rejects cards that would make a stack longer than an array can be, %s, before drawing a position",
+    (_label, position) => {
+      const random = counted(() => 0.5);
+      expect(
+        thrownBy(() => insert([ACE], holes(2 ** 32 - 1), position, { random })),
+      ).toMatchObject({ code: "INVALID_ARGUMENT" });
+      expect(random.calls).toBe(0);
+    },
+  );
+
+  it("says card for a one-card stack, and cards otherwise, when the cards won't fit", () => {
+    expect(thrownBy(() => insert([ACE], holes(2 ** 32 - 1), 0))).toMatchObject({
+      message:
+        "Invalid cards (array): a stack of 1 card with 4294967295 put into it would hold more cards than an array can",
+    });
+    expect(thrownBy(() => insert(hand, holes(2 ** 32 - 3), 0))).toMatchObject({
+      message: expect.stringContaining("a stack of 3 cards with") as unknown,
     });
   });
 

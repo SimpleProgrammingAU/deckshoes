@@ -4,6 +4,7 @@ import type { CardStack } from "./stack.ts";
 import { InvalidArgumentError } from "./errors.ts";
 import {
   countProblem,
+  MAX_ARRAY_LENGTH,
   optionsProblem,
   shortfall,
   sizeProblem,
@@ -11,9 +12,6 @@ import {
 } from "./internal/checks.ts";
 import { display } from "./internal/display.ts";
 import { copyStack } from "./internal/stack.ts";
-
-/** The most hands a deal can have: the longest an array can be. */
-const MAX_HANDS = 2 ** 32 - 1;
 
 /**
  * The named value {@link deal} takes as a hand size, besides a number of
@@ -326,7 +324,7 @@ export function deal<C>(
 ): DealResult<C> {
   const problem =
     stackProblem(deck) ??
-    countProblem(handCount, "hand count", 1, MAX_HANDS) ??
+    countProblem(handCount, "hand count", 1, MAX_ARRAY_LENGTH) ??
     sizeProblem(
       handSize,
       "hand size",
