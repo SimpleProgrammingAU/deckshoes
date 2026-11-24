@@ -49,7 +49,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's coming in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do shoes with a cut card, burn cards and a discard pile, and the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do shoes with a cut card, burn cards and a discard pile, saving and loading as JSON or compact strings, and the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -68,7 +68,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Planned for 1.0: serialisation. After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -574,15 +574,104 @@ chain(groups[3] ?? [])
   .value(); // => [card("A", "S"), card("2", "S")]
 ```
 
+## Saving and loading
+
+Cards, stacks and shoes are plain data, so `JSON.stringify` saves them: a card as its `rank`, `suit` and `color`, a stack as an array of cards, and a shoe as its `cards`, `cutCard` and `discardPile`. But what `JSON.parse` gives back is plain objects, which aren't `===` to any card. `cardFromJSON`, `stackFromJSON` and `shoeFromJSON` load them back as the real cards.
+
+They take the parsed value rather than the text, so you can parse a saved game once and load each part of it. Cards cloned by `structuredClone` or `postMessage`, or taken from a second install of deckshoes, load the same way. A card needs its rank and suit exactly as `card()` takes them, so ten is `"10"`, and its suit's colour; any other field is ignored.
+
+```ts
+import {
+  cardFromJSON,
+  dealFromShoe,
+  seededRandom,
+  shoe,
+  shoeFromJSON,
+  stackFromJSON,
+} from "deckshoes";
+import { standard52 } from "deckshoes/presets";
+
+const sixDecks = shoe(standard52(), 6, { random: seededRandom(42) });
+const { hands, shoe: dealt } = dealFromShoe(sixDecks, 2, 2);
+
+// Save the game as JSON, then load each part of it.
+const saved = JSON.stringify({ hands, shoe: dealt });
+const state = JSON.parse(saved) as { hands: unknown[]; shoe: unknown };
+const loaded = {
+  hands: state.hands.map((hand) => stackFromJSON(hand)),
+  shoe: shoeFromJSON(state.shoe),
+};
+loaded; // => { hands, shoe: dealt }
+loaded.shoe.cards[0] === dealt.cards[0]; // => true
+
+// A card's colour has to be its suit's.
+cardFromJSON({ rank: "A", suit: "S", color: "red" }); // throws INVALID_CARD
+```
+
+### Compact strings
+
+For logs and URLs, `formatStack` writes a stack as a compact string: its cards top first, separated by single spaces, such as `"AS 10H KD"`. Cards are in short notation unless you choose `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`; a card's name has spaces in it, so it can't be used.
+
+`formatShoe` writes a shoe as `cards | cut card's position | discard pile`:
+
+- **The cards**, top first, as `formatStack` writes them.
+- **The cut card's position**: the number of cards still to be dealt before the cut card is reached, and 0 once it has been.
+- **The discard pile**, written as the cards are. When it's empty, it's left out with the `" | "` before it.
+
+So `"AS 10H KD | 2 | 2C"` is a shoe of three cards with the cut card below the ten, and the two of clubs on the discard pile.
+
+`parseStack` and `parseShoe` read them back. Each card is read as `parseCard` reads it, so notations and case can mix, but nothing else is read: one space between cards, none around them, and exactly `" | "` between a shoe's parts. A shoe with no cards left is written starting with a space, as `" | 0 | 2C"`, so don't trim it. Text that isn't a stack or a shoe makes them throw, and makes `tryParseStack` and `tryParseShoe` return `undefined`.
+
+```ts
+import {
+  burn,
+  card,
+  formatShoe,
+  formatStack,
+  Notation,
+  parseShoe,
+  parseStack,
+  tryParseStack,
+} from "deckshoes";
+
+const hand = [card("A", "S"), card("10", "H"), card("K", "D")];
+formatStack(hand); // => "AS 10H KD"
+formatStack(hand, { notation: Notation.SYMBOL }); // => "A♠ 10♥ K♦"
+parseStack("as 10♥ 🃎"); // => hand
+
+const threeCards = { cards: hand, cutCard: 2, discardPile: [] };
+formatShoe(threeCards); // => "AS 10H KD | 2"
+const burned = formatShoe(burn(threeCards));
+burned; // => "10H KD | 1 | AS"
+parseShoe(burned); // => burn(threeCards)
+
+// One space between cards, none around them, and " | " between a shoe's parts.
+parseStack("AS  10H"); // throws INVALID_CARD
+tryParseStack("AS, 10H"); // => undefined
+parseShoe("10H KD|1|AS"); // throws INVALID_ARGUMENT
+```
+
+### Saving a game safely
+
+A saved shoe gives away every card to come, and anyone who can change it can stack it. Keep unplayed cards on a server. If a shoe has to travel through the client, such as in a URL, encrypt it with a key the client never sees, such as with Web Crypto's AES-GCM, which also detects tampering.
+
+A random source isn't saved with a shoe, so a loaded shoe reshuffles with whatever source you pass:
+
+- **The secure default:** nothing changes. Use it in real games.
+- **The original seed again:** `seededRandom(seed)` starts its sequence from the beginning, so the loaded game's reshuffles repeat the first ones that seed gave, not the ones the saved game would have had next.
+- **A new seed of your own:** the game carries on, reproducibly from the saved shoe and that seed, but it isn't the game the original seed would have played. To make a loaded game repeatable, save the seed you'll use next with the shoe, and reshuffle with `seededRandom(thatSeed)` after loading.
+
+Choose seeds the way you'd choose any secret: anyone who knows or guesses a seed, such as one taken from the date, knows every shuffle it gives.
+
 ## Error handling
 
 Every error deckshoes throws extends `DeckshoesError` and carries a stable `code`. Branch on the code rather than the message, since messages can be reworded in any release.
 
-| Code                 | Class                    | Thrown when                                                                                                                                                                                                                      |
-| -------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, position, seed or option is out of range, a stack isn't an array, a card to remove isn't in the stack, a rank or suit order repeats an entry, has a hole, or lacks a card's rank or suit, or a random source misbehaves |
-| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised                                                                                                                                                                         |
-| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                                                                                                                                                       |
+| Code                 | Class                    | Thrown when                                                                                                                                                                                                                                                                      |
+| -------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `INVALID_ARGUMENT`   | `InvalidArgumentError`   | A count, position, seed or option is out of range, a stack isn't an array, a shoe or a shoe's compact string is malformed, a card to remove isn't in the stack, a rank or suit order repeats an entry, has a hole, or lacks a card's rank or suit, or a random source misbehaves |
+| `INVALID_CARD`       | `InvalidCardError`       | A rank, suit, card, or a card's text can't be recognised, or a saved card's colour isn't its suit's                                                                                                                                                                              |
+| `INSUFFICIENT_CARDS` | `InsufficientCardsError` | An operation needs more cards than there are (has details)                                                                                                                                                                                                                       |
 
 Use `isDeckshoesError` to check an unknown value. It narrows the type, and unlike `instanceof` it still works if your app ends up with deckshoes installed twice.
 
@@ -609,7 +698,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 - **Runtimes:** Node.js 22.12+, Deno, Bun, and current browsers. The library doesn't use any Node.js APIs.
 - **TypeScript:** types are included. Strict mode is recommended.
 - **Randomness:** the default random source uses the global `crypto.getRandomValues`, which Node.js 22.12+, Deno, Bun and current browsers all have. Where it's missing or incomplete, such as React Native without a polyfill, a shuffle without a `random` option throws the runtime's own error, such as a `ReferenceError` or `TypeError`, rather than a deckshoes error. Polyfill `crypto.getRandomValues`, or pass a `random` source.
-- **One install per app.** If you publish a library that uses deckshoes, list it in `peerDependencies` so your users' apps get one install. Two installs still work side by side, but their cards aren't `===` to each other; `isDeckshoesError` recognises errors from both if they share a major version.
+- **One install per app.** If you publish a library that uses deckshoes, list it in `peerDependencies` so your users' apps get one install. Two installs still work side by side, but their cards aren't `===` to each other, so pass one install's cards through `stackFromJSON` to use them with the other; `isDeckshoesError` recognises errors from both if they share a major version.
 
 ## Documentation
 
