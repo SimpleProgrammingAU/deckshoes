@@ -1,10 +1,12 @@
 import type { Card, Rank, Suit } from "../card.ts";
+import type { Notation } from "../notation.ts";
 
 import { rankName, suitName } from "../names.ts";
 import { CARD_TABLE } from "./card-table.ts";
+import { lookup } from "./lookup.ts";
 
 /** The symbol each standard suit is written with. */
-export const SYMBOLS: Readonly<Record<Suit, string>> = {
+const SYMBOLS: Readonly<Record<Suit, string>> = {
   S: "♠",
   H: "♥",
   D: "♦",
@@ -51,11 +53,19 @@ const RANK_COLUMNS: Readonly<Record<Rank, number>> = {
 };
 
 /** Returns a standard card's character from Unicode's Playing Cards block, such as 🂡 for the ace of spades. */
-export function unicodeCharacter(card: Card): string {
+function unicodeCharacter(card: Card): string {
   return String.fromCodePoint(
     BLOCK_START + SUIT_ROWS[card.suit] + RANK_COLUMNS[card.rank],
   );
 }
+
+/** How each notation but the card's name writes a card, keyed by the notation's value. Names have spaces, so a compact string can't use them, and `formatCard` writes them itself. */
+export const WRITERS: ReadonlyMap<unknown, (card: Card) => string> =
+  /* @__PURE__ */ lookup<Exclude<Notation, "name">, (card: Card) => string>({
+    short: ({ rank, suit }) => `${rank}${suit}`,
+    symbol: ({ rank, suit }) => `${rank}${SYMBOLS[suit]}`,
+    "unicode character": unicodeCharacter,
+  });
 
 /** Builds the table of every text that parsing reads, lower-cased for A–Z, with the card it names. */
 function createTextTable(): ReadonlyMap<string, Card> {

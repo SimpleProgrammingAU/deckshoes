@@ -2,11 +2,7 @@ import { type Card, isCard } from "./card.ts";
 import { InvalidArgumentError, InvalidCardError } from "./errors.ts";
 import { optionsProblem } from "./internal/checks.ts";
 import { display } from "./internal/display.ts";
-import {
-  readCard,
-  SYMBOLS,
-  unicodeCharacter,
-} from "./internal/notation-table.ts";
+import { readCard, WRITERS } from "./internal/notation-table.ts";
 import { rankName, suitName } from "./names.ts";
 
 /**
@@ -258,23 +254,14 @@ export function formatCard(
   // and a getter could give the check one value and the text another.
   const { notation = Notation.SHORT }: Readonly<{ notation?: unknown }> =
     options;
-  switch (notation) {
-    case Notation.NAME: {
-      return `${rankName(card.rank)} of ${suitName(card.suit)}`;
-    }
-    case Notation.SHORT: {
-      return `${card.rank}${card.suit}`;
-    }
-    case Notation.SYMBOL: {
-      return `${card.rank}${SYMBOLS[card.suit]}`;
-    }
-    case Notation.UNICODE_CHARACTER: {
-      return unicodeCharacter(card);
-    }
-    default: {
-      throw new InvalidArgumentError(
-        `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL, Notation.NAME or Notation.UNICODE_CHARACTER ("unicode character")`,
-      );
-    }
+  if (notation === Notation.NAME) {
+    return `${rankName(card.rank)} of ${suitName(card.suit)}`;
   }
+  const write = WRITERS.get(notation);
+  if (write === undefined) {
+    throw new InvalidArgumentError(
+      `Invalid notation option ${display(notation)}: expected Notation.SHORT, Notation.SYMBOL, Notation.NAME or Notation.UNICODE_CHARACTER ("unicode character")`,
+    );
+  }
+  return write(card);
 }
