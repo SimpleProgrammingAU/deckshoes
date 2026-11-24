@@ -104,6 +104,10 @@ _Avoid_: NDO, factory order
 **Stripped deck**:
 A deck made by removing ranks from the standard 52, such as the Piquet and Euchre presets. The cards left stay in new deck order.
 
+**Compact string**:
+A stack written as text: its cards top first, separated by single spaces, such as `AS 10H KD`. A shoe's adds its cut card's position in the stack before it, and then its discard pile, each after a bar: `AS 10H KD | 2 | 2C`.
+_Avoid_: stack string, card list
+
 ## Actions
 
 **Stack operation**:
