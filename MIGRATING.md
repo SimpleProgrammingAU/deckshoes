@@ -11,7 +11,7 @@ The 0.x packages on npm held their README and tests but no compiled code, so thi
 - **Strings, not enums.** Suits are `"S"`, `"H"`, `"D"` and `"C"`, and colours are `"red"` and `"black"`, where 0.4 had the `Suit` and `Color` enums.
 - **Draws come from the top.** 0.4 drew a random card each time. In 1.0 you shuffle once, with a random source you can seed, and then draw from the top.
 - **Errors carry codes.** Every error 1.0 throws extends `DeckshoesError` and has a stable `code` to branch on.
-- **ESM only.** 1.0 runs on Node.js 22.12 or later, which can also `require()` it, and in Deno, Bun and current browsers. See the README's [Install](./README.md#install) and [Compatibility](./README.md#compatibility) sections.
+- **ESM only.** See the README's [Install](./README.md#install) and [Compatibility](./README.md#compatibility) sections for how to install 1.0 and where it runs.
 
 ## Every 0.4 API at a glance
 
@@ -38,7 +38,7 @@ The 0.x packages on npm held their README and tests but no compiled code, so thi
 | `deck.validateDeck()`                                       | `new Set(deck).size === deck.length`                    | [Decks](#decks)                                    |
 | `Shoe` (the class)                                          | `Shoe`, the type of what `shoe(deck, deckCount)` builds | [Shoes](#shoes)                                    |
 | `new Shoe(deckCount)`                                       | `shoe(standard52(), deckCount)`                         | [Shoes](#shoes)                                    |
-| `new Shoe()`                                                | None: a shoe holds at least one deck                    | [Shoes](#shoes)                                    |
+| `new Shoe()`                                                | None: build the shoe with its decks                     | [Shoes](#shoes)                                    |
 | `shoe.addDeck(deck)`, `shoe.addStandardDecks(count)`        | Choose the decks when you build the shoe                | [Shoes](#shoes)                                    |
 | `shoe.count`                                                | The deck count you passed to `shoe()`                   | [Shoes](#shoes)                                    |
 | `shoe.cardCount`                                            | `shoe.cards.length`                                     | [Shoes](#shoes)                                    |
@@ -63,7 +63,7 @@ const parsed = PlayingCard.parseString("as");
 
 `card(rank, suit)` returns the one object for that card, and its `rank`, `suit` and `color` are properties. TypeScript checks the rank and suit you pass. Values it can't check, such as user input, are checked when the card is made: a rank or suit that isn't standard throws `InvalidCardError`.
 
-`parseCard` reads a card written as text, ignoring the case of A–Z as 0.4's `parseString` did. It reads more than 0.4 did: ten as `T`, suit symbols such as `"A♠"`, names such as `"Ace of Spades"`, and Unicode's playing-card characters. `tryParseCard` returns `undefined` where `parseCard` throws.
+`parseCard` reads a card written as text, ignoring the case of A–Z as 0.4's `parseString` did. It reads more than 0.4 did: ten as `T`, suit symbols such as `"A♠"`, names such as `"Ace of Spades"`, and characters from Unicode's Playing Cards block. `tryParseCard` returns `undefined` where `parseCard` throws.
 
 0.4 took three things that 1.0 doesn't:
 
@@ -107,7 +107,7 @@ const drawn = deck.drawCard(); // A random card
 deck.addCard(drawn);
 ```
 
-A deck is a stack: a frozen array of cards, top first, of the type `CardStack`. So `new Deck()` is `[]`, `count` is `length`, and any array of cards works wherever a stack is taken. Presets give full decks: `standard52()` for `generateDeck()` and `generateStandardDeck()`, and `piquet()` for `generatePiquetDeck()`, both in new deck order.
+A deck is a stack: a frozen array of cards, top first, of the type `CardStack`. So `new Deck()` is `[]`, `count` is `length`, and any array of cards works wherever a stack is taken. Presets give the decks: `standard52()` for `generateDeck()` and `generateStandardDeck()`, and `piquet()` for `generatePiquetDeck()`, both in new deck order.
 
 Every function returns a new stack and leaves the one you passed alone, so keep the result where 0.4 changed the deck:
 
@@ -171,7 +171,7 @@ In 0.4:
 ```ts no-test
 import { Deck, Shoe } from "deckshoes";
 
-const shoe = new Shoe(6); // Six standard decks
+const shoe = new Shoe(6); // Six copies of the standard 52
 shoe.addDeck(Deck.generatePiquetDeck()).addStandardDecks(1);
 shoe.count; // 8 decks
 shoe.cardCount; // The cards in all its decks
@@ -182,7 +182,7 @@ shoe.empty(); // No decks left
 
 A 1.0 shoe is the cards of one or more decks, shuffled together, with a cut card that marks when to reshuffle. `shoe(deck, deckCount)` builds it in one call and returns a frozen `{ cards, cutCard, discardPile }`. Where 0.4's shoe was a list of decks you could add to:
 
-- **Choose the decks when you build it.** `shoe(standard52(), 6)` is six standard decks. For different decks, join them into one stack first, and build a shoe of one copy of it: `shoe([...standard52(), ...piquet()], 1)`. A shoe holds at least one deck, so there's no empty shoe to add to.
+- **Choose the decks when you build it.** `shoe(standard52(), 6)` is six copies of the standard 52. For different decks, join them into one stack first, and build a shoe of one copy of it: `shoe([...standard52(), ...piquet()], 1)`. A shoe can't be added to once it's built, and its deck count is 1 or more.
 - **Count its cards** with `shoe.cards.length`. A shoe doesn't remember how many decks went into it, so keep the count you passed.
 - **Draw** with `drawFromShoe(shoe)`. The shoe was shuffled when it was built, so this draws from the top, and returns the cards drawn and the shoe left.
 - **Start again** by building a new shoe, where 0.4 emptied it. To put the cards you've dealt back in, `discard` them and `reshuffle`.
@@ -209,7 +209,7 @@ const mixed = shoe([...standard52(), ...piquet()], 1, {
 });
 mixed.cards.length; // => 84
 
-// A shoe holds at least one deck.
+// The deck count is 1 or more.
 shoe(standard52(), 0); // throws INVALID_ARGUMENT
 ```
 
@@ -264,11 +264,23 @@ drawOne([]); // => undefined
 
 ## What 1.0.0 doesn't cover
 
+In 0.4:
+
+```ts no-test
+import { Color, Deck, JokerCard } from "deckshoes";
+
+const joker = new JokerCard(Color.black);
+const fiveHundred = Deck.generate500Deck(4); // 43 cards
+const spanish = Deck.generateSpanishDeck(); // 48 cards
+```
+
 1.0.0 has the 52 standard cards and nothing else ([ADR 0003](./docs/adr/0003-standard-cards-are-a-closed-set.md)). Three things from 0.4 aren't in it:
 
 - **Jokers.** `JokerCard` has no 1.0.0 equivalent. Jokers arrive after 1.0 with custom decks ([#39](https://github.com/SimpleProgrammingAU/deckshoes/issues/39), [#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)).
-- **The 500 deck.** 500 is played with a joker, and its six-player deck adds 11s, 12s and 13s, so `Deck.generate500Deck(players)` has no 1.0.0 equivalent either. The 500 deck arrives with custom decks too ([#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)).
-- **The Spanish deck.** 0.4's Spanish deck used French suits: it was a stripped deck, the standard 52 without the 10s. Rebuild it by taking the 10s out of `standard52()`, and the cards left stay in new deck order. The result is an ordinary array rather than a frozen one, which every function takes. 1.0 has no preset by that name, since Spanish decks with Spanish suits arrive later ([#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)), and a French-suited deck would take the name.
+- **The 500 deck.** 0.4's `PlayingCard` took the ranks 11, 12 and 13 for the 500 deck, and they aren't standard ranks. So `Deck.generate500Deck(players)` has no 1.0.0 equivalent either, and the 500 deck arrives with custom decks too ([#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)).
+- **The Spanish deck.** 0.4's Spanish deck used French suits: it was a stripped deck, the standard 52 without the 10s. Rebuild it by taking the 10s out of `standard52()`, and the cards left stay in new deck order. The result is an ordinary array rather than a frozen one, which every function takes. 1.0 has no preset by that name. Spanish decks with Spanish suits arrive later ([#40](https://github.com/SimpleProgrammingAU/deckshoes/issues/40)), and a French-suited deck would take their name.
+
+In 1.0:
 
 ```ts
 import { card } from "deckshoes";
@@ -278,10 +290,14 @@ import { standard52 } from "deckshoes/presets";
 const spanish = standard52().filter(({ rank }) => rank !== "10");
 spanish.length; // => 48
 
-// New deck order, with the jack of hearts straight after the nine.
-spanish.slice(8, 10); // => [card("9", "H"), card("J", "H")]
+// New deck order: the hearts from ace to king, without the 10…
+const hearts = spanish.slice(0, 12).map(({ rank }) => rank);
+hearts.join(" "); // => "A 2 3 4 5 6 7 8 9 J Q K"
+
+// …and the ace of spades at the bottom.
+spanish[47]; // => card("A", "S")
 ```
 
 ## New in 1.0
 
-Much of 1.0 is new, with nothing in 0.4's README or tests to map from. See the README's sections on [dealing](./README.md#dealing), [cutting, inserting and removing](./README.md#cutting-inserting-and-removing), [sorting and grouping](./README.md#sorting-and-grouping), [burning and discarding](./README.md#shoes), [saving and loading](./README.md#saving-and-loading), and [random sources](./README.md#random-sources), which make shuffles repeatable with a seed. The [API reference](https://simpleprogrammingau.github.io/deckshoes/) covers every function.
+Much of 1.0 is new, with nothing in 0.4's README or tests to map from. The README covers [dealing](./README.md#dealing), [cutting, inserting and removing](./README.md#cutting-inserting-and-removing), [sorting and grouping](./README.md#sorting-and-grouping), [burning and discarding](./README.md#shoes), and [saving and loading](./README.md#saving-and-loading). Its [random sources](./README.md#random-sources) make shuffles repeatable with a seed. The [API reference](https://simpleprogrammingau.github.io/deckshoes/) covers every function.
