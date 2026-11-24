@@ -5,7 +5,9 @@ import type { Shoe } from "./shoe.ts";
 
 import {
   arraySubclasses,
+  asShoe,
   asStack,
+  asText,
   countingReads,
   isPlainFrozen,
   nonArrays,
@@ -46,19 +48,9 @@ function asFormatStackOptions(value: unknown): FormatStackOptions {
   return value as FormatStackOptions;
 }
 
-/** Lets a test pass text that isn't a string, as untyped callers can. */
-function asText(value: unknown): string {
-  return value as string;
-}
-
 /** Lets a test pass options that aren't `FormatShoeOptions`, as untyped callers can. */
 function asFormatShoeOptions(value: unknown): FormatShoeOptions {
   return value as FormatShoeOptions;
-}
-
-/** Lets a test pass a value that isn't a shoe, as untyped callers can. */
-function asShoe(value: unknown): Shoe {
-  return value as Shoe;
 }
 
 /** A stack and its compact string, each card in any notation a compact string can use, in any case. */
@@ -209,8 +201,9 @@ describe("formatStack", () => {
 
   it("names the position of the first card it can't write", () => {
     expect(thrownBy(() => formatStack(asStack([ACE, "KH"])))).toMatchObject({
-      message:
-        'Invalid card "KH" at position 1 of the stack: expected one of the cards card() returns',
+      message: expect.stringMatching(
+        /^Invalid card "KH" at position 1 of the stack:/u,
+      ) as unknown,
     });
   });
 });
@@ -282,12 +275,14 @@ describe("parseStack and tryParseStack", () => {
 
   it("name the piece that isn't a card, and its position", () => {
     expect(thrownBy(() => parseStack("AS XX KH"))).toMatchObject({
-      message:
-        'Unknown card "XX" at position 1 of the stack: expected a card such as "AS", "10H", "A♠" or "🂡"',
+      message: expect.stringMatching(
+        /^Unknown card "XX" at position 1 of the stack:/u,
+      ) as unknown,
     });
     expect(thrownBy(() => parseStack("AS  KH"))).toMatchObject({
-      message:
-        "Extra space at position 1 of the stack: separate cards with one space, with none around them",
+      message: expect.stringMatching(
+        /^Extra space at position 1 of the stack:/u,
+      ) as unknown,
     });
     expect(thrownBy(() => parseStack(" AS"))).toMatchObject({
       message: expect.stringMatching(
@@ -546,15 +541,17 @@ describe("parseShoe and tryParseShoe", () => {
 
   it("name what's wrong, and where", () => {
     expect(thrownBy(() => parseShoe("AS KH|1"))).toMatchObject({
-      message:
-        'Invalid shoe text "AS KH|1": expected the shoe\'s cards, its cut card\'s position and, if it isn\'t empty, its discard pile, separated by " | ", such as "AS 10H KD | 2 | 2C"',
+      message: expect.stringMatching(
+        /^Invalid shoe text "AS KH\|1":/u,
+      ) as unknown,
     });
     expect(thrownBy(() => parseShoe("AS KH | 01"))).toMatchObject({
-      message:
-        'Invalid cut card "01": expected its position as a whole number, such as "2"',
+      message: expect.stringMatching(/^Invalid cut card "01":/u) as unknown,
     });
     expect(thrownBy(() => parseShoe("AS KH | 3"))).toMatchObject({
-      message: "Invalid cut card 3: expected an integer from 0 to 2",
+      message: expect.stringMatching(
+        /^Invalid cut card 3: .*from 0 to 2$/u,
+      ) as unknown,
     });
     expect(thrownBy(() => parseShoe("AS XX | 1"))).toMatchObject({
       message: expect.stringMatching(

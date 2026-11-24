@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   arraySubclasses,
+  asShoe,
   asStack,
   countingReads,
   deals,
@@ -39,11 +40,6 @@ import { shuffle } from "./shuffle.ts";
 const ACE = card("A", "S");
 const KING = card("K", "H");
 const TEN = card("10", "D");
-
-/** Lets a test pass a value that isn't a shoe, as untyped callers can. */
-function asShoe(value: unknown): Shoe {
-  return value as Shoe;
-}
 
 /** Lets a test pass options that aren't `ShoeOptions`, as untyped callers can. */
 function asShoeOptions(value: unknown): ShoeOptions {
