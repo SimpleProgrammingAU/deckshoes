@@ -118,7 +118,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 
 - Throw only the classes in `src/errors.ts`; every error has a stable `code`.
 - Throw where user input enters the library, and nowhere else. Internal invariants use an internal `assert()`, which isn't part of the API.
-- A function that reads text gets a non-throwing twin: `parseCard` throws, `tryParseCard` returns `undefined`. Loading saved data, as `stackFromJSON` does, gets none: data that won't load is exceptional ([ADR 0014](./docs/adr/0014-cards-save-as-their-fields-and-stacks-and-shoes-as-compact-strings.md)).
+- A function that reads text gets a non-throwing twin: `parseCard` throws, `tryParseCard` returns `undefined`.
 - A parse function accepts only the forms its doc comment lists ([ADR 0011](./docs/adr/0011-parsing-accepts-only-documented-forms.md)).
 - `INSUFFICIENT_CARDS` is for a stack that runs short of the cards an operation takes. A position outside the stack, or a card to remove that isn't there, is `INVALID_ARGUMENT` ([ADR 0005](./docs/adr/0005-errors-carry-stable-codes-and-a-versioned-brand.md)).
 - When a test checks that something throws, it asserts the error's `code`. Messages can be reworded freely; only tests of how a message is built (such as "1 card" vs "2 cards") look at message text.
