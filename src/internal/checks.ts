@@ -151,16 +151,16 @@ export function notInOrder(
   );
 }
 
-/** Returns the error for a rank that isn't a standard rank. */
-export function unknownRank(value: unknown): InvalidCardError {
+/** Returns the error for a rank that isn't a standard rank; `where` says where its card was, such as " at position 3 of the stack". */
+export function unknownRank(value: unknown, where = ""): InvalidCardError {
   return new InvalidCardError(
-    `Unknown rank ${display(value)}: expected "A", "2" to "10", "J", "Q" or "K"`,
+    `Unknown rank ${display(value)}${where}: expected "A", "2" to "10", "J", "Q" or "K"`,
   );
 }
 
-/** Returns the error for a suit that isn't a standard suit. */
-export function unknownSuit(value: unknown): InvalidCardError {
+/** Returns the error for a suit that isn't a standard suit; `where` says where its card was, as for {@link unknownRank}. */
+export function unknownSuit(value: unknown, where = ""): InvalidCardError {
   return new InvalidCardError(
-    `Unknown suit ${display(value)}: expected "S", "H", "D" or "C"`,
+    `Unknown suit ${display(value)}${where}: expected "S", "H", "D" or "C"`,
   );
 }
