@@ -4,10 +4,12 @@ import { describe, expect, it } from "vitest";
 import {
   arraySubclasses,
   counted,
+  countingReads,
   deals,
   isPlainFrozen,
   nonArrays,
   sameValues,
+  shoes,
   sparseStacks,
   stacks,
   stacksWithCards,
@@ -171,6 +173,25 @@ describe("arraySubclasses", () => {
   );
 });
 
+describe("countingReads", () => {
+  it("counts reads of the length and of each position, and nothing else", () => {
+    const { reads, stack } = countingReads(["a", "b", "c"]);
+    expect(stack.length).toBe(3);
+    expect(stack[0]).toBe("a");
+    expect(stack[2]).toBe("c");
+    expect(stack[2]).toBe("c");
+    expect(stack.at(-1)).toBe("c");
+    expect(reads).toStrictEqual({ length: 2, positions: [1, 0, 3] });
+  });
+
+  it("counts a read past the end at its position", () => {
+    const { reads, stack } = countingReads(["a"]);
+    expect(stack[2]).toBeUndefined();
+    expect(reads.positions[0]).toBe(0);
+    expect(reads.positions[2]).toBe(1);
+  });
+});
+
 describe("isPlainFrozen", () => {
   it("accepts a frozen array", () => {
     expect(isPlainFrozen(Object.freeze(["a"]))).toBe(true);
@@ -246,6 +267,30 @@ describe("stacksWithCounts", () => {
     expect(samples.every(({ stack }) => stack.length === 2)).toBe(true);
     expect(new Set(samples.map(({ count }) => count))).toStrictEqual(
       new Set([0, 1, 2]),
+    );
+  });
+});
+
+describe("shoes", () => {
+  it("puts the cut card anywhere from the top to below the bottom, with any discard pile", () => {
+    // Seeded, because this checks what the arbitrary gives, not a property.
+    const samples = fc.sample(shoes(), { numRuns: 1000, seed: 42 });
+    for (const { cards, cutCard } of samples) {
+      expect(Number.isInteger(cutCard)).toBe(true);
+      expect(cutCard).toBeGreaterThanOrEqual(0);
+      expect(cutCard).toBeLessThanOrEqual(cards.length);
+    }
+    expect(samples.some(({ cutCard }) => cutCard === 0)).toBe(true);
+    expect(
+      samples.some(
+        ({ cards, cutCard }) => cards.length > 0 && cutCard === cards.length,
+      ),
+    ).toBe(true);
+    expect(samples.some(({ discardPile }) => discardPile.length === 0)).toBe(
+      true,
+    );
+    expect(samples.some(({ discardPile }) => discardPile.length > 0)).toBe(
+      true,
     );
   });
 });

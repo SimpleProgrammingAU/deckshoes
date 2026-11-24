@@ -1,6 +1,7 @@
 import fc, { type Arbitrary } from "fast-check";
 
 import type { RandomSource } from "../src/random.ts";
+import type { Shoe } from "../src/shoe.ts";
 import type { ShuffleOptions } from "../src/shuffle.ts";
 import type { CardStack } from "../src/stack.ts";
 
@@ -220,6 +221,25 @@ export function arraySubclasses(): readonly (readonly [
   ];
 }
 
+/** Wraps a stack in a Proxy that counts the reads of its length and of each of its positions. */
+export function countingReads<C>(stack: readonly C[]): {
+  reads: { length: number; positions: number[] };
+  stack: readonly C[];
+} {
+  const reads = { length: 0, positions: stack.map(() => 0) };
+  const proxy = new Proxy(stack, {
+    get(target, key, receiver) {
+      if (key === "length") reads.length += 1;
+      if (typeof key === "string" && /^\d+$/.test(key)) {
+        const position = Number(key);
+        reads.positions[position] = (reads.positions[position] ?? 0) + 1;
+      }
+      return Reflect.get(target, key, receiver) as unknown;
+    },
+  });
+  return { reads, stack: proxy };
+}
+
 /** Whether a value is a frozen array with nothing between it and `Array.prototype`. */
 export function isPlainFrozen(value: unknown): boolean {
   return (
@@ -264,6 +284,17 @@ export function stacksWithCounts(
       stack: fc.constant(stack),
     }),
   );
+}
+
+/** Shoes of standard cards with the cut card anywhere in them, top to bottom, and any discard pile. */
+export function shoes(): Arbitrary<Shoe> {
+  return fc
+    .tuple(stacksWithCounts(), stacks())
+    .map(([{ count, stack }, discardPile]) => ({
+      cards: stack,
+      cutCard: count,
+      discardPile,
+    }));
 }
 
 /** A stack and cards picked from it, each place in the stack at most once, in any order. The stacks come from {@link stacks} unless `from` gives others. */
