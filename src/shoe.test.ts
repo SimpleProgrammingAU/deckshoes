@@ -7,6 +7,7 @@ import {
   asStack,
   countingReads,
   deals,
+  holes,
   isPlainFrozen,
   nonArrays,
   sameValues,
@@ -21,6 +22,7 @@ import { chain } from "./chain.ts";
 import { formatShoe, parseShoe } from "./compact.ts";
 import { deal, HandSize, RunOut } from "./deal.ts";
 import { draw } from "./draw.ts";
+import { isDeckshoesError } from "./errors.ts";
 import { shoeFromJSON } from "./json.ts";
 import { pinochle } from "./presets/pinochle.ts";
 import { standard52 } from "./presets/standard52.ts";
@@ -847,6 +849,30 @@ describe("discard", () => {
       ),
     ).toMatchObject({ code: "INVALID_ARGUMENT" });
   });
+
+  it("rejects cards that would make a discard pile longer than an array can be, with a deckshoes error", () => {
+    const thrown = thrownBy(() =>
+      discard(
+        { cards: [], cutCard: 0, discardPile: [ACE] },
+        holes(2 ** 32 - 1),
+      ),
+    );
+    expect(isDeckshoesError(thrown, "INVALID_ARGUMENT")).toBe(true);
+  });
+
+  it("counts the shoe's cards as well as its discard pile against the limit", () => {
+    expect(
+      thrownBy(() =>
+        discard(
+          { cards: [ACE], cutCard: 0, discardPile: [] },
+          holes(2 ** 32 - 1),
+        ),
+      ),
+    ).toMatchObject({
+      message:
+        "Invalid cards (array): a shoe of 1 card and a discard pile of 0 cards, with 4294967295 discarded, would hold more cards than an array can",
+    });
+  });
 });
 
 describe("reshuffle", () => {
@@ -960,6 +986,18 @@ describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
       expect(isPlainFrozen(result.cards)).toBe(true);
       expect(isPlainFrozen(result.discardPile)).toBe(true);
     }
+  });
+
+  it("rejects a shoe holding more cards than an array can, before copying either stack", () => {
+    expect(
+      thrownBy(() =>
+        use({ cards: holes(2 ** 31), cutCard: 0, discardPile: holes(2 ** 31) }),
+      ),
+    ).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        "Invalid shoe (object): a shoe of 2147483648 cards and a discard pile of 2147483648 cards would hold more cards than an array can",
+    });
   });
 
   it("reads the shoe's cards, cut card and discard pile once each", () => {

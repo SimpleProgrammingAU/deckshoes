@@ -45,7 +45,8 @@ import { copyStack } from "./internal/stack.ts";
  * A shoe without a `discardPile`, such as one written in JavaScript or saved
  * before shoes had one, is read as having an empty one. Every function that
  * takes a shoe checks it, and gives back a shoe holding only `cards`, `cutCard`
- * and `discardPile`, so no other field on it is carried over.
+ * and `discardPile`, so no other field on it is carried over. A shoe holds at
+ * most 2³² − 1 cards, counting its discard pile: the most an array can.
  *
  * Save a shoe with `JSON.stringify` or {@link formatShoe}, and load it with
  * {@link shoeFromJSON} or {@link parseShoe}. A shoe parsed from JSON or cloned
@@ -381,8 +382,9 @@ export function shoe<C>(
  * first, and the `shoe` left, a new frozen shoe.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
  * array of `cards`, a `cutCard` that's an integer from 0 to the number of
- * cards, and a `discardPile` that's an array or left out, or `count` isn't an
- * integer of 0 or more.
+ * cards, and a `discardPile` that's an array or left out, its cards and discard
+ * pile together hold more than 2³² − 1 cards, or `count` isn't an integer of 0
+ * or more.
  * @throws {@link InsufficientCardsError} When `count` is more than the shoe
  * holds.
  *
@@ -453,8 +455,8 @@ export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
  * shoe.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
  * array of `cards`, a `cutCard` that's an integer from 0 to the number of
- * cards, and a `discardPile` that's an array or left out, or when
- * {@link deal} would.
+ * cards, and a `discardPile` that's an array or left out, its cards and discard
+ * pile together hold more than 2³² − 1 cards, or when {@link deal} would.
  * @throws {@link InsufficientCardsError} When {@link deal} would: when the
  * shoe holds too few cards for the deal, unless `runOut` is `RunOut.STOP`.
  *
@@ -540,8 +542,9 @@ export function dealFromShoe<C>(
  * its discard pile.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
  * array of `cards`, a `cutCard` that's an integer from 0 to the number of
- * cards, and a `discardPile` that's an array or left out, or `count` isn't an
- * integer of 0 or more.
+ * cards, and a `discardPile` that's an array or left out, its cards and discard
+ * pile together hold more than 2³² − 1 cards, or `count` isn't an integer of 0
+ * or more.
  * @throws {@link InsufficientCardsError} When `count` is more than the shoe
  * holds.
  *
@@ -607,7 +610,8 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
  * array of `cards`, a `cutCard` that's an integer from 0 to the number of
  * cards, and a `discardPile` that's an array or left out, or `cards` isn't an
- * array.
+ * array. Also when the shoe's cards and discard pile, with `cards`, would hold
+ * more than 2³² − 1 cards, the most an array can.
  *
  * @example
  * ```ts
@@ -634,10 +638,23 @@ export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
   if (checked instanceof InvalidArgumentError) throw checked;
   const problem = cardsProblem(cards);
   if (problem !== undefined) throw problem;
+  // The whole shoe is counted, not only the pile, so the shoe given back is
+  // one that every shoe function takes.
+  const size = checked.cards.length;
+  const piled = checked.discardPile.length;
+  const count = cards.length;
+  const tooBig = tooManyCards(
+    size + piled + count,
+    "cards",
+    cards,
+    () =>
+      `a shoe of ${cardCount(size)} and a discard pile of ${cardCount(piled)}, with ${String(count)} discarded,`,
+  );
+  if (tooBig !== undefined) throw tooBig;
   return Object.freeze({
     cards: Object.freeze(checked.cards),
     cutCard: checked.cutCard,
-    discardPile: Object.freeze(onTopOf(cards, checked.discardPile)),
+    discardPile: Object.freeze(onTopOf(cards, checked.discardPile, count)),
   });
 }
 
@@ -681,8 +698,9 @@ export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
  * `discardPile`.
  * @throws {@link InvalidArgumentError} When `shoe` isn't an object holding an
  * array of `cards`, a `cutCard` that's an integer from 0 to the number of
- * cards, and a `discardPile` that's an array or left out, `options` isn't an
- * object or is an array, its `penetration` isn't a number from 0 to 1, or its
+ * cards, and a `discardPile` that's an array or left out, its cards and discard
+ * pile together hold more than 2³² − 1 cards, `options` isn't an object or is
+ * an array, its `penetration` isn't a number from 0 to 1, or its
  * `random` option isn't a function. Also when the random source returns
  * something other than a number from 0 up to 1, or keeps returning values that
  * have to be rejected.

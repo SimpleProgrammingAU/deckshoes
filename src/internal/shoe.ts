@@ -4,7 +4,12 @@ import type { CardStack } from "../stack.ts";
 
 import { InvalidArgumentError } from "../errors.ts";
 import { shuffle } from "../shuffle.ts";
-import { countProblem, randomProblem } from "./checks.ts";
+import {
+  cardCount,
+  countProblem,
+  randomProblem,
+  tooManyCards,
+} from "./checks.ts";
 import { display } from "./display.ts";
 import { copyStack } from "./stack.ts";
 
@@ -20,7 +25,7 @@ export interface ShuffleSettings {
   readonly random: RandomSource | undefined;
 }
 
-/** Reads a shoe's cards, cut card and discard pile once each, the stacks through `copyStack`, so a getter or a Proxy can't give the check one value and the operation another, and returns them, or the error for something that isn't a shoe. A missing discard pile is read as an empty one (ADR 0013). */
+/** Reads a shoe's cards, cut card and discard pile once each, the stacks through `copyStack`, so a getter or a Proxy can't give the check one value and the operation another, and returns them, or the error for something that isn't a shoe. A missing discard pile is read as an empty one (ADR 0013). A shoe holds at most 2³² − 1 cards with its discard pile, checked before either stack is copied, so a shoe too big for any operation is turned away before it can run the process out of memory. */
 export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
   const value: unknown = shoe;
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -41,13 +46,21 @@ export function readShoe<C>(shoe: Shoe<C>): InvalidArgumentError | Shoe<C> {
     stackFieldProblem(cards, "shoe cards") ??
     stackFieldProblem(discardPile, "discard pile");
   if (problem !== undefined) return problem;
-  const copied = copyStack(cards as CardStack<C>);
+  const size = (cards as CardStack<C>).length;
+  const piled = (discardPile as CardStack<C>).length;
   return (
-    countProblem(cutCard, "cut card", 0, copied.length) ?? {
-      cards: copied,
+    tooManyCards(
+      size + piled,
+      "shoe",
+      value,
+      () =>
+        `a shoe of ${cardCount(size)} and a discard pile of ${cardCount(piled)}`,
+    ) ??
+    countProblem(cutCard, "cut card", 0, size) ?? {
+      cards: copyStack(cards as CardStack<C>, 0, size),
       // `|| 0` turns a cut card of -0 into 0, as every shoe function gives.
       cutCard: (cutCard as number) || 0,
-      discardPile: copyStack(discardPile as CardStack<C>),
+      discardPile: copyStack(discardPile as CardStack<C>, 0, piled),
     }
   );
 }
@@ -78,9 +91,12 @@ export function shoeAfter<C>(
   });
 }
 
-/** `cards` on top of `pile`, each in its order, as one new plain array filled by index, as `copyStack` fills one, so each of `cards` and its length are read once. */
-export function onTopOf<C>(cards: CardStack<C>, pile: CardStack<C>): C[] {
-  const above = cards.length;
+/** `cards` on top of `pile`, each in its order, as one new plain array filled by index, as `copyStack` fills one, so each of `cards` and its length are read once. Pass `above` when the caller has already read the length of `cards`, so it isn't read twice. */
+export function onTopOf<C>(
+  cards: CardStack<C>,
+  pile: CardStack<C>,
+  above: number = cards.length,
+): C[] {
   const below = pile.length;
   // eslint-disable-next-line unicorn/no-new-array -- sized up front, as copyStack does
   const stacked = new Array<C>(above + below);

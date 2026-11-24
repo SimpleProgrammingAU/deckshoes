@@ -120,7 +120,8 @@ export function stackFromJSON(value: unknown): CardStack {
  * @returns A new frozen shoe of the card objects.
  * @throws {@link InvalidArgumentError} When `value` isn't an object holding an
  * array of `cards` and a `cutCard` that's an integer from 0 to the number of
- * cards, or its `discardPile` is there but isn't an array.
+ * cards, or its `discardPile` is there but isn't an array, or its cards and
+ * discard pile together hold more than 2³² − 1 cards.
  * @throws {@link InvalidCardError} When a card in it isn't an object, its
  * `rank` or `suit` isn't standard, or its `color` isn't its suit's colour.
  *
