@@ -1,9 +1,11 @@
 import type { Card } from "../card.ts";
+import type { Shoe } from "../shoe.ts";
 import type { CardStack } from "../stack.ts";
 
 import { isCard } from "../card.ts";
 import { InvalidArgumentError, InvalidCardError } from "../errors.ts";
 import { Notation } from "../notation.ts";
+import { countProblem } from "./checks.ts";
 import { display } from "./display.ts";
 import { readCard, WRITERS } from "./notation-table.ts";
 
@@ -77,4 +79,34 @@ export function readStackText(
     cards[i] = found;
   }
   return Object.freeze(cards);
+}
+
+/** How a shoe's compact string writes its cut card's position: a whole number with no sign or leading zeros. */
+const POSITION = /^(?:0|[1-9]\d*)$/u;
+
+/** Reads a shoe written as a compact string, its cards, cut card's position and discard pile separated by " | ", with an empty pile left out, into a new frozen shoe, or returns the error for text that isn't one. */
+export function readShoeText(
+  text: string,
+): InvalidArgumentError | InvalidCardError | Shoe {
+  const parts = text.split(" | ");
+  if (parts.length < 2 || parts.length > 3 || parts[2] === "") {
+    return new InvalidArgumentError(
+      `Invalid shoe text ${display(text)}: expected the shoe's cards, its cut card's position and, if it isn't empty, its discard pile, separated by " | ", such as "AS 10H KD | 2 | 2C"`,
+    );
+  }
+  const [cardText = "", position = "", pileText = ""] = parts;
+  if (!POSITION.test(position)) {
+    return new InvalidArgumentError(
+      `Invalid cut card ${display(position)}: expected its position as a whole number, such as "2"`,
+    );
+  }
+  const cards = readStackText(cardText, "the shoe's cards");
+  if (cards instanceof InvalidCardError) return cards;
+  const cutCard = Number(position);
+  const problem = countProblem(cutCard, "cut card", 0, cards.length);
+  if (problem !== undefined) return problem;
+  const discardPile = readStackText(pileText, "the discard pile");
+  return discardPile instanceof InvalidCardError
+    ? discardPile
+    : Object.freeze({ cards, cutCard, discardPile });
 }
