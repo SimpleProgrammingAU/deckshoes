@@ -67,7 +67,7 @@ export interface FormatStackOptions {
  * isn't an object or is an array, its `notation` isn't `Notation.SHORT`,
  * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`, or the stack's compact
  * string would be longer than the runtime's longest string: about 2²⁹
- * characters in Node.js, which is about 175 million cards.
+ * characters in Node.js.
  * @throws {@link InvalidCardError} When a card in `stack` isn't one of the
  * cards this install's `card()` returns, such as a cloned card.
  *

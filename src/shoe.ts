@@ -46,7 +46,7 @@ import { copyStack } from "./internal/stack.ts";
  * before shoes had one, is read as having an empty one. Every function that
  * takes a shoe checks it, and gives back a shoe holding only `cards`, `cutCard`
  * and `discardPile`, so no other field on it is carried over. A shoe holds at
- * most 2³² − 1 cards, counting its discard pile: the most an array can.
+ * most 2³² − 1 cards, counting its discard pile.
  *
  * Save a shoe with `JSON.stringify` or {@link formatShoe}, and load it with
  * {@link shoeFromJSON} or {@link parseShoe}. A shoe parsed from JSON or cloned
@@ -611,7 +611,7 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
  * array of `cards`, a `cutCard` that's an integer from 0 to the number of
  * cards, and a `discardPile` that's an array or left out, or `cards` isn't an
  * array. Also when the shoe's cards and discard pile, with `cards`, would hold
- * more than 2³² − 1 cards, the most an array can.
+ * more than 2³² − 1 cards.
  *
  * @example
  * ```ts
