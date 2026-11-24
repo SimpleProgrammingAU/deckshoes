@@ -28,12 +28,26 @@ export function readWriter(
   );
 }
 
-/** Writes each card of a stack, read by index, with `write`, separated by single spaces, or returns the error for the first that isn't one of this install's cards; `name` names the stack in the error, such as "the discard pile". */
+/** What a compact string is written for: the stack or shoe passed in, and the name the error gives it when its compact string would be too long. */
+export interface TextOwner {
+  readonly name: string;
+  readonly value: unknown;
+}
+
+/** Returns the error for a stack or shoe whose compact string would be longer than the runtime's longest string. The limit differs between runtimes and nothing reports it, so it's found by the `RangeError` a concatenation throws. */
+function tooLong({ name, value }: TextOwner): InvalidArgumentError {
+  return new InvalidArgumentError(
+    `Invalid ${name} ${display(value)}: its compact string would be longer than this runtime's longest string`,
+  );
+}
+
+/** Writes each card of a stack, read by index, with `write`, separated by single spaces, or returns the error for the first that isn't one of this install's cards, or for text longer than the runtime's longest string; `name` names the stack in a card's error, such as "the discard pile", and `owner` is what a too-long error names. */
 export function writeStack(
   stack: CardStack<unknown>,
   write: (card: Card) => string,
   name: string,
-): InvalidCardError | string {
+  owner: TextOwner,
+): InvalidArgumentError | InvalidCardError | string {
   let text = "";
   const size = stack.length;
   for (let i = 0; i < size; i++) {
@@ -43,9 +57,43 @@ export function writeStack(
         `Invalid card ${display(card)} at position ${String(i)} of ${name}: expected one of the cards card() returns`,
       );
     }
-    text += i === 0 ? write(card) : ` ${write(card)}`;
+    const piece = write(card);
+    // Only the concatenation is tried, so an error from reading the stack,
+    // such as a getter's, isn't mistaken for the text being too long.
+    try {
+      text += i === 0 ? piece : ` ${piece}`;
+    } catch {
+      return tooLong(owner);
+    }
   }
   return text;
+}
+
+/** Writes a shoe that `readShoe` has read as its compact string: its cards, its cut card's position and, unless it's empty, its discard pile, separated by {@link SHOE_PART_SEPARATOR}. Returns the error for a card that isn't one of this install's cards, or for text longer than the runtime's longest string. */
+export function writeShoe(
+  shoe: Shoe,
+  write: (card: Card) => string,
+): InvalidArgumentError | InvalidCardError | string {
+  const owner = { name: "shoe", value: shoe };
+  const cardText = writeStack(shoe.cards, write, "the shoe's cards", owner);
+  if (typeof cardText !== "string") return cardText;
+  const pileText = writeStack(
+    shoe.discardPile,
+    write,
+    "the discard pile",
+    owner,
+  );
+  if (typeof pileText !== "string") return pileText;
+  const position = String(shoe.cutCard);
+  const hasPile = shoe.discardPile.length > 0;
+  // Each part can fit while the whole doesn't. Only the concatenation is
+  // tried, as in writeStack.
+  try {
+    const text = `${cardText}${SHOE_PART_SEPARATOR}${position}`;
+    return hasPile ? `${text}${SHOE_PART_SEPARATOR}${pileText}` : text;
+  } catch {
+    return tooLong(owner);
+  }
 }
 
 /** Reads cards written as a compact string into a new frozen stack, or returns the error for the first piece between spaces that isn't a card; `name` names the stack in the error, such as "the stack". An empty string is an empty stack. */

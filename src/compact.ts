@@ -13,7 +13,7 @@ import {
   readShoeText,
   readStackText,
   readWriter,
-  SHOE_PART_SEPARATOR,
+  writeShoe,
   writeStack,
 } from "./internal/compact.ts";
 import { readShoe } from "./internal/shoe.ts";
@@ -64,8 +64,10 @@ export interface FormatStackOptions {
  * @param options - Settings for the text: its notation.
  * @returns The stack's cards, top first, separated by single spaces.
  * @throws {@link InvalidArgumentError} When `stack` isn't an array, `options`
- * isn't an object or is an array, or its `notation` isn't `Notation.SHORT`,
- * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`.
+ * isn't an object or is an array, its `notation` isn't `Notation.SHORT`,
+ * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`, or the stack's compact
+ * string would be longer than the runtime's longest string: about 2²⁹
+ * characters in Node.js, which is about 175 million cards.
  * @throws {@link InvalidCardError} When a card in `stack` isn't one of the
  * cards this install's `card()` returns, such as a cloned card.
  *
@@ -96,8 +98,11 @@ export function formatStack(
   if (problem !== undefined) throw problem;
   const write = readWriter(options);
   if (write instanceof InvalidArgumentError) throw write;
-  const text = writeStack(stack, write, "the stack");
-  if (text instanceof InvalidCardError) throw text;
+  const text = writeStack(stack, write, "the stack", {
+    name: "stack",
+    value: stack,
+  });
+  if (typeof text !== "string") throw text;
   return text;
 }
 
@@ -230,8 +235,10 @@ export interface FormatShoeOptions {
  * array of `cards` and a `cutCard` that's an integer from 0 to the number of
  * cards, or its `discardPile` is there but isn't an array, or its cards and
  * discard pile together hold more than 2³² − 1 cards. Also when `options`
- * isn't an object or is an array, or its `notation` isn't `Notation.SHORT`,
- * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`.
+ * isn't an object or is an array, its `notation` isn't `Notation.SHORT`,
+ * `Notation.SYMBOL` or `Notation.UNICODE_CHARACTER`, or the shoe's compact
+ * string would be longer than the runtime's longest string, as for
+ * {@link formatStack}.
  * @throws {@link InvalidCardError} When a card in the shoe isn't one of the
  * cards this install's `card()` returns, such as a cloned card.
  *
@@ -267,14 +274,9 @@ export function formatShoe(
   if (problem !== undefined) throw problem;
   const write = readWriter(options);
   if (write instanceof InvalidArgumentError) throw write;
-  const cardText = writeStack(checked.cards, write, "the shoe's cards");
-  if (cardText instanceof InvalidCardError) throw cardText;
-  const pileText = writeStack(checked.discardPile, write, "the discard pile");
-  if (pileText instanceof InvalidCardError) throw pileText;
-  const text = `${cardText}${SHOE_PART_SEPARATOR}${String(checked.cutCard)}`;
-  return checked.discardPile.length === 0
-    ? text
-    : `${text}${SHOE_PART_SEPARATOR}${pileText}`;
+  const text = writeShoe(checked, write);
+  if (typeof text !== "string") throw text;
+  return text;
 }
 
 /**
