@@ -206,7 +206,7 @@ export function tryParseCard(text: string): Card | undefined {
  * Only the 52 card objects that this install's `card()` returns can be
  * written. A cloned card, such as one sent with `postMessage`, isn't one of
  * them, and nor is a card from another install of deckshoes, such as one a
- * dependency bundles. Pass its rank and suit back through `card()` first.
+ * dependency bundles. Load it with {@link cardFromJSON} first.
  *
  * @param card - The card to write.
  * @param options - Settings for the text: its notation.
@@ -219,7 +219,13 @@ export function tryParseCard(text: string): Card | undefined {
  *
  * @example
  * ```ts
- * import { card, formatCard, Notation, parseCard } from "deckshoes";
+ * import {
+ *   card,
+ *   cardFromJSON,
+ *   formatCard,
+ *   Notation,
+ *   parseCard,
+ * } from "deckshoes";
  *
  * const ten = card("10", "H");
  * formatCard(ten); // => "10H"
@@ -230,10 +236,10 @@ export function tryParseCard(text: string): Card | undefined {
  * // Parsing reads every notation back.
  * parseCard(formatCard(ten, { notation: Notation.NAME })) === ten; // => true
  *
- * // A cloned card has to go back through card() first.
+ * // A cloned card has to be loaded first.
  * const clone = structuredClone(ten);
  * formatCard(clone); // throws INVALID_CARD
- * formatCard(card(clone.rank, clone.suit)); // => "10H"
+ * formatCard(cardFromJSON(clone)); // => "10H"
  * ```
  *
  * @since 1.0.0

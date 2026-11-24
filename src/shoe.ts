@@ -48,6 +48,10 @@ const MAX_CARDS = 2 ** 32 - 1;
  * takes a shoe checks it, and gives back a shoe holding only `cards`, `cutCard`
  * and `discardPile`, so no other field on it is carried over.
  *
+ * Save a shoe with `JSON.stringify` or {@link formatShoe}, and load it with
+ * {@link shoeFromJSON} or {@link parseShoe}. A shoe parsed from JSON or cloned
+ * holds plain objects rather than cards until it's loaded.
+ *
  * @typeParam C - The type of card the shoe holds: a standard {@link Card}
  * unless you say otherwise.
  *
