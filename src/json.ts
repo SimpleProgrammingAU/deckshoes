@@ -109,8 +109,11 @@ export function stackFromJSON(value: unknown): CardStack {
  * A random source isn't saved with a shoe, so a loaded shoe reshuffles with
  * whatever source you pass. The secure default needs nothing more. A fresh
  * {@link seededRandom} source with the original seed starts its sequence again,
- * repeating that seed's first reshuffles rather than carrying on, so save the
- * seed to use next with the shoe to make a loaded game repeatable.
+ * repeating that seed's first reshuffles rather than carrying on. A new seed
+ * carries the game on reproducibly, but not as the original seed would have,
+ * so to make a loaded game repeatable, save the seed to use next with the
+ * shoe. Anyone who knows or guesses a seed knows every shuffle it gives, so
+ * choose seeds as you would any secret.
  *
  * @param value - The shoe's JSON, already parsed: an object holding its
  * `cards`, `cutCard` and `discardPile`.
