@@ -61,7 +61,10 @@ function unicodeCharacter(card: Card): string {
 
 /** How each notation but the card's name writes a card, keyed by the notation's value. Names have spaces, so a compact string can't use them, and `formatCard` writes them itself. */
 export const WRITERS: ReadonlyMap<unknown, (card: Card) => string> =
-  /* @__PURE__ */ lookup<Exclude<Notation, "name">, (card: Card) => string>({
+  /* @__PURE__ */ lookup<
+    Exclude<Notation, typeof Notation.NAME>,
+    (card: Card) => string
+  >({
     short: ({ rank, suit }) => `${rank}${suit}`,
     symbol: ({ rank, suit }) => `${rank}${SYMBOLS[suit]}`,
     "unicode character": unicodeCharacter,

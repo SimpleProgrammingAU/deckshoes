@@ -136,6 +136,18 @@ export function stackProblem(value: unknown): InvalidArgumentError | undefined {
       );
 }
 
+/** Returns the error for compact-string text that isn't a string, or `undefined` for text that is; `example` shows valid text in the message. */
+export function textProblem(
+  value: unknown,
+  example: string,
+): InvalidArgumentError | undefined {
+  return typeof value === "string"
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid text ${display(value)}: expected a string, such as ${JSON.stringify(example)}`,
+      );
+}
+
 /** A trait of a card that an order lists: its rank or its suit. */
 export type Trait = "rank" | "suit";
 
