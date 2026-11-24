@@ -3,12 +3,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type ViteUserConfig } from "vitest/config";
 
+import { MARKDOWN_FILES } from "./scripts/doctest-sources.ts";
+
 const root = fileURLToPath(new URL(".", import.meta.url));
-const readme = path.join(root, "README.md");
+const markdownFiles = new Set(
+  MARKDOWN_FILES.map((file) => path.join(root, file)),
+);
 
 /** Whether a changed file can contain examples that scripts/doctest.ts reads. */
 function hasExamples(file: string): boolean {
-  if (file === readme) return true;
+  if (markdownFiles.has(file)) return true;
   const relative = path.relative(root, file);
   return (
     relative.startsWith(`src${path.sep}`) &&
@@ -23,7 +27,7 @@ const config: ViteUserConfig = defineConfig({
       // In watch mode, regenerate .doctest/ when an example changes; Vitest
       // then reruns the affected doctests.
       configureServer(server) {
-        server.watcher.add(readme);
+        server.watcher.add([...markdownFiles]);
         server.watcher.on("all", (_event, file) => {
           if (!hasExamples(file)) return;
           const result = spawnSync(process.execPath, ["scripts/doctest.ts"], {

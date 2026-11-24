@@ -4,7 +4,7 @@
  *
  * Sources:
  * - fenced `ts` blocks inside `@example` tags in `src/**\/*.ts`
- * - fenced `ts` blocks in the Markdown files listed in `MARKDOWN_FILES`
+ * - fenced `ts` blocks in the Markdown files that `doctest-sources.ts` lists
  *
  * Each block becomes one file under `.doctest/`. Imports are hoisted to the top
  * of the file and the rest of the block runs inside a `test()`. A comment at
@@ -34,6 +34,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { MARKDOWN_FILES } from "./doctest-sources.ts";
+
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.join(ROOT, ".doctest");
 const SOURCE_GLOB = "src/**/*.ts";
@@ -42,7 +44,6 @@ const SOURCE_IGNORE = [
   "src/**/*.test-d.ts",
   "src/**/*.bench.ts",
 ];
-const MARKDOWN_FILES = ["README.md"];
 
 interface Example {
   /** The code inside the fence, one entry per line. */
