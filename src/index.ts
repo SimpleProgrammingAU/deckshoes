@@ -16,9 +16,13 @@ export {
 } from "./card.ts";
 export { chain, type Chain, type TerminatedChain } from "./chain.ts";
 export {
+  formatShoe,
+  type FormatShoeOptions,
   formatStack,
   type FormatStackOptions,
+  parseShoe,
   parseStack,
+  tryParseShoe,
   tryParseStack,
 } from "./compact.ts";
 export {

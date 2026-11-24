@@ -17,6 +17,7 @@ import {
 } from "../test/helpers.ts";
 import { type Card, card } from "./card.ts";
 import { chain } from "./chain.ts";
+import { formatShoe, parseShoe } from "./compact.ts";
 import { deal, HandSize, RunOut } from "./deal.ts";
 import { draw } from "./draw.ts";
 import { shoeFromJSON } from "./json.ts";
@@ -945,6 +946,7 @@ describe.each<readonly [name: string, use: (from: Shoe) => Shoe]>([
   ["discard", (from) => discard(from, [ACE])],
   ["reshuffle", (from) => reshuffle(from, { random: seededRandom(1) })],
   ["shoeFromJSON", (from) => shoeFromJSON(from)],
+  ["formatShoe, read back by parseShoe", (from) => parseShoe(formatShoe(from))],
 ])("%s", (_name, use) => {
   it("takes a shoe written by hand, whose stacks are array subclasses", () => {
     const expected = use({

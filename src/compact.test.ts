@@ -1,6 +1,8 @@
 import fc, { type Arbitrary } from "fast-check";
 import { describe, expect, it } from "vitest";
 
+import type { Shoe } from "./shoe.ts";
+
 import {
   arraySubclasses,
   asStack,
@@ -8,14 +10,19 @@ import {
   isPlainFrozen,
   nonArrays,
   sameValues,
+  shoes,
   stacks,
   thrownBy,
 } from "../test/helpers.ts";
 import { type Card, card } from "./card.ts";
 import {
+  formatShoe,
+  type FormatShoeOptions,
   formatStack,
   type FormatStackOptions,
+  parseShoe,
   parseStack,
+  tryParseShoe,
   tryParseStack,
 } from "./compact.ts";
 import { formatCard, Notation } from "./notation.ts";
@@ -42,6 +49,16 @@ function asFormatStackOptions(value: unknown): FormatStackOptions {
 /** Lets a test pass text that isn't a string, as untyped callers can. */
 function asText(value: unknown): string {
   return value as string;
+}
+
+/** Lets a test pass options that aren't `FormatShoeOptions`, as untyped callers can. */
+function asFormatShoeOptions(value: unknown): FormatShoeOptions {
+  return value as FormatShoeOptions;
+}
+
+/** Lets a test pass a value that isn't a shoe, as untyped callers can. */
+function asShoe(value: unknown): Shoe {
+  return value as Shoe;
 }
 
 /** A stack and its compact string, each card in any notation a compact string can use, in any case. */
@@ -275,6 +292,278 @@ describe("parseStack and tryParseStack", () => {
     expect(thrownBy(() => parseStack(" AS"))).toMatchObject({
       message: expect.stringMatching(
         /^Extra space at position 0 of the stack:/u,
+      ) as unknown,
+    });
+  });
+});
+
+describe("formatShoe", () => {
+  const threeCards: Shoe = {
+    cards: [ACE, KING, TEN],
+    cutCard: 2,
+    discardPile: [card("2", "C"), card("7", "D")],
+  };
+
+  it("writes the cards, the cut card's position and the discard pile, separated by bars", () => {
+    expect(formatShoe(threeCards)).toBe("AS KH 10D | 2 | 2C 7D");
+    expect(formatShoe(threeCards, { notation: Notation.SYMBOL })).toBe(
+      "A♠ K♥ 10♦ | 2 | 2♣ 7♦",
+    );
+    expect(
+      formatShoe(threeCards, { notation: Notation.UNICODE_CHARACTER }),
+    ).toBe("🂡 🂾 🃊 | 2 | 🃒 🃇");
+  });
+
+  it("leaves out an empty discard pile, and the bar before it", () => {
+    expect(formatShoe({ ...threeCards, discardPile: [] })).toBe(
+      "AS KH 10D | 2",
+    );
+    expect(formatShoe(asShoe({ cards: [ACE], cutCard: 0 }))).toBe("AS | 0");
+  });
+
+  it("starts with a space when the shoe has no cards left", () => {
+    expect(formatShoe({ cards: [], cutCard: 0, discardPile: [] })).toBe(" | 0");
+    expect(formatShoe({ cards: [], cutCard: 0, discardPile: [ACE] })).toBe(
+      " | 0 | AS",
+    );
+  });
+
+  it("writes the cards and the pile as formatStack does", () => {
+    fc.assert(
+      fc.property(
+        shoes(),
+        fc.constantFrom(...COMPACT_NOTATIONS),
+        (shoe, notation) => {
+          const parts = [
+            formatStack(shoe.cards, { notation }),
+            String(shoe.cutCard),
+          ];
+          if (shoe.discardPile.length > 0) {
+            parts.push(formatStack(shoe.discardPile, { notation }));
+          }
+          expect(formatShoe(shoe, { notation })).toBe(parts.join(" | "));
+        },
+      ),
+    );
+  });
+
+  it("is read back to the same shoe by parseShoe, in every notation", () => {
+    fc.assert(
+      fc.property(
+        shoes(),
+        fc.constantFrom(...COMPACT_NOTATIONS),
+        (shoe, notation) => {
+          const read = parseShoe(formatShoe(shoe, { notation }));
+          expect(sameValues(read.cards, shoe.cards)).toBe(true);
+          expect(read.cutCard).toBe(shoe.cutCard);
+          expect(sameValues(read.discardPile, shoe.discardPile)).toBe(true);
+        },
+      ),
+    );
+  });
+
+  it("reads the notation option once", () => {
+    let reads = 0;
+    const options = {
+      get notation() {
+        reads++;
+        return Notation.SYMBOL;
+      },
+    };
+    expect(formatShoe(threeCards, options)).toBe("A♠ K♥ 10♦ | 2 | 2♣ 7♦");
+    expect(reads).toBe(1);
+  });
+
+  it.each([
+    ["names", Notation.NAME],
+    ["a notation that isn't one", "long"],
+    ["null", null],
+  ])("rejects %s as the notation", (_label, notation) => {
+    expect(
+      thrownBy(() => formatShoe(threeCards, asFormatShoeOptions({ notation }))),
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+
+  it.each([
+    ["null", null],
+    ["a notation on its own", Notation.SHORT],
+    ["an array", [Notation.SHORT]],
+  ])("rejects %s as the options", (_label, options) => {
+    expect(
+      thrownBy(() => formatShoe(threeCards, asFormatShoeOptions(options))),
+    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+
+  it("rejects a shoe holding a card that isn't one of this install's, naming where it is", () => {
+    const clone = structuredClone(KING);
+    expect(
+      thrownBy(() =>
+        formatShoe({ cards: [ACE, clone], cutCard: 0, discardPile: [] }),
+      ),
+    ).toMatchObject({
+      code: "INVALID_CARD",
+      message: expect.stringMatching(
+        /^Invalid card \(object\) at position 1 of the shoe's cards:/u,
+      ) as unknown,
+    });
+    expect(
+      thrownBy(() =>
+        formatShoe({ cards: [], cutCard: 0, discardPile: [clone] }),
+      ),
+    ).toMatchObject({
+      code: "INVALID_CARD",
+      message: expect.stringMatching(
+        /^Invalid card \(object\) at position 0 of the discard pile:/u,
+      ) as unknown,
+    });
+  });
+});
+
+describe("parseShoe and tryParseShoe", () => {
+  it("read the cards, the cut card's position and the discard pile", () => {
+    for (const parse of [parseShoe, tryParseShoe]) {
+      expect(parse("AS KH 10D | 2 | 2C 7D")).toStrictEqual({
+        cards: [ACE, KING, TEN],
+        cutCard: 2,
+        discardPile: [card("2", "C"), card("7", "D")],
+      });
+    }
+  });
+
+  it("read a shoe with its discard pile left out as having an empty one", () => {
+    for (const parse of [parseShoe, tryParseShoe]) {
+      expect(parse("AS KH | 0")).toStrictEqual({
+        cards: [ACE, KING],
+        cutCard: 0,
+        discardPile: [],
+      });
+    }
+  });
+
+  it("read a shoe with no cards left", () => {
+    for (const parse of [parseShoe, tryParseShoe]) {
+      expect(parse(" | 0")).toStrictEqual({
+        cards: [],
+        cutCard: 0,
+        discardPile: [],
+      });
+      expect(parse(" | 0 | AS")).toStrictEqual({
+        cards: [],
+        cutCard: 0,
+        discardPile: [ACE],
+      });
+    }
+  });
+
+  it("give a frozen shoe of new plain frozen stacks", () => {
+    const read = parseShoe("AS KH | 1 | 10D");
+    expect(Object.isFrozen(read)).toBe(true);
+    expect(isPlainFrozen(read.cards)).toBe(true);
+    expect(isPlainFrozen(read.discardPile)).toBe(true);
+    expect(Object.keys(read)).toStrictEqual([
+      "cards",
+      "cutCard",
+      "discardPile",
+    ]);
+  });
+
+  it("read back any shoe whose cards are written in any mix of notations and case", () => {
+    const written = fc
+      .tuple(writtenStacks(), writtenStacks())
+      .chain(([cards, pile]) =>
+        fc.record({
+          cards: fc.constant(cards),
+          cutCard: fc.integer({ max: cards.stack.length, min: 0 }),
+          pile: fc.constant(pile),
+        }),
+      );
+    fc.assert(
+      fc.property(written, ({ cards, cutCard, pile }) => {
+        const parts = [cards.text, String(cutCard)];
+        if (pile.stack.length > 0) parts.push(pile.text);
+        const read = parseShoe(parts.join(" | "));
+        expect(sameValues(read.cards, cards.stack)).toBe(true);
+        expect(read.cutCard).toBe(cutCard);
+        expect(sameValues(read.discardPile, pile.stack)).toBe(true);
+        expect(tryParseShoe(parts.join(" | "))).toStrictEqual(read);
+      }),
+    );
+  });
+
+  it.each([
+    ["an empty string", ""],
+    ["no bar", "AS KH"],
+    ["no cut card", "AS KH | "],
+    ["bars without spaces", "AS KH|1"],
+    ["a bar with a space only after it", "AS KH| 1"],
+    ["a bar with a space only before it", "AS KH |1"],
+    ["an empty discard pile written out", "AS KH | 1 | "],
+    ["a trailing bar", "AS KH | 1 |"],
+    ["four parts", "AS | 1 | KH | 10D"],
+    ["a trimmed shoe with no cards", "| 0"],
+    ["a cut card with a leading zero", "AS KH | 01"],
+    ["a negative cut card", "AS KH | -1"],
+    ["a cut card with a plus sign", "AS KH | +1"],
+    ["a fractional cut card", "AS KH | 1.0"],
+    ["a cut card in exponent form", "AS KH | 1e0"],
+    ["a cut card in hex", "AS KH | 0x1"],
+    ["a cut card with a space after it", "AS KH | 1 "],
+    ["a full-width cut card", "AS KH | １"],
+    ["a cut card below the bottom card", "AS KH | 3"],
+    ["a cut card in an empty shoe", " | 1"],
+    ["a cut card too big for an integer", `AS | ${"9".repeat(400)}`],
+  ])("reject %s", (_label, text) => {
+    expect(thrownBy(() => parseShoe(text))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
+    expect(tryParseShoe(text)).toBeUndefined();
+  });
+
+  it.each([
+    ["a card that isn't one", "AS XX | 1"],
+    ["two spaces between cards", "AS  KH | 1"],
+    ["a space before the cards", " AS KH | 1"],
+    ["a card in the pile that isn't one", "AS KH | 1 | XX"],
+    ["a space after the pile", "AS KH | 1 | 10D "],
+    ["a name", "Ace of Spades | 0"],
+  ])("reject %s", (_label, text) => {
+    expect(thrownBy(() => parseShoe(text))).toMatchObject({
+      code: "INVALID_CARD",
+    });
+    expect(tryParseShoe(text)).toBeUndefined();
+  });
+
+  it.each([
+    ["undefined", undefined],
+    ["null", null],
+    ["a shoe", { cards: [ACE], cutCard: 0, discardPile: [] }],
+  ])("reject %s as the text", (_label, value) => {
+    expect(thrownBy(() => parseShoe(asText(value)))).toMatchObject({
+      code: "INVALID_ARGUMENT",
+    });
+    expect(tryParseShoe(asText(value))).toBeUndefined();
+  });
+
+  it("name what's wrong, and where", () => {
+    expect(thrownBy(() => parseShoe("AS KH|1"))).toMatchObject({
+      message:
+        'Invalid shoe text "AS KH|1": expected the shoe\'s cards, its cut card\'s position and, if it isn\'t empty, its discard pile, separated by " | ", such as "AS 10H KD | 2 | 2C"',
+    });
+    expect(thrownBy(() => parseShoe("AS KH | 01"))).toMatchObject({
+      message:
+        'Invalid cut card "01": expected its position as a whole number, such as "2"',
+    });
+    expect(thrownBy(() => parseShoe("AS KH | 3"))).toMatchObject({
+      message: "Invalid cut card 3: expected an integer from 0 to 2",
+    });
+    expect(thrownBy(() => parseShoe("AS XX | 1"))).toMatchObject({
+      message: expect.stringMatching(
+        /^Unknown card "XX" at position 1 of the shoe's cards:/u,
+      ) as unknown,
+    });
+    expect(thrownBy(() => parseShoe("AS | 1 | 2C XX"))).toMatchObject({
+      message: expect.stringMatching(
+        /^Unknown card "XX" at position 1 of the discard pile:/u,
       ) as unknown,
     });
   });
