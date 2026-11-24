@@ -97,7 +97,7 @@ Four things ESLint can't fully check:
 
 ### Writing examples
 
-Examples are tests. Each fenced `ts` block in an `@example` tag, and in `README.md`, is turned into a test file and run. Show results with a comment at the end of the line:
+Examples are tests. Each fenced `ts` block in an `@example` tag, and in `README.md` and `MIGRATING.md`, is turned into a test file and run. Show results with a comment at the end of the line:
 
 ```ts no-test
 import { InsufficientCardsError, isDeckshoesError } from "deckshoes";

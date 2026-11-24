@@ -4,4 +4,4 @@
  * `vitest.config.ts` regenerates those tests in watch mode when one of the
  * files changes.
  */
-export const MARKDOWN_FILES: readonly string[] = ["README.md"];
+export const MARKDOWN_FILES: readonly string[] = ["README.md", "MIGRATING.md"];
