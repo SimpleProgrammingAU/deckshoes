@@ -12,15 +12,18 @@ export function loadCard(
   where: string,
 ): Card | InvalidCardError {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return new InvalidCardError(
-      `Invalid card ${display(value)}${where}: expected an object with rank, suit and color fields, as JSON.stringify writes a card`,
-    );
+    return notCardFields(value, where);
   }
   const {
     color,
     rank,
     suit,
   }: Readonly<{ color?: unknown; rank?: unknown; suit?: unknown }> = value;
+  // An object with none of a card's fields, such as a whole shoe or a wrapper
+  // around the card, is the wrong object, not a card with a bad rank.
+  if (color === undefined && rank === undefined && suit === undefined) {
+    return notCardFields(value, where);
+  }
   const bySuit = CARD_TABLE.get(rank as Rank);
   if (bySuit === undefined) return unknownRank(rank, where);
   const found = bySuit.get(suit as Suit);
@@ -30,6 +33,13 @@ export function loadCard(
     : new InvalidCardError(
         `Invalid colour ${display(color)}${where}: expected ${display(found.color)}, the colour of suit ${display(found.suit)}`,
       );
+}
+
+/** Returns the error for a value that isn't a card's JSON at all, such as text or an object without a card's fields; `where` says where it was, as for {@link loadCard}. */
+function notCardFields(value: unknown, where: string): InvalidCardError {
+  return new InvalidCardError(
+    `Invalid card ${display(value)}${where}: expected an object with rank, suit and color fields, as JSON.stringify writes a card`,
+  );
 }
 
 /** Loads each card of a stack, read by index, into a new frozen stack, or returns the error for the first that isn't a card; `name` names the stack in the error, such as "the discard pile". */

@@ -122,6 +122,23 @@ describe("cardFromJSON", () => {
     });
   });
 
+  it.each([
+    ["an empty object", {}],
+    [
+      "a wrapper around a card",
+      { card: { color: "black", rank: "A", suit: "S" } },
+    ],
+    ["a shoe", { cards: [], cutCard: 0, discardPile: [] }],
+    ["a date", new Date(0)],
+  ])("says that %s isn't a card's JSON at all", (_label, value) => {
+    expect(thrownBy(() => cardFromJSON(value))).toMatchObject({
+      code: "INVALID_CARD",
+      message: expect.stringMatching(
+        /^Invalid card \(object\): expected an object with rank, suit and color fields/u,
+      ) as unknown,
+    });
+  });
+
   it("names the colour it expected", () => {
     expect(
       thrownBy(() => cardFromJSON({ color: "red", rank: "A", suit: "S" })),
