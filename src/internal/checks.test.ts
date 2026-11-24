@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cardCount,
   cardsProblem,
   countProblem,
   flagProblem,
@@ -11,9 +12,18 @@ import {
   shortfall,
   sizeProblem,
   stackProblem,
+  tooManyCards,
   unknownRank,
   unknownSuit,
 } from "./checks.ts";
+
+describe("cardCount", () => {
+  it("says card for one, and cards for any other number", () => {
+    expect(cardCount(0)).toBe("0 cards");
+    expect(cardCount(1)).toBe("1 card");
+    expect(cardCount(52)).toBe("52 cards");
+  });
+});
 
 describe("cardsProblem", () => {
   it("accepts any array and names anything else as the cards", () => {
@@ -173,6 +183,34 @@ describe("stackProblem", () => {
   it("accepts any array and rejects anything else", () => {
     expect(stackProblem([])).toBeUndefined();
     expect(stackProblem("AS")).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+});
+
+describe("tooManyCards", () => {
+  it("accepts up to 2³² − 1 cards without describing them", () => {
+    let described = 0;
+    const wording = () => {
+      described += 1;
+      return "a stack";
+    };
+    expect(tooManyCards(0, "cards", [], wording)).toBeUndefined();
+    expect(tooManyCards(2 ** 32 - 1, "cards", [], wording)).toBeUndefined();
+    expect(described).toBe(0);
+  });
+
+  it("names the value and says what would hold the cards, past 2³² − 1", () => {
+    expect(
+      tooManyCards(
+        2 ** 32,
+        "deck count",
+        2 ** 32,
+        () => "4294967296 decks of 1 card",
+      ),
+    ).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        "Invalid deck count 4294967296: 4294967296 decks of 1 card would hold more cards than an array can",
+    });
   });
 });
 

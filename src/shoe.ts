@@ -6,11 +6,13 @@ import { deal, type DealOptions, type HandSize } from "./deal.ts";
 import { draw } from "./draw.ts";
 import { InvalidArgumentError } from "./errors.ts";
 import {
+  cardCount,
   cardsProblem,
   countProblem,
   optionsProblem,
   shortfall,
   stackProblem,
+  tooManyCards,
 } from "./internal/checks.ts";
 import {
   onTopOf,
@@ -21,9 +23,6 @@ import {
   shuffledShoe,
 } from "./internal/shoe.ts";
 import { copyStack } from "./internal/stack.ts";
-
-/** The most cards a shoe can hold: the longest an array can be. */
-const MAX_CARDS = 2 ** 32 - 1;
 
 /**
  * A shoe: copies of a deck dealt from as one, with a cut card that marks when
@@ -335,12 +334,13 @@ export function shoe<C>(
   const copied = copyStack(deck);
   const deckSize = copied.length;
   const size = deckSize * deckCount;
-  if (size > MAX_CARDS) {
-    const decks = `${String(deckCount)} decks of ${String(deckSize)} ${deckSize === 1 ? "card" : "cards"}`;
-    throw new InvalidArgumentError(
-      `Invalid deck count ${String(deckCount)}: ${decks} would hold more cards than an array can`,
-    );
-  }
+  const tooBig = tooManyCards(
+    size,
+    "deck count",
+    deckCount,
+    () => `${String(deckCount)} decks of ${cardCount(deckSize)}`,
+  );
+  if (tooBig !== undefined) throw tooBig;
 
   const settings = readShuffleSettings(options);
   if (settings instanceof InvalidArgumentError) throw settings;

@@ -280,6 +280,13 @@ export function sparseStacks(): Arbitrary<Card[]> {
   return fc.sparseArray(fc.constantFrom(...standard52()), { maxLength: 104 });
 }
 
+/** An array that's all holes, which costs nothing to make at any length, for a stack too long to build on. */
+export function holes(length: number): Card[] {
+  const cards: Card[] = [];
+  cards.length = length;
+  return cards;
+}
+
 /** A stack and a count from 0 up to its size. The stacks come from {@link stacks} unless `from` gives others. */
 export function stacksWithCounts(): Arbitrary<{ count: number; stack: Card[] }>;
 export function stacksWithCounts<C>(
