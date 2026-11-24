@@ -4,13 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   arraySubclasses,
   asStack,
+  countingReads,
   deals,
   isPlainFrozen,
   nonArrays,
   sameValues,
   seeds,
+  shoes,
   stacks,
-  stacksWithCounts,
   tally,
   thrownBy,
 } from "../test/helpers.ts";
@@ -52,39 +53,9 @@ function stackedCopies<C>(deck: readonly C[], deckCount: number): C[] {
   return Array.from({ length: deckCount }, () => deck).flat();
 }
 
-/** Wraps a stack in a Proxy that counts the reads of its length and of each of its positions. */
-function countingReads<C>(stack: readonly C[]): {
-  reads: { length: number; positions: number[] };
-  stack: readonly C[];
-} {
-  const reads = { length: 0, positions: stack.map(() => 0) };
-  const proxy = new Proxy(stack, {
-    get(target, key, receiver) {
-      if (key === "length") reads.length += 1;
-      if (typeof key === "string" && /^\d+$/.test(key)) {
-        const position = Number(key);
-        reads.positions[position] = (reads.positions[position] ?? 0) + 1;
-      }
-      return Reflect.get(target, key, receiver) as unknown;
-    },
-  });
-  return { reads, stack: proxy };
-}
-
 /** Six decks, 312 cards, with 100 of them burned onto the discard pile. */
 function sixDecksPartBurned(): Shoe {
   return burn(shoe(standard52(), 6, { random: seededRandom(3) }), 100);
-}
-
-/** Shoes of standard cards with the cut card anywhere in them, top to bottom, and any discard pile. */
-function shoes(): Arbitrary<Shoe> {
-  return fc
-    .tuple(stacksWithCounts(), stacks())
-    .map(([{ count, stack }, discardPile]) => ({
-      cards: stack,
-      cutCard: count,
-      discardPile,
-    }));
 }
 
 describe("shoe", () => {
