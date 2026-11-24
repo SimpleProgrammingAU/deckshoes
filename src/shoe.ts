@@ -6,13 +6,13 @@ import { deal, type DealOptions, type HandSize } from "./deal.ts";
 import { draw } from "./draw.ts";
 import { InvalidArgumentError } from "./errors.ts";
 import {
-  cardCount,
+  cardCountText,
   cardsProblem,
+  cardTotalProblem,
   countProblem,
   optionsProblem,
   shortfall,
   stackProblem,
-  tooManyCards,
 } from "./internal/checks.ts";
 import {
   onTopOf,
@@ -335,11 +335,11 @@ export function shoe<C>(
   const copied = copyStack(deck);
   const deckSize = copied.length;
   const size = deckSize * deckCount;
-  const tooBig = tooManyCards(
+  const tooBig = cardTotalProblem(
     size,
     "deck count",
     deckCount,
-    () => `${String(deckCount)} decks of ${cardCount(deckSize)}`,
+    () => `${String(deckCount)} decks of ${cardCountText(deckSize)}`,
   );
   if (tooBig !== undefined) throw tooBig;
 
@@ -639,16 +639,17 @@ export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
   const problem = cardsProblem(cards);
   if (problem !== undefined) throw problem;
   // The whole shoe is counted, not only the pile, so the shoe given back is
-  // one that every shoe function takes.
+  // one that every shoe function takes. The message says what the shoe holds
+  // in the words readShoe's does.
   const size = checked.cards.length;
-  const piled = checked.discardPile.length;
+  const pileSize = checked.discardPile.length;
   const count = cards.length;
-  const tooBig = tooManyCards(
-    size + piled + count,
+  const tooBig = cardTotalProblem(
+    size + pileSize + count,
     "cards",
     cards,
     () =>
-      `a shoe of ${cardCount(size)} and a discard pile of ${cardCount(piled)}, with ${String(count)} discarded,`,
+      `a shoe with ${cardCountText(size)} in it and ${cardCountText(pileSize)} on its discard pile, with ${String(count)} discarded,`,
   );
   if (tooBig !== undefined) throw tooBig;
   return Object.freeze({

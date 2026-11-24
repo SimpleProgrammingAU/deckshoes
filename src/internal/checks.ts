@@ -17,7 +17,7 @@ import { display } from "./display.ts";
 export const MAX_ARRAY_LENGTH: number = 2 ** 32 - 1;
 
 /** Writes a number of cards for an error message, such as "1 card" or "52 cards". */
-export function cardCount(count: number): string {
+export function cardCountText(count: number): string {
   return `${String(count)} ${count === 1 ? "card" : "cards"}`;
 }
 
@@ -156,8 +156,8 @@ export function textProblem(
       );
 }
 
-/** Returns the error for `value`, named `name` in the message, when `total` cards are more than an array can hold, or `undefined` when they fit; `describe` says what would hold them, such as "6 decks of 52 cards", and is called only when they don't fit. */
-export function tooManyCards(
+/** Returns the error for `value`, named `name` in the message, when `total` is more than 2³² − 1 cards, or `undefined` when it isn't; `describe` says what would hold them, such as "6 decks of 52 cards", and is called only when they don't fit. */
+export function cardTotalProblem(
   total: number,
   name: string,
   value: unknown,

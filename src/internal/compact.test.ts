@@ -45,7 +45,7 @@ describe("writeStack", () => {
     ).toMatchObject({
       code: "INVALID_ARGUMENT",
       message:
-        "Invalid stack (array): its compact string would be longer than this runtime's longest string",
+        "Invalid stack (array): its compact string would be longer than this runtime allows",
     });
   });
 });
@@ -65,14 +65,18 @@ describe("writeShoe", () => {
     ).toMatchObject({
       code: "INVALID_ARGUMENT",
       message:
-        "Invalid shoe (object): its compact string would be longer than this runtime's longest string",
+        "Invalid shoe (object): its compact string would be longer than this runtime allows",
     });
   });
 
   it("names the shoe when its discard pile is too long for a string", () => {
     expect(
       writeShoe({ cards: [], cutCard: 0, discardPile: [ACE, ACE] }, writeLong),
-    ).toMatchObject({ code: "INVALID_ARGUMENT" });
+    ).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message:
+        "Invalid shoe (object): its compact string would be longer than this runtime allows",
+    });
   });
 
   it("names the shoe when its cards and discard pile fit apart but not together", () => {
@@ -81,7 +85,7 @@ describe("writeShoe", () => {
     ).toMatchObject({
       code: "INVALID_ARGUMENT",
       message:
-        "Invalid shoe (object): its compact string would be longer than this runtime's longest string",
+        "Invalid shoe (object): its compact string would be longer than this runtime allows",
     });
   });
 });
