@@ -55,8 +55,7 @@ The maintainer works the same way with an AI agent: the agent plans, the plan is
 
 Any change to the published package needs a changeset: run `pnpm changeset`, pick the bump type, and write a sentence or two for users. It becomes the changelog entry. Changes that don't affect users (tests, CI, docs outside `src/`) don't need one.
 
-- **Before 1.0.0:** the project is in prerelease mode, and every release is `1.0.0-alpha.N`. Pick `minor` for new features and `patch` for fixes; the alpha releases still go out in order.
-- **From 1.0.0:** semantic versioning. `patch` for fixes, `minor` for new features and deprecations, `major` for removals and other breaking changes.
+Releases follow [semantic versioning](https://semver.org): `patch` for fixes, `minor` for new features and deprecations, `major` for removals and other breaking changes.
 
 ## Code rules
 
@@ -154,6 +153,6 @@ Releases are automated with [Changesets](https://github.com/changesets/changeset
 
 The trusted publisher on npm only allows `npm stage publish`, not `npm publish`, so a compromised workflow can stage a release but can't make one public. The git tag `v<version>` marks a version as staged: `scripts/release.ts` does nothing once it exists. If staging fails, re-run the release job.
 
-While the project is in prerelease mode, releases go to the `alpha` dist-tag. To ship 1.0.0, run `pnpm changeset pre exit` in a PR, merge it, then merge the version PR that follows.
+Releases go to the `latest` dist-tag. To release prereleases of a major version, run `pnpm changeset pre enter alpha` in a PR: while the project is in prerelease mode, releases go to the `alpha` dist-tag. To leave it, run `pnpm changeset pre exit` in a PR, and trim `.changeset/pre/`, because every changeset left there is listed again in the stable release's changelog entry. Merge it, then merge the version PR that follows.
 
 The release workflow opens the version PR with a token from a GitHub App, because PRs opened with the default `GITHUB_TOKEN` don't trigger CI. The App needs **Contents** and **Pull requests** read and write access on this repository. Its client ID goes in the `RELEASE_APP_CLIENT_ID` Actions variable and its private key in the `RELEASE_APP_PRIVATE_KEY` secret. Without them the workflow falls back to `GITHUB_TOKEN`, and CI won't run on the version PR.
