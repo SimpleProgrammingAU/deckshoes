@@ -4,9 +4,13 @@ deckshoes 1.0 is a ground-up rewrite of the 0.x package. Each milestone below ha
 
 ## M0: Foundation
 
+**Done.**
+
 Tooling, CI, release pipeline, documentation rules and contributor workflow. No public API beyond the error types.
 
 ## M1: Core (`1.0.0-alpha.N`)
+
+**Done.** Released in 1.0.0.
 
 - `Card`, `Rank`, `Suit` and `Color` types for the 52 standard cards. Cards are frozen and interned, so identical cards are `===`.
 - Parse and format cards: `"AS"`, `"10h"`, `"Th"`, `"A♠"`, `"Ace of Spades"`, and Unicode characters such as `"🂡"`.
@@ -18,6 +22,8 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 - Property-based tests for every stack operation, plus benchmarks.
 
 ## M2: Stable (`1.0.0`)
+
+**Done.** Released in 1.0.0.
 
 - `Shoe`: one or more decks dealt together, with a cut card or penetration, burn cards, a discard pile and a reshuffle trigger.
 - Serialisation to JSON and to a compact string.
@@ -33,6 +39,8 @@ Each helper is its own entry point with its own size budget, so you only downloa
 - `deckshoes/blackjack`: hard and soft hand totals, Hi-Lo running count.
 - `deckshoes/bridge`: high-card points and hand distribution.
 
+M3 also brings an online playground, linked from the README and the API docs.
+
 ## M4: Realistic shuffles (1.x)
 
 Riffle (Gilbert–Shannon–Reeds model), overhand, pile and wash shuffles, and imperfect cuts, with a statistical test harness to check their distributions.
@@ -44,4 +52,4 @@ Riffle (Gilbert–Shannon–Reeds model), overhand, pile and wash shuffles, and 
 
 ## Ongoing
 
-Bundle size budgets, dependency updates, more examples in the docs, and an online playground.
+Bundle size budgets, dependency updates and more examples in the docs.
