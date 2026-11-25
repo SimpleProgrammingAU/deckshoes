@@ -1,22 +1,20 @@
 # deckshoes
 
 [![npm](https://img.shields.io/npm/v/deckshoes?label=npm)](https://www.npmjs.com/package/deckshoes)
-[![npm alpha](https://img.shields.io/npm/v/deckshoes/alpha?label=alpha)](https://www.npmjs.com/package/deckshoes?activeTab=versions)
 [![CI](https://github.com/SimpleProgrammingAU/deckshoes/actions/workflows/ci.yml/badge.svg)](https://github.com/SimpleProgrammingAU/deckshoes/actions/workflows/ci.yml)
 [![Bundle size](https://img.shields.io/bundlejs/size/deckshoes)](https://bundlejs.com/?q=deckshoes)
 [![License: MIT](https://img.shields.io/npm/l/deckshoes)](./LICENSE)
 
 A lightweight, fully typed library for playing cards: decks, shoes, shuffling, dealing and more. No runtime dependencies, tree-shakeable, and it runs anywhere JavaScript does.
 
-> [!WARNING]
-> **deckshoes 1.0 is a rewrite and is under active development.** The 1.0 API is arriving piece by piece in alpha releases (`deckshoes@alpha`) and may change between them. The last stable release is 0.4.0; see [Migrating from 0.4](#migrating-from-04).
+Upgrading from 0.4? 1.0 is a rewrite: see [Migrating from 0.4](#migrating-from-04).
 
 ## Install
 
 ```sh
-npm install deckshoes@alpha
+npm install deckshoes
 # or
-pnpm add deckshoes@alpha
+pnpm add deckshoes
 ```
 
 ## Quick start
@@ -47,9 +45,9 @@ A stack, such as a deck or a hand, is a frozen array of cards with the top card 
 
 In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure random source. See [Random sources](#random-sources).
 
-## What's coming in 1.0
+## What's in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. Shuffling, dealing, cutting, removing, sorting and grouping cards work today, as do shoes with a cut card, burn cards and a discard pile, saving and loading as JSON or compact strings, and the standard 52, Piquet, Euchre and Pinochle presets; the [roadmap](./ROADMAP.md) tracks the rest.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. 1.0 covers shuffling, dealing, cutting, removing, sorting and grouping cards, shoes with a cut card, burn cards and a discard pile, saving and loading as JSON or compact strings, and the standard 52, Piquet, Euchre and Pinochle presets.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
@@ -68,7 +66,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-After 1.0: optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Next on the [roadmap](./ROADMAP.md): optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
