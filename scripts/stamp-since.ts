@@ -3,8 +3,7 @@
  *
  * Runs as part of `pnpm version-packages`, right after `changeset version` has
  * bumped `package.json`, so the "Version Packages" PR shows the real numbers.
- * Prerelease suffixes are dropped: during the 1.0 alpha, `1.0.0-alpha.3`
- * stamps `@since 1.0.0`.
+ * Prerelease suffixes are dropped: `2.0.0-alpha.3` stamps `@since 2.0.0`.
  */
 import { globSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";

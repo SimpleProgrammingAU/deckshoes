@@ -2,10 +2,11 @@
 
 ## Supported versions
 
-| Version         | Supported                  |
-| --------------- | -------------------------- |
-| 1.x (and alpha) | Yes                        |
-| 0.x             | No. Please upgrade to 1.x. |
+| Version      | Supported                  |
+| ------------ | -------------------------- |
+| 1.x          | Yes                        |
+| 1.0.0 alphas | No. Please upgrade to 1.x. |
+| 0.x          | No. Please upgrade to 1.x. |
 
 ## Reporting a vulnerability
 
@@ -19,7 +20,7 @@ You should get a reply within 7 days. Once a fix is ready, it is released as a p
 
 deckshoes has no runtime dependencies and doesn't do any I/O, so the most likely issues are:
 
-- **Predictable shuffles.** Shuffling (arriving during the 1.0 alpha) uses `crypto.getRandomValues` by default. Report anything that makes the default shuffle biased or predictable.
+- **Predictable shuffles.** Shuffling uses `crypto.getRandomValues` by default. Report anything that makes the default shuffle biased or predictable.
 - **Denial of service** from crafted input to parsing functions.
 
 Seeded random number generators are deliberately predictable. Don't use them where the outcome matters, such as real-money games.
