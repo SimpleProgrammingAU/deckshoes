@@ -10,7 +10,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 
 ## M1: Core (`1.0.0-alpha.N`)
 
-**Done.** Released in 1.0.0.
+**Done.**
 
 - `Card`, `Rank`, `Suit` and `Color` types for the 52 standard cards. Cards are frozen and interned, so identical cards are `===`.
 - Parse and format cards: `"AS"`, `"10h"`, `"Th"`, `"A♠"`, `"Ace of Spades"`, and Unicode characters such as `"🂡"`.
@@ -23,7 +23,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 
 ## M2: Stable (`1.0.0`)
 
-**Done.** Released in 1.0.0.
+**Done.**
 
 - `Shoe`: one or more decks dealt together, with a cut card or penetration, burn cards, a discard pile and a reshuffle trigger.
 - Serialisation to JSON and to a compact string.
