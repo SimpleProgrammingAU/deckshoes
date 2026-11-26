@@ -42,11 +42,11 @@ import { copyStack } from "./internal/stack.ts";
  * anything that takes cards out of a shoe has to move its cut card too.
  *
  * Any object with this shape works as a shoe, so one can be written by hand.
- * A shoe without a `discardPile`, such as one written in JavaScript or saved
- * before shoes had one, is read as having an empty one. Every function that
- * takes a shoe checks it, and gives back a shoe holding only `cards`, `cutCard`
- * and `discardPile`, so no other field on it is carried over. A shoe holds at
- * most 2³² − 1 cards, counting its discard pile.
+ * A shoe without a `discardPile`, such as one written in JavaScript, is read as
+ * having an empty one. Every function that takes a shoe checks it, and gives
+ * back a shoe holding only `cards`, `cutCard` and `discardPile`, so no other
+ * field on it is carried over. A shoe holds at most 2³² − 1 cards, counting its
+ * discard pile.
  *
  * Save a shoe with `JSON.stringify` or {@link formatShoe}, and load it with
  * {@link shoeFromJSON} or {@link parseShoe}. A shoe parsed from JSON or cloned
