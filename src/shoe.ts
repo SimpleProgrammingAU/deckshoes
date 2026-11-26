@@ -76,7 +76,7 @@ import { copyStack } from "./internal/stack.ts";
  * drawFromShoe(threeCards, 2).shoe.cutCard; // => 0
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface Shoe<C = Card> {
   /** The cards still in the shoe, top first. */
@@ -110,7 +110,7 @@ export interface Shoe<C = Card> {
  * shoe(standard52(), 2, options).cutCard; // => 83
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface ShoeOptions {
   /**
@@ -157,7 +157,7 @@ export interface ShoeOptions {
  * reshuffle(burned, rules).cutCard; // => 83
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface ReshuffleOptions {
   /**
@@ -203,7 +203,7 @@ export interface ReshuffleOptions {
  * Object.isFrozen(result); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface ShoeDrawResult<C = Card> {
   /** The cards drawn, in the order they had in the shoe, top first. */
@@ -236,7 +236,7 @@ export interface ShoeDrawResult<C = Card> {
  * Object.isFrozen(result.hands); // => true
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface ShoeDealResult<C = Card> {
   /**
@@ -318,7 +318,7 @@ export interface ShoeDealResult<C = Card> {
  * shoe(standard52(), 6, { penetration: 1.5 }); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function shoe<C>(
   deck: CardStack<C>,
@@ -413,7 +413,7 @@ export function shoe<C>(
  * drawFromShoe(sixDecks, 313); // throws INSUFFICIENT_CARDS
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
   const checked = readShoe(shoe);
@@ -486,7 +486,7 @@ export function drawFromShoe<C>(shoe: Shoe<C>, count = 1): ShoeDrawResult<C> {
  * dealFromShoe(sixDecks, 4, 79); // throws INSUFFICIENT_CARDS
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function dealFromShoe<C>(
   shoe: Shoe<C>,
@@ -567,7 +567,7 @@ export function dealFromShoe<C>(
  * burn(sixDecks, 313); // throws INSUFFICIENT_CARDS
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
   const checked = readShoe(shoe);
@@ -631,7 +631,7 @@ export function burn<C>(shoe: Shoe<C>, count = 1): Shoe<C> {
  * played.cutCard; // => 226
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
   const checked = readShoe(shoe);
@@ -738,7 +738,7 @@ export function discard<C>(shoe: Shoe<C>, cards: CardStack<C>): Shoe<C> {
  * reshuffle(current, { penetration: 2 }); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function reshuffle<C>(
   shoe: Shoe<C>,

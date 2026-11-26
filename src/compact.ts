@@ -35,7 +35,7 @@ const SHOE_TEXT_EXAMPLE = "AS 10H KD | 2 | 2C";
  * formatStack([card("A", "S"), card("10", "H")], options); // => "A♠ 10♥"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface FormatStackOptions {
   /**
@@ -86,7 +86,7 @@ export interface FormatStackOptions {
  * formatStack(stackFromJSON(clone)); // => "AS 10H KD"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function formatStack(
   stack: CardStack,
@@ -143,7 +143,7 @@ export function formatStack(
  * parseStack("Ace of Spades"); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function parseStack(text: string): CardStack {
   const problem = textProblem(text, STACK_TEXT_EXAMPLE);
@@ -174,7 +174,7 @@ export function parseStack(text: string): CardStack {
  * tryParseStack("AS, 10H"); // => undefined
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function tryParseStack(text: string): CardStack | undefined {
   if (typeof text !== "string") return undefined;
@@ -194,7 +194,7 @@ export function tryParseStack(text: string): CardStack | undefined {
  * formatShoe(twoCards, options); // => "A♠ 10♥ | 1"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export interface FormatShoeOptions {
   /**
@@ -260,7 +260,7 @@ export interface FormatShoeOptions {
  * formatShoe(burn(threeCards, 3)); // => " | 0 | AS 10H KD"
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function formatShoe(
   shoe: Shoe,
@@ -335,7 +335,7 @@ export function formatShoe(
  * parseShoe("AS 10H KD | 4"); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function parseShoe(text: string): Shoe {
   const problem = textProblem(text, SHOE_TEXT_EXAMPLE);
@@ -367,7 +367,7 @@ export function parseShoe(text: string): Shoe {
  * tryParseShoe("A♠ 10♥|0"); // => undefined
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function tryParseShoe(text: string): Shoe | undefined {
   if (typeof text !== "string") return undefined;

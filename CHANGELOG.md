@@ -1,5 +1,35 @@
 # deckshoes
 
+## 1.0.0
+
+### Major Changes
+
+- [#95](https://github.com/SimpleProgrammingAU/deckshoes/pull/95) [`616ba5b`](https://github.com/SimpleProgrammingAU/deckshoes/commit/616ba5b6d35c5a27c9a51b100c20c2a70cdee17c) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - deckshoes 1.0.0 is the first stable release of the rewrite, and replaces 0.4's classes with functions over frozen data. The [migration guide](https://github.com/SimpleProgrammingAU/deckshoes/blob/main/MIGRATING.md) maps every 0.4 class, method and constant to its 1.0 equivalent, and names what 1.0.0 doesn't cover yet.
+  
+  This section lists what's new since 1.0.0-alpha.3. The [changelog](https://github.com/SimpleProgrammingAU/deckshoes/blob/main/CHANGELOG.md)'s 1.0.0-alpha sections list everything else in 1.0. From here, releases follow [semantic versioning](https://semver.org).
+
+### Minor Changes
+
+- [#81](https://github.com/SimpleProgrammingAU/deckshoes/pull/81) [`1e4e539`](https://github.com/SimpleProgrammingAU/deckshoes/commit/1e4e53914b954b02a8b04812d49a11180fec461f) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add burning, discarding and reshuffling to shoes, with a `discardPile` that starts empty:
+  
+  - `burn(shoe, count)` moves cards from the top to the discard pile without using them, moving the cut card up as well.
+  - `discard(shoe, cards)` puts cards that are finished with, such as a round's hands, on the discard pile.
+  - `reshuffle(shoe, { penetration, random })` shuffles the discard pile back in with the cards left in the shoe and puts the cut card back in. A shoe doesn't remember its penetration, so pass the options you built it with.
+  
+  A shoe without a `discardPile`, such as one written in JavaScript, is read as having an empty one.
+
+- [#86](https://github.com/SimpleProgrammingAU/deckshoes/pull/86) [`9d09bf0`](https://github.com/SimpleProgrammingAU/deckshoes/commit/9d09bf0597a2c0b1d2ebc120cdc3b4557fb14773) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add saving and loading. `JSON.stringify` already writes cards, stacks and shoes as JSON; `cardFromJSON`, `stackFromJSON` and `shoeFromJSON` load them back as the real card objects, which are `===` to the ones `card()` returns. They take the parsed value, so they also load cards cloned by `structuredClone` or `postMessage`. A card whose `color` doesn't match its suit throws `InvalidCardError`.
+  
+  Add compact strings for logs and URLs. `formatStack(stack, { notation })` writes a stack's cards top first, separated by single spaces, such as `"AS 10H KD"`, in short or symbol notation or as Unicode characters. `parseStack` reads one back, reading each card as `parseCard` does except for names, which have spaces, and `tryParseStack` returns `undefined` rather than throwing.
+  
+  `formatShoe` writes a shoe as its cards, its cut card's position and its discard pile, separated by `" | "`, such as `"AS 10H KD | 2 | 2C"`, leaving out an empty discard pile. `parseShoe` and `tryParseShoe` read one back.
+
+- [#78](https://github.com/SimpleProgrammingAU/deckshoes/pull/78) [`ddcfccf`](https://github.com/SimpleProgrammingAU/deckshoes/commit/ddcfccf142f4dfb1d3d689eac7467cf8234523cb) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add shoes. `shoe(deck, deckCount, { penetration, random })` shuffles copies of a deck together and puts a cut card at the penetration, three quarters of the way in by default. `drawFromShoe` and `dealFromShoe` take cards out as `draw` and `deal` do, and move the cut card up by the cards taken. A shoe is a frozen `{ cards, cutCard, discardPile }`: once `cutCard` is 0, the cut card has been reached and the shoe is due for a reshuffle. Read a shoe's cards with any stack operation on `shoe.cards`.
+
+### Patch Changes
+
+- [#92](https://github.com/SimpleProgrammingAU/deckshoes/pull/92) [`57d379f`](https://github.com/SimpleProgrammingAU/deckshoes/commit/57d379f88d44c4d9c6ed177f0cc2e581db718707) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - `insert` throws `INVALID_ARGUMENT` when the stack and the cards put into it would hold more than 2³² − 1 cards between them, instead of the runtime's `RangeError`, which has no `code` and which `isDeckshoesError` doesn't recognise.
+
 ## 1.0.0-alpha.3
 
 ### Minor Changes

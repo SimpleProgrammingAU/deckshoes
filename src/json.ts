@@ -46,7 +46,7 @@ import { readShoe } from "./internal/shoe.ts";
  * cardFromJSON({ rank: "T", suit: "H", color: "red" }); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function cardFromJSON(value: unknown): Card {
   const loaded = loadCard(value, "");
@@ -86,7 +86,7 @@ export function cardFromJSON(value: unknown): Card {
  * stackFromJSON([{ rank: "A", suit: "H" }]); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function stackFromJSON(value: unknown): CardStack {
   const problem = stackProblem(value);
@@ -140,7 +140,7 @@ export function stackFromJSON(value: unknown): CardStack {
  * shoeFromJSON({ cards: [], cutCard: 1, discardPile: [] }); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.0.0
  */
 export function shoeFromJSON(value: unknown): Shoe {
   const checked = readShoe(value as Shoe<unknown>);
