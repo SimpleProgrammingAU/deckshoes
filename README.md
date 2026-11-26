@@ -47,7 +47,7 @@ In a real game, leave the seed out, `shuffle(deck)`, to shuffle with a secure ra
 
 ## What's in 1.0
 
-Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. 1.0 covers shuffling, dealing, cutting, removing, sorting and grouping cards, shoes with a cut card, burn cards and a discard pile, saving and loading as JSON or compact strings, and the standard 52, Piquet, Euchre and Pinochle presets.
+Everything in deckshoes 1.0 is a pure function over immutable data, with an optional chain for when you'd rather write a pipeline. Shuffles take a random source, so you can make them reproducible with a seed. 1.0 covers shuffling, dealing, drawing, peeking, cutting, inserting, removing, sorting and grouping cards; shoes with a cut card, burn cards and a discard pile; saving and loading as JSON or compact strings; and the standard 52, Piquet, Euchre and Pinochle presets.
 
 ```ts
 import { chain, deal, seededRandom, shuffle } from "deckshoes";
