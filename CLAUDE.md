@@ -1,6 +1,6 @@
 # deckshoes
 
-A TypeScript library for playing cards. Releases follow semantic versioning, through Changesets. ESM-only, no runtime dependencies, runs in any JS runtime.
+A TypeScript library for playing cards. ESM-only, no runtime dependencies, runs in any JS runtime.
 
 ## Architecture
 
