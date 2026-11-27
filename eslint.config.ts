@@ -17,9 +17,10 @@ import deckshoes from "./eslint-plugin/index.ts";
 /** Virtual files that eslint-plugin-jsdoc's processor creates for `@example` code. */
 const EXAMPLES = "**/*.ts/*.ts";
 const BENCHMARKS = ["src/**/*.bench.ts"];
+const TYPE_TESTS = ["src/**/*.test-d.ts"];
 const TESTS = [
   "src/**/*.test.ts",
-  "src/**/*.test-d.ts",
+  ...TYPE_TESTS,
   "test/**/*.test.ts",
   ...BENCHMARKS,
 ];
@@ -441,6 +442,18 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
     rules: {
       // Benchmarks measure; they don't assert.
       "vitest/expect-expect": "off",
+    },
+  },
+
+  {
+    files: TYPE_TESTS,
+    name: "deckshoes/type-tests",
+    rules: {
+      // Type tests build cards that aren't real on purpose: look-alikes
+      // that the brand must turn away, and `{} as Card` stand-ins that
+      // never run. `Card` extends a declared class (ADR 0002), so this
+      // rule flags each one.
+      "@typescript-eslint/no-unsafe-class-instance-assignment": "off",
     },
   },
 
