@@ -450,9 +450,10 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
     name: "deckshoes/type-tests",
     rules: {
       // Type tests build cards that aren't real on purpose: look-alikes
-      // that the brand must turn away, and `{} as Card` stand-ins that
-      // never run. `Card` extends a declared class (ADR 0002), so this
-      // rule flags each one.
+      // and cards of another kind under `@ts-expect-error`, and
+      // `{} as Card` stand-ins. A card's brand (ADR 0002) is a declared
+      // class, so this rule flags each one, but type tests never run, so
+      // it has nothing to catch in them.
       "@typescript-eslint/no-unsafe-class-instance-assignment": "off",
     },
   },
