@@ -66,6 +66,9 @@ const CHAIN_IMPORT = /Only src\/index\.ts imports the chain.*\(ADR 0001\)/u;
 /** What a library module that imports a Node built-in is told. */
 const NODE_IMPORT = /Node built-ins/u;
 
+/** The rule that flags type tests' fake cards, so #96 turns it off for them alone. */
+const CLASS_INSTANCE = "@typescript-eslint/no-unsafe-class-instance-assignment";
+
 describe("the rules ESLint applies to library code", () => {
   it.each([
     LIBRARY_FILE,
@@ -86,6 +89,24 @@ describe("the rules ESLint applies to library code", () => {
     const rules = await rulesFor("src/chain.test.ts");
     expect(rules["deckshoes/pure-top-level-calls"]).toBeUndefined();
     expect(rules["no-restricted-imports"]).toBeUndefined();
+  });
+});
+
+describe("the class-instance rule", () => {
+  it.each(["src/operation.test-d.ts", "src/presets/operation.test-d.ts"])(
+    "is off in the type test %s",
+    async (file) => {
+      expect((await rulesFor(file))[CLASS_INSTANCE]).toEqual([0]);
+    },
+  );
+
+  it.each([
+    LIBRARY_FILE,
+    "src/operation.test.ts",
+    "test/operation.test.ts",
+    "src/operation.bench.ts",
+  ])("isn't turned off in %s", async (file) => {
+    expect((await rulesFor(file))[CLASS_INSTANCE]).not.toEqual([0]);
   });
 });
 
