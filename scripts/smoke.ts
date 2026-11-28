@@ -68,6 +68,26 @@ for (const name of ["handTotal", "isSoft", "isBlackjack", "isBust", "runningCoun
     throw new Error("the deckshoes entry point exports blackjack's " + name);
   }
 }
+const seven = [card("K", "S"), card("K", "H"), card("K", "D"), card("4", "C"), card("4", "S"), card("9", "H"), card("2", "D")];
+if (handCategory(seven) !== Category.FULL_HOUSE || bestHand(seven).length !== 5 || bestHand(seven)[3] !== card("4", "C") || compareHands(seven, deck.slice(0, 5)) !== -1 || !Object.isFrozen(Category)) {
+  throw new Error("deckshoes/poker loaded but its functions misbehaved");
+}
+for (const [cards, ErrorClass, code] of [[[null], InvalidCardError, "INVALID_CARD"], ["AS", InvalidArgumentError, "INVALID_ARGUMENT"], [[], InsufficientCardsError, "INSUFFICIENT_CARDS"]]) {
+  let pokerError;
+  try {
+    handCategory(cards);
+  } catch (error) {
+    pokerError = error;
+  }
+  if (!(pokerError instanceof ErrorClass) || !isDeckshoesError(pokerError, code)) {
+    throw new Error("deckshoes/poker throws its own error classes, not the ones deckshoes exports");
+  }
+}
+for (const name of ["Category", "bestHand", "compareHands", "handCategory"]) {
+  if (name in root) {
+    throw new Error("the deckshoes entry point exports poker's " + name);
+  }
+}
 const shuffled = shuffle(deck, { random: seededRandom(42) });
 if (shuffled.length !== 52 || shuffled[0] !== card("7", "H")) {
   throw new Error("shuffle() with seededRandom(42) gave the wrong order");
@@ -99,6 +119,7 @@ if (chainedDraw.cards[0] !== drawn.cards[0] || chainedDraw.remainder[0] !== draw
 const TYPES = `
 import { type Card, card, type CardStack, chain, type Chain, draw, type DrawResult, seededRandom, shuffle, type TerminatedChain } from "deckshoes";
 import { handTotal, isBlackjack, isBust, isSoft, runningCount, type RunningCountOptions, trueCount } from "deckshoes/blackjack";
+import { bestHand, Category, compareHands, handCategory } from "deckshoes/poker";
 import { euchre, pinochle, type PinochleOptions, piquet, standard52 } from "deckshoes/presets";
 
 const options: PinochleOptions = { size: 80 };
@@ -118,6 +139,10 @@ export const soft: boolean = isSoft(standard52());
 export const blackjack: boolean = isBlackjack(blackjackHand) && !isBust(drawnCards);
 const tagOptions: RunningCountOptions = { tag: (c: Card) => (c.rank === "A" ? 1 : 0) };
 export const count: number = trueCount(runningCount(drawnCards, tagOptions), deck, standard52());
+const category: Category = handCategory(drawnCards);
+export const fullHouse: boolean = category === Category.FULL_HOUSE;
+export const pokerHand: CardStack<Card> = bestHand(deck);
+export const winner: -1 | 0 | 1 = compareHands(pokerHand, deck);
 `;
 
 /** Strict settings for TYPES, checking the published .d.ts files too. */
@@ -159,8 +184,9 @@ try {
     path.join(dir, "esm.mjs"),
     [
       `import * as root from "deckshoes";`,
-      `import { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
+      `import { card, chain, draw, InsufficientCardsError, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
       `import { handTotal, isBlackjack, isBust, isSoft, runningCount, trueCount } from "deckshoes/blackjack";`,
+      `import { bestHand, Category, compareHands, handCategory } from "deckshoes/poker";`,
       `import { euchre, pinochle, piquet, standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -169,8 +195,9 @@ try {
     path.join(dir, "cjs.cjs"),
     [
       `const root = require("deckshoes");`,
-      `const { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
+      `const { card, chain, draw, InsufficientCardsError, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
       `const { handTotal, isBlackjack, isBust, isSoft, runningCount, trueCount } = require("deckshoes/blackjack");`,
+      `const { bestHand, Category, compareHands, handCategory } = require("deckshoes/poker");`,
       `const { euchre, pinochle, piquet, standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),

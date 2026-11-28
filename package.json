@@ -34,6 +34,10 @@
       "types": "./dist/blackjack.d.ts",
       "default": "./dist/blackjack.js"
     },
+    "./poker": {
+      "types": "./dist/poker.d.ts",
+      "default": "./dist/poker.js"
+    },
     "./presets": {
       "types": "./dist/presets.d.ts",
       "default": "./dist/presets.js"

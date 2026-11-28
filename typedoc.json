@@ -3,6 +3,7 @@
   "entryPoints": [
     "src/index.ts",
     "src/blackjack/index.ts",
+    "src/poker/index.ts",
     "src/presets/index.ts"
   ],
   "out": "docs-site",
