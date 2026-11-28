@@ -209,6 +209,7 @@ describe("comparing poker hands", () => {
     ["5S 4H 3D 2C AS", "6S 5H 4D 3C 2H", -1],
     ["4S 4H 4D 2S 2H", "3S 3H 3D AS AH", 1],
     ["KS KH KD 5C 5S", "KS KH KC 4C 4S", 1],
+    ["KS KH KD QS QH", "2S 2H 2D AS AH", 1],
     ["9C 9D 9H 9S AC", "9C 9D 9H 9S KC", 1],
     ["AS KS QD JC 10H", "AH KD QS JH 10C", 0],
     ["AH KH 9H 6H 3H", "AS KS 9S 6S 3S", 0],

@@ -162,9 +162,10 @@ export function bestHand(cards: CardStack): CardStack {
  * Each is judged by the best five of its cards, or all of them while there
  * are fewer than five, so pass every card each player can use, such as their
  * hole cards with the community cards. A higher category wins, whatever the
- * ranks. Within a category, the ranks of the cards that make it are compared,
- * highest first, and then the kickers': A A K beats A A Q. Suits never rank,
- * so poker hands with the same ranks tie.
+ * ranks. Within a category, the cards that make it are compared, bigger
+ * groups first and then higher ranks, and then the kickers, high to low: so
+ * K K K Q Q beats 2 2 2 A A, and A A K beats A A Q. Suits never rank, so poker
+ * hands with the same category and ranks tie.
  *
  * Below five cards, a poker hand is only compared with one of the same size,
  * such as two players' hole cards before the flop, or the up cards that decide
