@@ -2,7 +2,7 @@ import { InvalidCardError } from "../errors.ts";
 import { display } from "./display.ts";
 
 /** Looks up a card's rank, read once, in a table with an entry for every standard rank, as game helpers read cards (ADR 0015); returns the entry, or the error for a card without a standard rank at `position` of the stack `stackName` names, such as "the hand". A hole, `null` or a primitive has no rank. */
-export function byRank<V>(
+export function rankEntry<V>(
   card: unknown,
   table: ReadonlyMap<unknown, V>,
   position: number,
