@@ -151,13 +151,29 @@ const NODE_BUILT_INS = {
  * relative path that ends in `chain.ts`, written however it gets there. That
  * would include another `chain.ts`, such as a `src/internal/chain.ts`; there
  * isn't one. It doesn't see a dynamic `import()`, which the library doesn't
- * use, or the chain reached through an entry point (#74).
+ * use. ENTRY_POINT catches the chain reached through an entry point.
  */
 const CHAIN = {
   allowTypeImports: true,
   message:
     "Only src/index.ts imports the chain: it bundles every stack operation, and so does any module that imports it (ADR 0001). A type import is fine.",
   regex: String.raw`^\.{1,2}/(?:.*/)?chain\.[jt]s$`,
+};
+
+/**
+ * An entry point, which no library module imports, entry points included
+ * (#74): it brings its whole API into the importer's bundle, and the root's
+ * includes the chain (ADR 0001). That covers the package's own name and
+ * subpaths, which resolve to the source through `tsconfig.json`'s `paths`, and
+ * any relative path to an `index.ts`; under `NodeNext`, a directory import
+ * such as `".."` doesn't type-check, so it needs no pattern. A type import is
+ * banned too: the build would copy a type import of `"deckshoes"` into the
+ * published declarations as the package importing itself.
+ */
+const ENTRY_POINT = {
+  message:
+    "Import the library module itself, not an entry point (deckshoes, deckshoes/* or an index.ts): an entry point brings its whole API into your bundle, and the root's includes the chain, which bundles every stack operation (ADR 0001).",
+  regex: String.raw`^(?:deckshoes(?:/.*)?|\.{1,2}/(?:.*/)?index\.[jt]s)$`,
 };
 
 const importSorting: Linter.RulesRecord = {
@@ -219,7 +235,10 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       // index loop that only reads is the right loop for one.
       "@typescript-eslint/prefer-for-of": "off",
       "deckshoes/pure-top-level-calls": "error",
-      "no-restricted-imports": ["error", { patterns: [NODE_BUILT_INS, CHAIN] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [NODE_BUILT_INS, CHAIN, ENTRY_POINT] },
+      ],
       "no-restricted-syntax": [
         "error",
         {
@@ -246,7 +265,10 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
     name: "deckshoes/root-entry-point",
     rules: {
       // The root entry point exports the chain (ADR 0001).
-      "no-restricted-imports": ["error", { patterns: [NODE_BUILT_INS] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [NODE_BUILT_INS, ENTRY_POINT] },
+      ],
     },
   },
 
