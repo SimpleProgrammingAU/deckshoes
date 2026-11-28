@@ -28,7 +28,8 @@ trueCount(runningCount(seen), shoe.cards, standard52());
 ## Consequences
 
 - Each game has its own exports entry, build entry, size budget, API reference entry point and smoke test, as `deckshoes/presets` does.
-- A game helper can't be part of a pipeline. It reads a stack and answers with a number, a flag or a named value, or with a stack such as poker's best hand, so a chain user unwraps with `.value()` first.
+- A game helper can't be part of a pipeline. It reads a stack and answers with a number, a flag, a named value, a list of numbers such as bridge's distribution, or a stack such as poker's best hand, so a chain user unwraps with `.value()` first.
+- A helper that counts, such as blackjack's totals and bridge's high-card points and distribution, counts the cards it's given, copies included. Only a helper whose answer a copy would make impossible, such as poker's category, rejects them ([ADR 0016](./0016-poker-hands-are-judged-by-their-best-five-cards.md)). Rejecting copies later would break calls that work, so each helper settles it when it's added.
 - Lint stops any library module, entry points included, from importing `deckshoes`, `deckshoes/*` or an `index.ts`, value or type (#74), so a helper can't reach the root's chain through its errors.
 - A helper may default a setting to its game's dominant convention, such as Hi-Lo for `runningCount`'s tags. A rank order has no default ([ADR 0012](./0012-rank-and-suit-orders-are-lists-passed-to-every-call.md)), because the right one depends on the game, but a game helper's subpath already names the game.
 - An input that gives a wrong number with no error when left at a default is required and positional instead, such as the deck `trueCount` divides by: Spanish 21 is dealt from 48-card decks ([ADR 0009](./0009-settings-go-in-one-options-object.md)).

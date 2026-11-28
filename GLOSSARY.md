@@ -258,6 +258,35 @@ _Avoid_: showing cards, door cards
 Cards dealt face up in the middle of the table for every player to use, such as hold'em's five.
 _Avoid_: board, shared cards
 
+## Bridge
+
+**High-card points**:
+A hand's points for its aces, kings, queens and jacks: 4 for each ace, 3 for each king, 2 for each queen and 1 for each jack, so a deck holds 40 and a hand of 13 cards at most 37.
+_Avoid_: HCP, honour points, point count
+
+**Suit length**:
+How many cards of one suit a hand holds.
+
+**Distribution**:
+A hand's suit lengths, longest first, whichever suits they're in, written such as 4-3-3-3 or 5-4-3-1.
+_Avoid_: shape, hand pattern, pattern
+
+**Void**:
+A suit length of 0.
+
+**Singleton**:
+A suit length of 1, or the one card a hand holds in that suit.
+
+**Doubleton**:
+A suit length of 2, or the two cards a hand holds in that suit.
+
+**Balanced**:
+A hand with no void or singleton and at most one doubleton: a distribution of 4-3-3-3, 4-4-3-2 or 5-3-3-2.
+
+**Partnership**:
+Two players who sit opposite each other and play as a side, North and South or East and West.
+_Avoid_: pair, team
+
 ## Library
 
 **Random source**:
