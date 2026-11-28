@@ -251,6 +251,9 @@ describe("reading a stack in library code", () => {
     "pile.map((card) => card);",
     "Array.from(remainder);",
     "cards.slice();",
+    "[...otherCards];",
+    "discardPile.map((card) => card);",
+    "for (const card of spanishDeck) f(card);",
   ])("rejects %s", (code) => {
     const found = problems(code);
     expect(found).toHaveLength(1);
@@ -288,6 +291,10 @@ describe("naming a stack parameter in library code", () => {
     "function op<C>(from: CardStack<C> | undefined) {}",
     "function op<C>(from: undefined | CardStack<C>) {}",
     "function op<C>(from: Readonly<CardStack<C>>) {}",
+    "function op<C>(Cards: CardStack<C>) {}",
+    "function op<C>(cardsOther: CardStack<C>) {}",
+    "function op<C>(other_cards: CardStack<C>) {}",
+    "function op<C>(otherCard: CardStack<C>) {}",
   ])("rejects %s", (code) => {
     const found = problems(code);
     expect(found).toHaveLength(1);
@@ -298,6 +305,9 @@ describe("naming a stack parameter in library code", () => {
     "function op<C>(stack: CardStack<C>, cards: CardStack<C>) {}",
     "function op<C>(deck: CardStack<C>, hand: CardStack<C>) {}",
     "function op<C>(pile: CardStack<C>, remainder: CardStack<C>) {}",
+    "function op<C>(cards: CardStack<C>, otherCards: CardStack<C>) {}",
+    "function op<C>(discardPile: CardStack<C>, spanishDeck: CardStack<C>) {}",
+    "function op<C>(firstHand: CardStack<C>, hand2Stack: CardStack<C>) {}",
     "function op<C>(stack: CardStack<C> | undefined, cards: Readonly<CardStack<C>> = []) {}",
     "function op(order: readonly Rank[], count = 1) {}",
     "function op<C>(hands: readonly CardStack<C>[]) {}",
