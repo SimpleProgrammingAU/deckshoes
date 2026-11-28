@@ -86,7 +86,9 @@ export function handCategory(cards: CardStack): Category {
  * of a kind and then its pair, and two pair is the higher pair, the lower
  * pair, and the kicker. A straight runs from its top card, so the wheel is
  * 5 4 3 2 A. Where more than one card would do equally well, such as two
- * queens for one kicker, the one nearer the top is used.
+ * queens for one kicker, the one nearer the top is used. When two suits make
+ * flushes as strong as each other, the one whose top card is nearer the top
+ * is used.
  *
  * The cards returned are the ones given, so a cloned card comes back as the
  * clone. The cards are left untouched.
@@ -118,7 +120,7 @@ export function handCategory(cards: CardStack): Category {
  * formatStack(bestHand(parseStack("3D JC 3S 9H 2C 7D 5S"))); // => "3D 3S JC 9H 7D"
  * formatStack(bestHand(parseStack("AS 2D 3C 4H 5S 9D KC"))); // => "5S 4H 3C 2D AS"
  *
- * // Fewer than five cards come back in the same order.
+ * // Fewer than five cards all come back, most significant first.
  * formatStack(bestHand(parseStack("7H KS 7C"))); // => "7H 7C KS"
  *
  * // Omaha: two of the four hole cards, with three community cards.
@@ -235,6 +237,6 @@ export function compareHands(
   if (reading instanceof Error) throw reading;
   const otherReading = readPokerHand(otherCards, otherSize, "the other cards");
   if (otherReading instanceof Error) throw otherReading;
-  if (reading.score === otherReading.score) return 0;
-  return reading.score > otherReading.score ? 1 : -1;
+  if (reading.strength === otherReading.strength) return 0;
+  return reading.strength > otherReading.strength ? 1 : -1;
 }

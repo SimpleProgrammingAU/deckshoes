@@ -21,8 +21,8 @@ import { standard52 } from "../presets/standard52.ts";
 import { Category } from "./category.ts";
 import { bestHand, compareHands, handCategory } from "./hand.ts";
 
-/** Each standard rank's place, with an ace high, written out here rather than shared with the implementation. */
-const PLACES: Readonly<Record<string, number>> = {
+/** Each standard rank's value in poker, with an ace high, written out here rather than shared with the implementation. */
+const VALUES: Readonly<Record<string, number>> = {
   "2": 2,
   "3": 3,
   "4": 4,
@@ -53,35 +53,35 @@ const CATEGORIES: readonly Category[] = [
 
 /**
  * A poker hand of five cards or fewer, judged by brute force: its category's
- * index in CATEGORIES, then the places that settle a tie, in the order they're
+ * index in CATEGORIES, then the values that settle a tie, in the order they're
  * compared. Written without the implementation's approach: the ranks grouped
- * by how often they come, and a straight read off the sorted places.
+ * by how often they come, and a straight read off the sorted values.
  */
 function oracleScore(cards: readonly Card[]): number[] {
-  const places = cards
-    .map((c) => PLACES[c.rank] ?? NaN)
+  const values = cards
+    .map((c) => VALUES[c.rank] ?? NaN)
     .toSorted((a, b) => b - a);
-  const groups = [...tally(places)].toSorted(
-    ([placeA, countA], [placeB, countB]) => countB - countA || placeB - placeA,
+  const groups = [...tally(values)].toSorted(
+    ([valueA, countA], [valueB, countB]) => countB - countA || valueB - valueA,
   );
   const shape = groups.map(([, count]) => count).join("");
-  const grouped = groups.map(([place]) => place);
-  const five = cards.length === 5;
-  const flush = five && cards.every((c) => c.suit === cards[0]?.suit);
+  const grouped = groups.map(([value]) => value);
+  const fiveCards = cards.length === 5;
+  const flush = fiveCards && cards.every((c) => c.suit === cards[0]?.suit);
   let top: number | undefined;
-  if (five && shape === "11111") {
-    if (places[0] === (places[4] ?? NaN) + 4) top = places[0];
-    if (places.join(",") === "14,5,4,3,2") top = 5;
+  if (fiveCards && shape === "11111") {
+    if (values[0] === (values[4] ?? NaN) + 4) top = values[0];
+    if (values.join(",") === "14,5,4,3,2") top = 5;
   }
   if (flush && top !== undefined) return [8, top];
   if (shape.startsWith("4")) return [7, ...grouped];
   if (shape === "32") return [6, ...grouped];
-  if (flush) return [5, ...places];
+  if (flush) return [5, ...values];
   if (top !== undefined) return [4, top];
   if (shape.startsWith("3")) return [3, ...grouped];
   if (shape.startsWith("22")) return [2, ...grouped];
   if (shape.startsWith("2")) return [1, ...grouped];
-  return [0, ...places];
+  return [0, ...values];
 }
 
 /** Compares two scores from {@link oracleScore} in turn, as -1, 0 or 1. */
@@ -121,13 +121,8 @@ function dealt(min: number, max: number): fc.Arbitrary<Card[]> {
   });
 }
 
-/** The cards of a stack as compact text, to compare whole stacks. */
-function text(cards: CardStack): string {
-  return formatStack(cards);
-}
-
 describe("known poker hands", () => {
-  // [cards, category, best hand]
+  // [cards, category, best poker hand]
   it.each([
     ["AS KS QS JS 10S", Category.STRAIGHT_FLUSH, "AS KS QS JS 10S"],
     ["5D 4D 3D 2D AD", Category.STRAIGHT_FLUSH, "5D 4D 3D 2D AD"],
@@ -165,6 +160,19 @@ describe("known poker hands", () => {
       Category.STRAIGHT_FLUSH,
       "10S 9S 8S 7S 6S",
     ],
+    // Two suits that make flushes as strong as each other: the one whose top
+    // card is nearer the top, even below another suit's first card.
+    ["2S JH 9H 7H 5H 3H JS 9S 7S 5S 3S", Category.FLUSH, "JH 9H 7H 5H 3H"],
+    [
+      "2S 9H 8H 7H 6H 5H 9S 8S 7S 6S 5S",
+      Category.STRAIGHT_FLUSH,
+      "9H 8H 7H 6H 5H",
+    ],
+    [
+      "3S 9S 8S 7S 6S 5S 9H 8H 7H 6H 5H",
+      Category.STRAIGHT_FLUSH,
+      "9S 8S 7S 6S 5S",
+    ],
     // Fewer than five cards.
     ["AS", Category.HIGH_CARD, "AS"],
     ["8C 8D", Category.ONE_PAIR, "8C 8D"],
@@ -179,12 +187,12 @@ describe("known poker hands", () => {
   ] as const)("%s is %s: %s", (cards, category, best) => {
     const stack = parseStack(cards);
     expect(handCategory(stack)).toBe(category);
-    expect(text(bestHand(stack))).toBe(best);
+    expect(formatStack(bestHand(stack))).toBe(best);
   });
 
   it("finds the royal flush in hearts in a standard 52, whose hearts come first", () => {
     expect(handCategory(standard52())).toBe(Category.STRAIGHT_FLUSH);
-    expect(text(bestHand(standard52()))).toBe("AH KH QH JH 10H");
+    expect(formatStack(bestHand(standard52()))).toBe("AH KH QH JH 10H");
   });
 });
 
@@ -205,7 +213,7 @@ describe("comparing poker hands", () => {
     ["AS KS QD JC 10H", "AH KD QS JH 10C", 0],
     ["AH KH 9H 6H 3H", "AS KS 9S 6S 3S", 0],
     ["AS KD QC JH 9S", "AH KC QD JS 8H", 1],
-    // Hands of different sizes, both of five cards or more.
+    // Poker hands of different sizes, both of five cards or more.
     ["AS KS QS JS 10S 2H 3D", "AH AD AC KS KH QD", 1],
     ["AS KS 2D 3C 4H", "AH KH 2S 3D 4C 7S 8S", -1],
     // Fewer than five cards, of the same size.
@@ -225,12 +233,12 @@ describe("comparing poker hands", () => {
   });
 });
 
-describe("every distinct five-card poker hand", () => {
-  /** One five-card poker hand for each of the 7,462 that differ in ranks or in being a flush. */
-  function distinctHands(): Card[][] {
-    const ranks = Object.keys(PLACES) as Card["rank"][];
+describe("every distinct poker hand of five cards", () => {
+  /** One poker hand of five cards for each of the 7,462 that differ in ranks or in being a flush. */
+  function distinctPokerHands(): Card[][] {
+    const ranks = Object.keys(VALUES) as Card["rank"][];
     const suits = ["S", "H", "D", "C"] as const;
-    const hands: Card[][] = [];
+    const pokerHands: Card[][] = [];
     const build = (start: number, chosen: number[]): void => {
       if (chosen.length < 5) {
         for (let index = start; index < ranks.length; index++) {
@@ -243,29 +251,31 @@ describe("every distinct five-card poker hand", () => {
       // a flush. Five different ranks all get spades, a flush, and then again
       // with the last in hearts, which isn't.
       const copies = new Map<number, number>();
-      const hand = chosen.map((index) => {
+      const pokerHand = chosen.map((index) => {
         const copy = copies.get(index) ?? 0;
         copies.set(index, copy + 1);
         return card(ranks[index] ?? "2", suits[copy] ?? "S");
       });
-      hands.push(hand);
-      const last = hand[4];
+      pokerHands.push(pokerHand);
+      const last = pokerHand[4];
       if (copies.size === 5 && last !== undefined) {
-        hands.push([...hand.slice(0, 4), card(last.rank, "H")]);
+        pokerHands.push([...pokerHand.slice(0, 4), card(last.rank, "H")]);
       }
     };
     build(0, []);
-    return hands;
+    return pokerHands;
   }
 
-  const hands = distinctHands();
+  const pokerHands = distinctPokerHands();
 
   it("number 7,462", () => {
-    expect(hands).toHaveLength(7462);
+    expect(pokerHands).toHaveLength(7462);
   });
 
   it("fall into the categories in the numbers poker's odds give", () => {
-    const counts = tally(hands.map((hand) => handCategory(hand)));
+    const counts = tally(
+      pokerHands.map((pokerHand) => handCategory(pokerHand)),
+    );
     expect(Object.fromEntries(counts)).toStrictEqual({
       [Category.STRAIGHT_FLUSH]: 10,
       [Category.FOUR_OF_A_KIND]: 156,
@@ -280,7 +290,7 @@ describe("every distinct five-card poker hand", () => {
   });
 
   it("sort into 7,462 places with no ties, in the order brute force gives", () => {
-    const sorted = hands.toSorted(compareHands);
+    const sorted = pokerHands.toSorted(compareHands);
     for (let i = 1; i < sorted.length; i++) {
       const lower = sorted[i - 1] ?? [];
       const higher = sorted[i] ?? [];
@@ -291,14 +301,14 @@ describe("every distinct five-card poker hand", () => {
 });
 
 describe("judging any cards", () => {
-  it("finds the category and best five that brute force finds, from 1 to 9 cards", () => {
+  it("finds the category and best five that brute force finds, from 1 to 12 cards", () => {
     fc.assert(
-      fc.property(dealt(1, 9), (cards) => {
+      fc.property(dealt(1, 12), (cards) => {
         const best = oracleBest(cards);
         expect(handCategory(cards)).toBe(CATEGORIES[best[0] ?? NaN]);
-        const hand = bestHand(cards);
-        expect(hand).toHaveLength(Math.min(cards.length, 5));
-        expect(oracleScore(hand)).toStrictEqual(best);
+        const pokerHand = bestHand(cards);
+        expect(pokerHand).toHaveLength(Math.min(cards.length, 5));
+        expect(oracleScore(pokerHand)).toStrictEqual(best);
       }),
     );
   });
@@ -326,10 +336,10 @@ describe("judging any cards", () => {
   it("gives some of the cards it was given, each once, as a plain frozen stack", () => {
     fc.assert(
       fc.property(dealt(1, 20), (cards) => {
-        const hand = bestHand(cards);
-        expect(isPlainFrozen(hand)).toBe(true);
-        expect(new Set(hand).size).toBe(hand.length);
-        for (const c of hand) expect(cards).toContain(c);
+        const pokerHand = bestHand(cards);
+        expect(isPlainFrozen(pokerHand)).toBe(true);
+        expect(new Set(pokerHand).size).toBe(pokerHand.length);
+        for (const c of pokerHand) expect(cards).toContain(c);
       }),
     );
   });
@@ -337,10 +347,10 @@ describe("judging any cards", () => {
   it("judges the best five as it judges all the cards", () => {
     fc.assert(
       fc.property(dealt(5, 20), (cards) => {
-        const hand = bestHand(cards);
-        expect(handCategory(hand)).toBe(handCategory(cards));
-        expect(compareHands(hand, cards)).toBe(0);
-        expect(text(bestHand(hand))).toBe(text(hand));
+        const pokerHand = bestHand(cards);
+        expect(handCategory(pokerHand)).toBe(handCategory(cards));
+        expect(compareHands(pokerHand, cards)).toBe(0);
+        expect(formatStack(bestHand(pokerHand))).toBe(formatStack(pokerHand));
       }),
     );
   });
@@ -384,11 +394,11 @@ describe("judging any cards", () => {
         const clone = structuredClone(cards);
         expect(handCategory(clone)).toBe(handCategory(cards));
         expect(compareHands(clone, cards)).toBe(0);
-        const hand = bestHand(clone);
-        expect(hand.map((c) => short(c))).toStrictEqual(
+        const pokerHand = bestHand(clone);
+        expect(pokerHand.map((c) => short(c))).toStrictEqual(
           bestHand(cards).map((c) => short(c)),
         );
-        for (const c of hand) expect(clone).toContain(c);
+        for (const c of pokerHand) expect(clone).toContain(c);
       }),
     );
   });
@@ -397,8 +407,8 @@ describe("judging any cards", () => {
 /** A royal flush, the other poker hand when `compareHands` is under test. */
 const ROYAL_FLUSH = parseStack("AS KS QS JS 10S");
 
-/** Five cards that make a poker hand, with room for a card to go wrong at position 1. */
-const FIVE = "AS 6H KC 6D 2S";
+/** Five cards, as compact text, for the tests that need a stack of five. */
+const FIVE_CARDS = "AS 6H KC 6D 2S";
 
 /** The functions under test, each taking one stack, with `compareHands` given a royal flush as its other poker hand. */
 const OPERATIONS = [
@@ -424,16 +434,16 @@ describe.each(OPERATIONS)(
       asStack([card("Q", "D"), value, ...parseStack("JC 10H 9S 8D")]);
 
     it("reads the length once and each card once, by index", () => {
-      const { reads, stack } = countingReads(parseStack(FIVE));
+      const { reads, stack } = countingReads(parseStack(FIVE_CARDS));
       operation(stack);
       expect(reads.length).toBe(1);
       expect(reads.positions).toStrictEqual([1, 1, 1, 1, 1]);
     });
 
     it("leaves the cards untouched", () => {
-      const cards = [...parseStack(FIVE)];
+      const cards = [...parseStack(FIVE_CARDS)];
       operation(cards);
-      expect(cards).toStrictEqual(parseStack(FIVE));
+      expect(cards).toStrictEqual(parseStack(FIVE_CARDS));
       expect(Object.isFrozen(cards)).toBe(false);
     });
 
@@ -557,7 +567,7 @@ describe.each(OPERATIONS)(
   },
 );
 
-describe("compareHands with hands of different sizes", () => {
+describe("compareHands with poker hands of different sizes", () => {
   it.each([
     ["AS AH", "KS KH KD"],
     ["AS AH KS KH", "QS QH QD QC 2S"],
