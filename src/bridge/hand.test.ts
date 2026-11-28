@@ -6,6 +6,7 @@ import type { CardStack } from "../stack.ts";
 import {
   arraySubclasses,
   asStack,
+  asSuit,
   countingReads,
   isPlainFrozen,
   nonArrays,
@@ -13,6 +14,7 @@ import {
   nonSuits,
   seeds,
   stacks,
+  standardSuits,
   thrownBy,
 } from "../../test/helpers.ts";
 import { type Card, card, type Rank } from "../card.ts";
@@ -41,7 +43,7 @@ const POINTS: Readonly<Record<string, number>> = {
 };
 
 /** The standard suits, spades first. */
-const SUITS = ["S", "H", "D", "C"] as const;
+const SUITS = standardSuits.map(asSuit);
 
 /** The standard ranks, ace first. */
 const RANKS: readonly Rank[] = [
@@ -102,8 +104,9 @@ describe("every hand of 13 cards", () => {
     4484, 624, 60, 4,
   ];
 
-  // Richard Pavlicek's table of hand patterns, http://www.rpbridge.net/7z77.htm:
-  // how many of the hands of 13 cards have each distribution.
+  // Richard Pavlicek's counts of hands by distribution,
+  // http://www.rpbridge.net/7z77.htm: how many of the hands of 13 cards have
+  // each distribution.
   const HANDS_BY_DISTRIBUTION: ReadonlyMap<string, number> = new Map([
     ["4-4-3-2", 136_852_887_600],
     ["5-3-3-2", 98_534_079_072],
