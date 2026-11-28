@@ -1,6 +1,7 @@
 /**
  * A lightweight, fully typed library for playing cards. Presets come from
- * {@link deckshoes/presets!}.
+ * {@link deckshoes/presets!}, and blackjack helpers from
+ * {@link deckshoes/blackjack!}.
  *
  * @packageDocumentation
  * @module deckshoes
