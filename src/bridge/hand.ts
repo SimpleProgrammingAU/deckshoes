@@ -14,7 +14,7 @@ import { namedStackProblem } from "../internal/checks.ts";
  *
  * Only the cards' ranks are read, so the order of the cards doesn't matter,
  * and a cloned card, such as one sent with `postMessage`, counts the same as
- * the real one. A card given twice counts twice. The hand is left untouched.
+ * the real one. Copies each count. The hand is left untouched.
  *
  * @param hand - The cards to count, in any order.
  * @returns The sum of the cards' high-card points, from 0 up.
@@ -76,8 +76,8 @@ export function highCardPoints(hand: CardStack): number {
  * in one suit, use {@link deckshoes!count | count}.
  *
  * Only the cards' ranks and suits are read, so the order of the cards doesn't
- * matter, and a cloned card counts the same as the real one. A card given
- * twice counts twice. The hand is left untouched.
+ * matter, and a cloned card counts the same as the real one. Copies each
+ * count. The hand is left untouched.
  *
  * @param hand - The cards to count, in any order.
  * @returns A new frozen array of the four suit lengths, longest first.
