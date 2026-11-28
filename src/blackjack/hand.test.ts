@@ -13,6 +13,7 @@ import {
   thrownBy,
 } from "../../test/helpers.ts";
 import { type Card, card } from "../card.ts";
+import { parseStack } from "../compact.ts";
 import { handTotal, isBlackjack, isBust, isSoft } from "./hand.ts";
 
 /** Each standard rank's value in blackjack, with an ace as 1, written out here rather than shared with the implementation. */
@@ -50,16 +51,6 @@ function oracleSoft(hand: readonly Card[]): boolean {
   return oracleTotal(hand) !== totals(hand)[0];
 }
 
-/** Writes "AS 6H" as its cards. */
-function cards(text: string): Card[] {
-  if (text === "") return [];
-  return text.split(" ").map((short) => {
-    const rank = short.slice(0, -1) as Card["rank"];
-    const suit = short.slice(-1) as Card["suit"];
-    return card(rank, suit);
-  });
-}
-
 describe("hand totals", () => {
   // [hand, total, soft, blackjack, bust]
   it.each([
@@ -88,7 +79,7 @@ describe("hand totals", () => {
   ] as const)(
     "%s: %i, soft %s, blackjack %s, bust %s",
     (text, total, soft, blackjack, bust) => {
-      const hand = cards(text);
+      const hand = parseStack(text);
       expect(handTotal(hand)).toBe(total);
       expect(isSoft(hand)).toBe(soft);
       expect(isBlackjack(hand)).toBe(blackjack);
@@ -142,7 +133,7 @@ describe("hand totals", () => {
         );
       }),
     );
-    const tens = cards("10S JH QD KC");
+    const tens = parseStack("10S JH QD KC");
     for (const ten of tens) {
       expect(isBlackjack([card("A", "S"), ten])).toBe(true);
       expect(isBlackjack([ten, card("A", "S")])).toBe(true);
@@ -169,16 +160,16 @@ describe.each([
   ["isBust", isBust],
 ] as const)("%s", (_name, operation: (hand: CardStack) => unknown) => {
   it("reads the length once and each card once, by index", () => {
-    const { reads, stack } = countingReads(cards("AS 6H KC"));
+    const { reads, stack } = countingReads(parseStack("AS 6H KC"));
     operation(stack);
     expect(reads.length).toBe(1);
     expect(reads.positions).toStrictEqual([1, 1, 1]);
   });
 
   it("leaves the hand untouched", () => {
-    const hand = cards("AS 6H");
+    const hand = [...parseStack("AS 6H")];
     operation(hand);
-    expect(hand).toStrictEqual(cards("AS 6H"));
+    expect(hand).toStrictEqual(parseStack("AS 6H"));
     expect(Object.isFrozen(hand)).toBe(false);
   });
 
