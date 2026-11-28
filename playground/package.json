@@ -1,0 +1,15 @@
+{
+  "name": "deckshoes-playground",
+  "private": true,
+  "description": "The deckshoes quick start, run on StackBlitz against the latest release.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "deckshoes": "latest"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}
