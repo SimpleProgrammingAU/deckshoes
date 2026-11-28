@@ -95,6 +95,7 @@ describe("the rules ESLint applies to library code", () => {
     "src/internal/operation.ts",
     "src/presets/operation.ts",
     "src/presets/index.ts",
+    "src/blackjack/operation.ts",
   ])(
     "restrict reading a stack and imports in %s, allow an index loop, and require pure marks",
     async (file) => {
