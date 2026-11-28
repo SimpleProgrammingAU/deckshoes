@@ -24,6 +24,12 @@
     "limit": "1250 B"
   },
   {
+    "name": "deckshoes/bridge (everything)",
+    "path": "dist/bridge.js",
+    "import": "*",
+    "limit": "850 B"
+  },
+  {
     "name": "deckshoes/poker (everything)",
     "path": "dist/poker.js",
     "import": "*",
