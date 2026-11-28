@@ -4,7 +4,7 @@ A TypeScript library for playing cards. ESM-only, no runtime dependencies, runs 
 
 ## Architecture
 
-A pure functional core over frozen, immutable data (cards, stacks), plus `chain()`, which only delegates to those functions. The public API is exported from `src/index.ts`; presets ship from the `deckshoes/presets` subpath, and game helpers (poker, blackjack) will follow as their own subpaths. Library helpers that aren't public API live in `src/internal/`. Name things with `GLOSSARY.md`'s terms, in code, docs and issues; read the ADRs in `docs/adr/` that touch what you're changing. Prose is Australian English, identifiers US English.
+A pure functional core over frozen, immutable data (cards, stacks), plus `chain()`, which only delegates to those functions. The public API is exported from `src/index.ts`; presets ship from the `deckshoes/presets` subpath, and game helpers from their own, starting with `deckshoes/blackjack` (ADR 0015). Library helpers that aren't public API live in `src/internal/`. Name things with `GLOSSARY.md`'s terms, in code, docs and issues; read the ADRs in `docs/adr/` that touch what you're changing. Prose is Australian English, identifiers US English.
 
 ## Working in src/
 

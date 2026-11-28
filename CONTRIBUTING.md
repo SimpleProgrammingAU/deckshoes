@@ -31,7 +31,7 @@ pnpm check     # everything CI runs; should pass on a fresh clone
 | `pnpm build`                        | Builds `dist/`.                                                                                                                                                                                       |
 | `pnpm check:package`                | Checks the published package shape (publint, Are the Types Wrong).                                                                                                                                    |
 | `pnpm size`                         | Checks bundle size budgets.                                                                                                                                                                           |
-| `pnpm smoke`                        | Installs the packed tarball in a scratch project, loads both entry points with `import` and `require()`, and type-checks a file that uses them against the published types. Needs `pnpm build` first. |
+| `pnpm smoke`                        | Installs the packed tarball in a scratch project, loads every entry point with `import` and `require()`, and type-checks a file that uses them against the published types. Needs `pnpm build` first. |
 | `pnpm knip`                         | Finds unused files, exports and dependencies.                                                                                                                                                         |
 | `pnpm changeset`                    | Adds a changeset describing your change for the changelog.                                                                                                                                            |
 
@@ -67,9 +67,9 @@ Most of these are enforced by ESLint or TypeScript; the rest are checked in revi
 - **Settings go in one options object,** the last parameter. The stack, and the counts or cards an operation acts on, stay positional ([ADR 0009](./docs/adr/0009-settings-go-in-one-options-object.md)). So does an input an operation can't run without, such as `count`'s `match` or the rank order that `sort` takes ([ADR 0012](./docs/adr/0012-rank-and-suit-orders-are-lists-passed-to-every-call.md)).
 - **Named values are strings, with a constant and a type named after the parameter,** such as `RunOut.STOP` for a `runOut` of `"stop"`, or `Notation.UNICODE_CHARACTER` for `"unicode character"`. Docs use the constant ([ADR 0010](./docs/adr/0010-named-values-are-strings-with-a-constant-of-the-same-name.md)). A setting that's only on or off is a boolean named for what it turns on, `false` by default.
 - **No runtime dependencies,** and no Node.js built-ins in `src/`; the library has to run in browsers and every JS runtime.
-- **Bundlers can drop what isn't imported.** Mark every call or `new` in a top-level constant `/* @__PURE__ */`, nested ones included ([ADR 0010](./docs/adr/0010-named-values-are-strings-with-a-constant-of-the-same-name.md)), and import the chain only in `src/index.ts` ([ADR 0001](./docs/adr/0001-functional-core-with-a-chain.md)). Lint checks both, so the size budgets only measure size.
+- **Bundlers can drop what isn't imported.** Mark every call or `new` in a top-level constant `/* @__PURE__ */`, nested ones included ([ADR 0010](./docs/adr/0010-named-values-are-strings-with-a-constant-of-the-same-name.md)), import the chain only in `src/index.ts` ([ADR 0001](./docs/adr/0001-functional-core-with-a-chain.md)), and import a library module itself, never an entry point (`deckshoes`, `deckshoes/*` or an `index.ts`), which would bring its whole API along. Lint checks all three, so the size budgets only measure size.
 - **Bundles grow only on purpose.** Each budget in `.size-limit.json` is set to the bundle's measured size plus 5%, rounded up to a multiple of 50 B. A change that pushes a bundle over its budget resets that budget by the same rule in the same PR, and the commit that resets it says why the bundle grew. A new budget, such as a new entry point's, starts the same way. A bundle that shrinks can keep its budget.
-- **Named exports only.** Everything public is exported from `src/index.ts`, except presets, which are exported from `src/presets/index.ts`, the `deckshoes/presets` entry point ([ADR 0008](./docs/adr/0008-presets-ship-from-a-subpath.md)).
+- **Named exports only.** Everything public is exported from `src/index.ts`, except presets, which are exported from `src/presets/index.ts`, the `deckshoes/presets` entry point ([ADR 0008](./docs/adr/0008-presets-ship-from-a-subpath.md)), and game helpers, each exported from its game's `src/<game>/index.ts`, such as `deckshoes/blackjack` ([ADR 0015](./docs/adr/0015-game-helpers-ship-from-their-own-subpaths.md)).
 - **Imports use `.ts` extensions** (`import { x } from "./x.ts"`).
 - **Library helpers that aren't public API go in `src/internal/`.** They need a one-line doc comment, nothing more.
 
@@ -77,15 +77,15 @@ Most of these are enforced by ESLint or TypeScript; the rest are checked in revi
 
 Every public export needs a complete doc comment. ESLint enforces each of these:
 
-| Tag           | Rule                                                                                                                                                                                                                        |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (description) | Says what it is or does, not just its name restated.                                                                                                                                                                        |
-| `@param`      | Every parameter, as `@param name - Description.` No `{type}`; TypeScript provides types.                                                                                                                                    |
-| `@returns`    | Required unless the function returns `void`, `Promise<void>`, `never` or `undefined`.                                                                                                                                       |
-| `@throws`     | One per error the function throws, as `@throws {@link InvalidArgumentError} When …`. In `deckshoes/presets`, name the root entry point and the link text: `{@link deckshoes!InvalidArgumentError \| InvalidArgumentError}`. |
-| `@example`    | At least one per export: a fenced `ts` block that compiles, passes lint, and runs as a test.                                                                                                                                |
-| `@since`      | `@since NEXT` on anything new; the release script replaces it with the version number.                                                                                                                                      |
-| `@deprecated` | When something is superseded: name the replacement with `{@link …}` and say when it will be removed.                                                                                                                        |
+| Tag           | Rule                                                                                                                                                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (description) | Says what it is or does, not just its name restated.                                                                                                                                                                                                       |
+| `@param`      | Every parameter, as `@param name - Description.` No `{type}`; TypeScript provides types.                                                                                                                                                                   |
+| `@returns`    | Required unless the function returns `void`, `Promise<void>`, `never` or `undefined`.                                                                                                                                                                      |
+| `@throws`     | One per error the function throws, as `@throws {@link InvalidArgumentError} When …`. In a subpath entry point, such as `deckshoes/presets`, name the root entry point and the link text: `{@link deckshoes!InvalidArgumentError \| InvalidArgumentError}`. |
+| `@example`    | At least one per export: a fenced `ts` block that compiles, passes lint, and runs as a test.                                                                                                                                                               |
+| `@since`      | `@since NEXT` on anything new; the release script replaces it with the version number.                                                                                                                                                                     |
+| `@deprecated` | When something is superseded: name the replacement with `{@link …}` and say when it will be removed.                                                                                                                                                       |
 
 Four things ESLint can't fully check:
 
@@ -109,7 +109,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 
 - `expr; // => value` asserts that `expr` deeply equals `value`. `const x = …; // => value` and `console.log(x); // => value` work too. The comment goes on the last line of the statement, so statements that Prettier wraps over several lines work.
 - `expr; // throws CODE` asserts the error's `code`. Use an error class name instead (`// throws InvalidArgumentError`) to check its `name`. If `expr` contains `await`, it asserts the promise rejects.
-- Import from `"deckshoes"`, or `"deckshoes/presets"` for presets, the way users will.
+- Import from `"deckshoes"`, or from a subpath for presets and game helpers, such as `"deckshoes/presets"` or `"deckshoes/blackjack"`, the way users will.
 - Pass a seeded random source to every shuffle, so the results shown are the results you get.
 - Add `no-test` to the fence (` ```ts no-test `) for illustrations that shouldn't run, such as the block above.
 
