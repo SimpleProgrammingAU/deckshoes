@@ -21,7 +21,7 @@
     "name": "deckshoes/blackjack (everything)",
     "path": "dist/blackjack.js",
     "import": "*",
-    "limit": "850 B"
+    "limit": "1250 B"
   },
   {
     "name": "deckshoes/presets (everything)",

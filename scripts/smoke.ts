@@ -60,7 +60,10 @@ for (const [hand, ErrorClass, code] of [[[null], InvalidCardError, "INVALID_CARD
     throw new Error("deckshoes/blackjack throws its own error classes, not the ones deckshoes exports");
   }
 }
-for (const name of ["handTotal", "isSoft", "isBlackjack", "isBust"]) {
+if (runningCount(deck) !== 0 || runningCount([card("2", "S"), card("K", "H"), card("5", "D")]) !== 1 || trueCount(6, deck.slice(0, 26), deck) !== 12) {
+  throw new Error("deckshoes/blackjack loaded but its counts misbehaved");
+}
+for (const name of ["handTotal", "isSoft", "isBlackjack", "isBust", "runningCount", "trueCount"]) {
   if (name in root) {
     throw new Error("the deckshoes entry point exports blackjack's " + name);
   }
@@ -95,7 +98,7 @@ if (chainedDraw.cards[0] !== drawn.cards[0] || chainedDraw.remainder[0] !== draw
  */
 const TYPES = `
 import { type Card, card, type CardStack, chain, type Chain, draw, type DrawResult, seededRandom, shuffle, type TerminatedChain } from "deckshoes";
-import { handTotal, isBlackjack, isBust, isSoft } from "deckshoes/blackjack";
+import { handTotal, isBlackjack, isBust, isSoft, runningCount, type RunningCountOptions, trueCount } from "deckshoes/blackjack";
 import { euchre, pinochle, type PinochleOptions, piquet, standard52 } from "deckshoes/presets";
 
 const options: PinochleOptions = { size: 80 };
@@ -113,6 +116,8 @@ const blackjackHand: Card[] = [card("A", "S"), card("K", "H")];
 export const total: number = handTotal(blackjackHand);
 export const soft: boolean = isSoft(standard52());
 export const blackjack: boolean = isBlackjack(blackjackHand) && !isBust(drawnCards);
+const tagOptions: RunningCountOptions = { tag: (c: Card) => (c.rank === "A" ? 1 : 0) };
+export const count: number = trueCount(runningCount(drawnCards, tagOptions), deck, standard52());
 `;
 
 /** Strict settings for TYPES, checking the published .d.ts files too. */
@@ -155,7 +160,7 @@ try {
     [
       `import * as root from "deckshoes";`,
       `import { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
-      `import { handTotal, isBlackjack, isBust, isSoft } from "deckshoes/blackjack";`,
+      `import { handTotal, isBlackjack, isBust, isSoft, runningCount, trueCount } from "deckshoes/blackjack";`,
       `import { euchre, pinochle, piquet, standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -165,7 +170,7 @@ try {
     [
       `const root = require("deckshoes");`,
       `const { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
-      `const { handTotal, isBlackjack, isBust, isSoft } = require("deckshoes/blackjack");`,
+      `const { handTotal, isBlackjack, isBust, isSoft, runningCount, trueCount } = require("deckshoes/blackjack");`,
       `const { euchre, pinochle, piquet, standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),
