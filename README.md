@@ -66,7 +66,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Blackjack and poker helpers come from `deckshoes/blackjack` and `deckshoes/poker`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Blackjack, poker and bridge helpers come from `deckshoes/blackjack`, `deckshoes/poker` and `deckshoes/bridge`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -686,6 +686,58 @@ compareHands(parseStack("2C 2D"), parseStack("AS KH")); // => 1
 // In stud, the player whose up cards make the best poker hand acts first:
 // compare the up cards alone.
 compareHands(parseStack("QD QS 4C"), parseStack("AH KH 9H")); // => 1
+```
+
+### Bridge
+
+`deckshoes/bridge` counts a hand's high-card points and gives its distribution.
+
+- **`highCardPoints(hand)`** adds up 4 for each ace, 3 for each king, 2 for each queen and 1 for each jack. A deck holds 40, so a hand of 13 cards averages 10.
+- **`distribution(hand)`** gives the hand's suit lengths, longest first, whichever suits they're in, such as `[4, 3, 3, 3]`. Join them with hyphens to write 4-3-3-3.
+
+Both take any cards: a hand of 13, a hand in mid-play, or a partnership's two hands together. Other ways to judge a bridge hand, such as distribution points and the losing trick count, aren't covered yet ([#102](https://github.com/SimpleProgrammingAU/deckshoes/issues/102)).
+
+```ts
+import {
+  type Card,
+  count,
+  deal,
+  parseStack,
+  seededRandom,
+  shuffle,
+} from "deckshoes";
+import { distribution, highCardPoints } from "deckshoes/bridge";
+import { standard52 } from "deckshoes/presets";
+
+const north = parseStack("AS KS 7S 2S QH 9H 4H KD JD 8D 6C 5C 3C");
+highCardPoints(north); // => 13
+distribution(north); // => [4, 3, 3, 3]
+const written = distribution(north).join("-");
+written; // => "4-3-3-3"
+
+// A 1NT opening: 15 to 17 high-card points, and balanced, with no void or
+// singleton and at most one doubleton.
+function opensOneNoTrump(hand: readonly Card[]): boolean {
+  const points = highCardPoints(hand);
+  const lengths = distribution(hand);
+  return points >= 15 && points <= 17 && lengths[2] >= 3 && lengths[3] >= 2;
+}
+opensOneNoTrump(parseStack("AS QS 7S 2S KH JH 4H AD 9D 8D KC 5C 3C")); // => true
+opensOneNoTrump(north); // => false
+
+// A partnership's points add up: 25 or more is usually enough for game.
+const south = parseStack("QS JS 3S AH KH 5H 2H QD 4D 3D AC 7C 2C");
+highCardPoints([...north, ...south]); // => 29
+
+// Four hands of 13 from a shuffled deck share its 40 high-card points.
+const deck = shuffle(standard52(), { random: seededRandom(42) });
+const { hands } = deal(deck, 4, 13);
+hands.map((hand) => highCardPoints(hand)); // => [11, 9, 11, 9]
+hands.map((hand) => distribution(hand).join("-")); // => ["5-3-3-2", "6-3-2-2", "5-4-3-1", "4-3-3-3"]
+
+// Which suit is which: count one suit's cards, such as to look for five or
+// more spades.
+count(north, ({ suit }) => suit === "S"); // => 4
 ```
 
 ## Saving and loading

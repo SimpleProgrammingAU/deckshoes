@@ -37,7 +37,7 @@ Each helper is its own entry point with its own size budget, so you only downloa
 
 - `deckshoes/poker`: the category of a poker hand, its best five cards, and which of two poker hands wins, from hold'em's seven cards down to two hole cards. **Done.**
 - `deckshoes/blackjack`: hand totals, soft hands, blackjack and bust, and running and true counts, Hi-Lo by default. **Done.**
-- `deckshoes/bridge`: high-card points and hand distribution.
+- `deckshoes/bridge`: a hand's high-card points and its distribution, for any number of cards. **Done.**
 
 M3 also brings an online playground, linked from the README and the API docs.
 
