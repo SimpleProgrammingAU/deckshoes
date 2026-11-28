@@ -19,6 +19,8 @@ pnpm add deckshoes
 
 ## Quick start
 
+Try this quick start in your browser: the [playground](https://stackblitz.com/github/SimpleProgrammingAU/deckshoes/tree/main/playground?file=index.ts) runs it on StackBlitz against the latest release.
+
 ```ts
 import { card, chain, seededRandom, shuffle } from "deckshoes";
 import { standard52 } from "deckshoes/presets";
@@ -873,6 +875,7 @@ describe(new Error("boom")); // => "Something else went wrong"
 ## Documentation
 
 - [API reference](https://simpleprogrammingau.github.io/deckshoes/), generated from the doc comments in the source. Every example in it is run as a test.
+- [Playground](https://stackblitz.com/github/SimpleProgrammingAU/deckshoes/tree/main/playground?file=index.ts) on StackBlitz, which runs the quick start in your browser against the latest release.
 - [Roadmap](./ROADMAP.md)
 - [Changelog](https://github.com/SimpleProgrammingAU/deckshoes/blob/main/CHANGELOG.md)
 

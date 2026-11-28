@@ -39,7 +39,7 @@ Each helper is its own entry point with its own size budget, so you only downloa
 - `deckshoes/blackjack`: hand totals, soft hands, blackjack and bust, and running and true counts, Hi-Lo by default. **Done.**
 - `deckshoes/bridge`: a hand's high-card points and its distribution, for any number of cards. **Done.**
 
-M3 also brings an online playground, linked from the README and the API docs.
+M3 also brings an online playground, linked from the README and the API docs. **Done.**
 
 ## M4: Realistic shuffles (1.x)
 

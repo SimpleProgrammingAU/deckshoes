@@ -43,6 +43,7 @@
     "scripts",
     "test",
     "eslint-plugin",
+    "playground",
     ".doctest/**/*.ts",
     "*.ts"
   ]
