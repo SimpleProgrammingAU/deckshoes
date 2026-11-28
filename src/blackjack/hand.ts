@@ -52,7 +52,7 @@ import { namedStackProblem } from "../internal/checks.ts";
  * handTotal(holey); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function handTotal(hand: CardStack): number {
   const problem = namedStackProblem(hand, "hand");
@@ -103,7 +103,7 @@ export function handTotal(hand: CardStack): number {
  * handTotal(softSeventeen) - 10; // => 7
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function isSoft(hand: CardStack): boolean {
   const problem = namedStackProblem(hand, "hand");
@@ -145,7 +145,7 @@ export function isSoft(hand: CardStack): boolean {
  * isBlackjack([card("A", "S"), card("9", "H")]); // => false
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function isBlackjack(hand: CardStack): boolean {
   const problem = namedStackProblem(hand, "hand");
@@ -181,7 +181,7 @@ export function isBlackjack(hand: CardStack): boolean {
  * isBust([card("K", "S"), card("Q", "H"), card("A", "C")]); // => false
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function isBust(hand: CardStack): boolean {
   const problem = namedStackProblem(hand, "hand");

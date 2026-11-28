@@ -29,7 +29,7 @@ import { rankEntry } from "../internal/rank-entry.ts";
  * runningCount([card("A", "S"), card("K", "H"), card("A", "D")], options); // => 2
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export interface RunningCountOptions {
   /**
@@ -98,7 +98,7 @@ export interface RunningCountOptions {
  * runningCount(sevens, { tag: () => NaN }); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function runningCount(
   cards: CardStack,
@@ -186,7 +186,7 @@ export function runningCount(
  * trueCount(6, [], deck); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function trueCount(
   runningCount: number,
