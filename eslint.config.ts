@@ -75,10 +75,13 @@ const DOCUMENTABLE = [
 
 /**
  * What library code calls a stack: the glossary's words for the roles a stack
- * plays, and `cards` for a stack an operation acts on. A selector has no type
- * information, so the rules below find a stack by its name.
+ * plays, and `cards` for a stack an operation acts on, alone or with a word in
+ * front, such as `otherCards` beside `cards` or a shoe's `discardPile`. A
+ * selector has no type information, so the rules below find a stack by its
+ * name.
  */
-const STACK_NAME = "/^(?:cards|deck|hand|pile|remainder|stack)$/";
+const STACK_NAME =
+  "/^(?:cards|deck|hand|pile|remainder|stack|[a-z][A-Za-z\\d]*(?:Cards|Deck|Hand|Pile|Remainder|Stack))$/";
 
 /** Array methods that make a new array, through `Symbol.species` or an override. */
 const COPYING_METHOD =
@@ -253,7 +256,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
         })),
         {
           message:
-            "Name a stack parameter stack, deck, hand, pile, remainder or cards: lint finds a stack by its name, to keep copies going through copyStack (ADR 0004).",
+            "Name a stack parameter stack, deck, hand, pile, remainder or cards, alone or with a word in front, such as otherCards: lint finds a stack by its name, to keep copies going through copyStack (ADR 0004).",
           selector: MISNAMED_STACK,
         },
       ],
