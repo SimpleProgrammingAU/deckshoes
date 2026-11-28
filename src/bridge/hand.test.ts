@@ -90,9 +90,9 @@ function addTo<K>(totals: Map<K, number>, key: K, weight: number): void {
 }
 
 describe("every hand of 13 cards", () => {
-  // Richard Pavlicek's Basic HCP Table, http://www.rpbridge.net/7z76.htm: how
-  // many of the 635,013,559,600 hands of 13 cards hold each number of
-  // high-card points.
+  // Richard Pavlicek's counts of hands by high-card points,
+  // http://www.rpbridge.net/7z76.htm: how many of the 635,013,559,600 hands
+  // of 13 cards hold each number of high-card points.
   const HANDS_BY_POINTS = [
     2_310_789_600, 5_006_710_800, 8_611_542_576, 15_636_342_960, 24_419_055_136,
     32_933_031_040, 41_619_399_184, 50_979_441_968, 56_466_608_128,
