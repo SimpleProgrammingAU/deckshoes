@@ -42,6 +42,8 @@ export function readSuitLengths(hand: CardStack): InvalidCardError | number[] {
   const size = hand.length;
   for (let i = 0; i < size; i++) {
     const card: unknown = hand[i];
+    // Only the rank check is wanted, not the points: ADR 0015 asks for a
+    // standard rank, and suitEntry needs a card that has one.
     const entry = rankEntry(card, POINTS, i, "the hand");
     if (entry instanceof InvalidCardError) return entry;
     const suit = suitEntry(card, i, "the hand");
