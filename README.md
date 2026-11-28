@@ -66,7 +66,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Since 1.0, blackjack helpers come from `deckshoes/blackjack`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): poker and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Blackjack helpers come from `deckshoes/blackjack`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): poker and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -591,13 +591,15 @@ const dealer = [card("A", "S"), card("6", "H")];
 handTotal(dealer); // => 17
 isSoft(dealer); // => true
 
-// A dealer who stands on soft 17 draws below 17, and one who hits soft 17
-// draws to it as well.
-const standsOnSoft17 = (hand: readonly Card[]) => handTotal(hand) < 17;
-const hitsSoft17 = (hand: readonly Card[]) =>
-  handTotal(hand) < 17 || (handTotal(hand) === 17 && isSoft(hand));
-standsOnSoft17(dealer); // => false
-hitsSoft17(dealer); // => true
+// Whether the dealer draws again: always below 17, and on a soft 17 too when
+// the table's rules say the dealer hits soft 17.
+function dealerDraws(hand: readonly Card[], hitsSoft17: boolean): boolean {
+  const total = handTotal(hand);
+  return total < 17 || (hitsSoft17 && total === 17 && isSoft(hand));
+}
+// On A 6, a dealer who stands on soft 17 stands, and one who hits soft 17 draws.
+dealerDraws(dealer, false); // => false
+dealerDraws(dealer, true); // => true
 
 // Drawing a 9 makes a hard 16: the ace drops back to 1.
 const drawn = [...dealer, card("9", "C")];
