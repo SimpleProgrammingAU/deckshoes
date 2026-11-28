@@ -50,6 +50,10 @@ const config: ViteUserConfig = defineConfig({
         replacement: path.join(root, "src", "blackjack", "index.ts"),
       },
       {
+        find: /^deckshoes\/bridge$/u,
+        replacement: path.join(root, "src", "bridge", "index.ts"),
+      },
+      {
         find: /^deckshoes\/poker$/u,
         replacement: path.join(root, "src", "poker", "index.ts"),
       },

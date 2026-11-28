@@ -11,6 +11,7 @@
     "deal",
     "poker",
     "blackjack",
+    "bridge",
     "card-game"
   ],
   "homepage": "https://github.com/SimpleProgrammingAU/deckshoes#readme",
@@ -33,6 +34,10 @@
     "./blackjack": {
       "types": "./dist/blackjack.d.ts",
       "default": "./dist/blackjack.js"
+    },
+    "./bridge": {
+      "types": "./dist/bridge.d.ts",
+      "default": "./dist/bridge.js"
     },
     "./poker": {
       "types": "./dist/poker.d.ts",

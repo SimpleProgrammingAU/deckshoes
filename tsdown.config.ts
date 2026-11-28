@@ -4,6 +4,7 @@ const config: UserConfig = defineConfig({
   entry: {
     index: "src/index.ts",
     blackjack: "src/blackjack/index.ts",
+    bridge: "src/bridge/index.ts",
     poker: "src/poker/index.ts",
     presets: "src/presets/index.ts",
   },

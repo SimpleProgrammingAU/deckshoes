@@ -68,6 +68,16 @@ if (runningCount(deck) !== 0 || runningCount([card("2", "S"), card("K", "H"), ca
   throw new Error("deckshoes/blackjack loaded but its counts misbehaved");
 }
 notInRoot("deckshoes/blackjack", ["handTotal", "isSoft", "isBlackjack", "isBust", "runningCount", "trueCount"]);
+const bridgeHand = [card("A", "S"), card("K", "S"), card("Q", "H"), card("J", "D"), card("2", "C")];
+const lengths = distribution(bridgeHand);
+if (highCardPoints(bridgeHand) !== 10 || highCardPoints(deck) !== 40 || lengths.join("-") !== "2-1-1-1" || !Object.isFrozen(lengths)) {
+  throw new Error("deckshoes/bridge loaded but its functions misbehaved");
+}
+throwsRootErrors("deckshoes/bridge", [
+  [() => highCardPoints([null]), InvalidCardError, "INVALID_CARD"],
+  [() => distribution("AS"), InvalidArgumentError, "INVALID_ARGUMENT"],
+]);
+notInRoot("deckshoes/bridge", ["distribution", "highCardPoints"]);
 const seven = [card("K", "S"), card("K", "H"), card("K", "D"), card("4", "C"), card("4", "S"), card("9", "H"), card("2", "D")];
 if (handCategory(seven) !== Category.FULL_HOUSE || bestHand(seven).length !== 5 || bestHand(seven)[3] !== card("4", "C") || compareHands(seven, deck.slice(0, 5)) !== -1 || !Object.isFrozen(Category)) {
   throw new Error("deckshoes/poker loaded but its functions misbehaved");
@@ -109,6 +119,7 @@ if (chainedDraw.cards[0] !== drawn.cards[0] || chainedDraw.remainder[0] !== draw
 const TYPES = `
 import { type Card, card, type CardStack, chain, type Chain, draw, type DrawResult, seededRandom, shuffle, type TerminatedChain } from "deckshoes";
 import { handTotal, isBlackjack, isBust, isSoft, runningCount, type RunningCountOptions, trueCount } from "deckshoes/blackjack";
+import { distribution, highCardPoints } from "deckshoes/bridge";
 import { bestHand, Category, compareHands, handCategory } from "deckshoes/poker";
 import { euchre, pinochle, type PinochleOptions, piquet, standard52 } from "deckshoes/presets";
 
@@ -129,6 +140,9 @@ export const soft: boolean = isSoft(standard52());
 export const blackjack: boolean = isBlackjack(blackjackHand) && !isBust(drawnCards);
 const tagOptions: RunningCountOptions = { tag: (c: Card) => (c.rank === "A" ? 1 : 0) };
 export const count: number = trueCount(runningCount(drawnCards, tagOptions), deck, standard52());
+export const points: number = highCardPoints(drawnCards);
+const [longest, , , shortest]: readonly [number, number, number, number] = distribution(deck);
+export const lengthsApart: number = longest - shortest;
 const category: Category = handCategory(drawnCards);
 export const fullHouse: boolean = category === Category.FULL_HOUSE;
 export const pokerHand: CardStack<Card> = bestHand(deck);
@@ -176,6 +190,7 @@ try {
       `import * as root from "deckshoes";`,
       `import { card, chain, draw, InsufficientCardsError, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
       `import { handTotal, isBlackjack, isBust, isSoft, runningCount, trueCount } from "deckshoes/blackjack";`,
+      `import { distribution, highCardPoints } from "deckshoes/bridge";`,
       `import { bestHand, Category, compareHands, handCategory } from "deckshoes/poker";`,
       `import { euchre, pinochle, piquet, standard52 } from "deckshoes/presets";`,
       CHECK,
@@ -187,6 +202,7 @@ try {
       `const root = require("deckshoes");`,
       `const { card, chain, draw, InsufficientCardsError, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
       `const { handTotal, isBlackjack, isBust, isSoft, runningCount, trueCount } = require("deckshoes/blackjack");`,
+      `const { distribution, highCardPoints } = require("deckshoes/bridge");`,
       `const { bestHand, Category, compareHands, handCategory } = require("deckshoes/poker");`,
       `const { euchre, pinochle, piquet, standard52 } = require("deckshoes/presets");`,
       CHECK,
