@@ -214,5 +214,7 @@ export function trueCount(
       "Invalid deck: it's empty, so it can't measure the decks left",
     );
   }
-  return runningCount / (left / size);
+  // One division, so the result is rounded once: dividing by `left / size`
+  // would round twice, and give 12.999999999999998 for 27 over 108 of 52.
+  return (runningCount * size) / left;
 }
