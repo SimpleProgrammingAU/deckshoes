@@ -2,8 +2,8 @@ import type { Rank } from "../card.ts";
 import type { CardStack } from "../stack.ts";
 
 import { InvalidArgumentError, InvalidCardError } from "../errors.ts";
-import { byRank } from "./by-rank.ts";
 import { display } from "./display.ts";
+import { rankEntry } from "./rank-entry.ts";
 
 /** Each standard rank's value in blackjack, with an ace as 1, the only rank worth 1. Built here rather than with `lookup()`, which only the root entry point uses: sharing it would move it into the shared chunk, and change the root's measured size. */
 const VALUES: ReadonlyMap<unknown, number> = /* @__PURE__ */ new Map(
@@ -56,7 +56,7 @@ export function readHand(hand: CardStack): HandReading | InvalidCardError {
   let ace = false;
   const size = hand.length;
   for (let i = 0; i < size; i++) {
-    const value = byRank(hand[i], VALUES, i, "the hand");
+    const value = rankEntry(hand[i], VALUES, i, "the hand");
     if (value instanceof InvalidCardError) return value;
     sum += value;
     if (value === 1) ace = true;

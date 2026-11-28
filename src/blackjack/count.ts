@@ -8,13 +8,13 @@ import {
   tagProblem,
   tagResultProblem,
 } from "../internal/blackjack.ts";
-import { byRank } from "../internal/by-rank.ts";
 import {
   cardsProblem,
   optionsProblem,
   stackProblem,
 } from "../internal/checks.ts";
 import { display } from "../internal/display.ts";
+import { rankEntry } from "../internal/rank-entry.ts";
 
 /**
  * Settings for {@link runningCount}.
@@ -117,16 +117,16 @@ export function runningCount(
   for (let i = 0; i < size; i++) {
     // Checked for a standard rank before it goes to `tag`.
     const card: unknown = cards[i];
-    const hiLo = byRank(card, HI_LO, i, "the cards");
+    const hiLo = rankEntry(card, HI_LO, i, "the cards");
     if (hiLo instanceof InvalidCardError) throw hiLo;
     if (tagOf === undefined) {
       count += hiLo;
       continue;
     }
-    const given = tagOf(card as Card);
-    const badResult = tagResultProblem(given, i);
+    const tagged = tagOf(card as Card);
+    const badResult = tagResultProblem(tagged, i);
     if (badResult !== undefined) throw badResult;
-    count += given as number;
+    count += tagged as number;
   }
   return count;
 }
