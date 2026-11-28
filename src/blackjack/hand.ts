@@ -2,7 +2,7 @@ import type { CardStack } from "../stack.ts";
 
 import { InvalidCardError } from "../errors.ts";
 import { readHand } from "../internal/blackjack.ts";
-import { stackProblem } from "../internal/checks.ts";
+import { namedStackProblem } from "../internal/checks.ts";
 
 /**
  * Returns a hand's total in blackjack: the sum of its cards' values, with an
@@ -55,7 +55,7 @@ import { stackProblem } from "../internal/checks.ts";
  * @since NEXT
  */
 export function handTotal(hand: CardStack): number {
-  const problem = stackProblem(hand);
+  const problem = namedStackProblem(hand, "hand");
   if (problem !== undefined) throw problem;
   const reading = readHand(hand);
   if (reading instanceof InvalidCardError) throw reading;
@@ -106,7 +106,7 @@ export function handTotal(hand: CardStack): number {
  * @since NEXT
  */
 export function isSoft(hand: CardStack): boolean {
-  const problem = stackProblem(hand);
+  const problem = namedStackProblem(hand, "hand");
   if (problem !== undefined) throw problem;
   const reading = readHand(hand);
   if (reading instanceof InvalidCardError) throw reading;
@@ -148,7 +148,7 @@ export function isSoft(hand: CardStack): boolean {
  * @since NEXT
  */
 export function isBlackjack(hand: CardStack): boolean {
-  const problem = stackProblem(hand);
+  const problem = namedStackProblem(hand, "hand");
   if (problem !== undefined) throw problem;
   const reading = readHand(hand);
   if (reading instanceof InvalidCardError) throw reading;
@@ -158,8 +158,8 @@ export function isBlackjack(hand: CardStack): boolean {
 /**
  * Checks whether a hand is bust: whether its total is over 21.
  *
- * An ace never busts a hand: it counts 1 whenever 11 would take the total over
- * 21. So A♠ K♥ 5♣ is a hard 16, not bust, while K♠ Q♥ 2♣ is bust at 22.
+ * An ace counts 1 whenever 11 would take the total over 21, so A♠ K♥ 5♣ is a
+ * hard 16, not bust, while K♠ Q♥ 2♣ is bust at 22.
  *
  * Only the cards' ranks are read, so a cloned card counts the same as the
  * real one. The hand is left untouched.
@@ -184,7 +184,7 @@ export function isBlackjack(hand: CardStack): boolean {
  * @since NEXT
  */
 export function isBust(hand: CardStack): boolean {
-  const problem = stackProblem(hand);
+  const problem = namedStackProblem(hand, "hand");
   if (problem !== undefined) throw problem;
   const reading = readHand(hand);
   if (reading instanceof InvalidCardError) throw reading;

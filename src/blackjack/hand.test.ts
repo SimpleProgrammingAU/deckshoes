@@ -185,9 +185,10 @@ describe.each([
     },
   );
 
-  it.each(nonArrays())("rejects %s as the hand", (_label, hand) => {
+  it.each(nonArrays())("rejects %s as the hand, naming it", (_label, hand) => {
     expect(thrownBy(() => operation(asStack(hand)))).toMatchObject({
       code: "INVALID_ARGUMENT",
+      message: expect.stringMatching(/^Invalid hand /u) as unknown,
     });
   });
 
