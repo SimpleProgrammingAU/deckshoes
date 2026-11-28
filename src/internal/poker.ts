@@ -1,11 +1,11 @@
-import type { Card, Rank, Suit } from "../card.ts";
+import type { Card, Rank } from "../card.ts";
 import type { CardStack } from "../stack.ts";
 
 import { InvalidArgumentError, InvalidCardError } from "../errors.ts";
 import { Category } from "../poker/category.ts";
 import { cardCountText } from "./checks.ts";
-import { display } from "./display.ts";
 import { rankEntry } from "./rank-entry.ts";
+import { suitEntry } from "./suit-entry.ts";
 
 /** Each standard rank's value in poker, from 2 for a 2 up to 14 for an ace, which also counts as 1 in the wheel. Built here rather than with `lookup()`, as `VALUES` in src/internal/blackjack.ts is, to keep `lookup()` out of the chunk shared between entry points. */
 const VALUES: ReadonlyMap<unknown, number> = /* @__PURE__ */ new Map(
@@ -24,14 +24,6 @@ const VALUES: ReadonlyMap<unknown, number> = /* @__PURE__ */ new Map(
     K: 13,
     A: 14,
   } satisfies Record<Rank, number>),
-);
-
-/** Each standard suit's index, for finding flushes and copies, built as {@link VALUES} is. */
-const SUITS: ReadonlyMap<unknown, number> = /* @__PURE__ */ new Map(
-  /* @__PURE__ */ Object.entries({ S: 0, H: 1, D: 2, C: 3 } satisfies Record<
-    Suit,
-    number
-  >),
 );
 
 /** Each category's strength, from 0 for high card up to 8 for a straight flush, so that a higher category beats a lower one. */
@@ -65,21 +57,6 @@ interface HeldCard {
 interface Straight {
   readonly held: readonly HeldCard[];
   readonly top: number;
-}
-
-/** Looks up a card's suit, read once, as `rankEntry` looks up its rank; returns the suit's index, or the error for a card without a standard suit at `position` of the stack `stackName` names. Only called once the card has a standard rank, so it's an object. */
-function suitEntry(
-  card: unknown,
-  position: number,
-  stackName: string,
-): InvalidCardError | number {
-  const suit = (card as Partial<Record<"suit", unknown>>).suit;
-  return (
-    SUITS.get(suit) ??
-    new InvalidCardError(
-      `Invalid card with suit ${display(suit)} at position ${String(position)} of ${stackName}: expected a card with suit "S", "H", "D" or "C"`,
-    )
-  );
 }
 
 /** Finds the highest straight among some cards, given the card of each value they hold, or `undefined` for a value they don't; or `undefined` when they hold no straight. */
