@@ -144,6 +144,18 @@ export function stackProblem(value: unknown): InvalidArgumentError | undefined {
       );
 }
 
+/** Returns the error for a stack that isn't an array, named as `name` in the message, such as "remainder" where a call takes two stacks; or `undefined` for one that is. Apart from {@link stackProblem}, which the root entry point bundles, so a name there doesn't change the root's size. */
+export function namedStackProblem(
+  value: unknown,
+  name: string,
+): InvalidArgumentError | undefined {
+  return Array.isArray(value)
+    ? undefined
+    : new InvalidArgumentError(
+        `Invalid ${name} ${display(value)}: expected an array of cards`,
+      );
+}
+
 /** Returns the error for compact-string text that isn't a string, or `undefined` for text that is; `example` shows valid text in the message. */
 export function textProblem(
   value: unknown,
