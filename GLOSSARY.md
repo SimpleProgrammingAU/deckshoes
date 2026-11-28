@@ -261,7 +261,7 @@ _Avoid_: board, shared cards
 ## Bridge
 
 **High-card points**:
-A hand's points for its aces, kings, queens and jacks: 4 for each ace, 3 for each king, 2 for each queen and 1 for each jack, so a deck holds 40 and a hand of 13 cards at most 37.
+A hand's points for its aces, kings, queens and jacks: 4 for each ace, 3 for each king, 2 for each queen and 1 for each jack, so a standard 52 holds 40 and a hand of 13 cards dealt from one at most 37.
 _Avoid_: HCP, honour points, point count
 
 **Suit length**:

@@ -692,7 +692,7 @@ compareHands(parseStack("QD QS 4C"), parseStack("AH KH 9H")); // => 1
 
 `deckshoes/bridge` counts a hand's high-card points and gives its distribution.
 
-- **`highCardPoints(hand)`** adds up 4 for each ace, 3 for each king, 2 for each queen and 1 for each jack. A deck holds 40, so a hand of 13 cards averages 10.
+- **`highCardPoints(hand)`** adds up 4 for each ace, 3 for each king, 2 for each queen and 1 for each jack. A standard 52 holds 40, so a hand of 13 cards dealt from one averages 10.
 - **`distribution(hand)`** gives the hand's suit lengths, longest first, whichever suits they're in, such as `[4, 3, 3, 3]`. Join them with hyphens to write 4-3-3-3.
 
 Both take any cards: a hand of 13, a hand in mid-play, or a partnership's two hands together. Other ways to judge a bridge hand, such as distribution points and the losing trick count, aren't covered yet ([#102](https://github.com/SimpleProgrammingAU/deckshoes/issues/102)).

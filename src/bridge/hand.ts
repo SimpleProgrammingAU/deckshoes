@@ -8,9 +8,10 @@ import { namedStackProblem } from "../internal/checks.ts";
  * Returns a hand's high-card points: 4 for each ace, 3 for each king, 2 for
  * each queen and 1 for each jack.
  *
- * A deck holds 40, so a hand of 13 cards averages 10 and holds at most 37.
- * Any cards can be counted, such as a hand in mid-play, or a partnership's two
- * hands together, whose points add up. An empty hand has none.
+ * A standard 52 holds 40, so a hand of 13 cards dealt from one averages 10
+ * and holds at most 37. Any cards can be counted, such as a hand in mid-play,
+ * or a partnership's two hands together, whose points add up. An empty hand
+ * has none.
  *
  * Only the cards' ranks are read, so the order of the cards doesn't matter,
  * and a cloned card, such as one sent with `postMessage`, counts the same as
@@ -42,7 +43,7 @@ import { namedStackProblem } from "../internal/checks.ts";
  * highCardPoints(parseStack("10S 9S 8H 7H 6H 5D 4D 3D 2D 10C 9C 8C 7C")); // => 0
  * highCardPoints([]); // => 0
  *
- * // A deck holds 40.
+ * // A standard 52 holds 40.
  * highCardPoints(standard52()); // => 40
  *
  * // Cards are read by rank, so cloned cards count the same.
