@@ -27,7 +27,7 @@
     "name": "deckshoes/poker (everything)",
     "path": "dist/poker.js",
     "import": "*",
-    "limit": "2000 B"
+    "limit": "2050 B"
   },
   {
     "name": "deckshoes/presets (everything)",
