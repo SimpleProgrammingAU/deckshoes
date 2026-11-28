@@ -20,7 +20,8 @@
   "sourceLinkExternal": true,
   "navigationLinks": {
     "GitHub": "https://github.com/SimpleProgrammingAU/deckshoes",
-    "npm": "https://www.npmjs.com/package/deckshoes"
+    "npm": "https://www.npmjs.com/package/deckshoes",
+    "Playground": "https://stackblitz.com/github/SimpleProgrammingAU/deckshoes/tree/main/playground?file=index.ts"
   },
   "validation": {
     "notExported": true,
