@@ -277,6 +277,8 @@ describe("trueCount", () => {
     [0, 156, 52, 0],
     [6, 144, 48, 2],
     [1.5, 104, 52, 0.75],
+    [27, 108, 52, 13],
+    [-15, 60, 52, -13],
   ])(
     "divides %d by %d cards left in decks of %d to give %d",
     (running, left, size, expected) => {
@@ -288,6 +290,28 @@ describe("trueCount", () => {
     expect(trueCount(6, threeDecks, deck)).toBe(2);
     const spanish21 = deck.filter((c) => c.rank !== "10");
     expect(trueCount(6, threeDecks.slice(0, 144), spanish21)).toBe(2);
+  });
+
+  it("gives every whole or half true count exactly, rounding once", () => {
+    const wrong: string[] = [];
+    for (const size of [52, 48]) {
+      const deck = holes(size);
+      for (let left = 1; left <= 8 * size; left++) {
+        const remainder = holes(left);
+        for (let running = -60; running <= 60; running++) {
+          const doubled = 2 * running * size;
+          if (doubled % left !== 0) continue;
+          const exact = doubled / left / 2;
+          const given = trueCount(running, remainder, deck);
+          if (given !== exact) {
+            wrong.push(
+              `${String(running)} over ${String(left)} of ${String(size)}: ${String(given)}`,
+            );
+          }
+        }
+      }
+    }
+    expect(wrong).toStrictEqual([]);
   });
 
   it("gives back the running count when multiplied by the decks left", () => {

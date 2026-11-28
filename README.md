@@ -631,7 +631,7 @@ count += runningCount(next.hands.flat());
 count; // => 2
 
 // The running count per deck left to deal: 296 cards is about 5.7 decks.
-trueCount(count, next.shoe.cards, deck); // => 0.3513513513513513
+trueCount(count, next.shoe.cards, deck); // => 0.35135135135135137
 Math.trunc(trueCount(count, next.shoe.cards, deck)); // => 0
 
 // With three decks left, a running count of +6 is a true count of +2.
