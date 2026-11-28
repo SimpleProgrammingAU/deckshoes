@@ -37,10 +37,10 @@
  * @since NEXT
  */
 export const Category: {
-  /** Four cards of one rank. */
-  readonly FOUR_OF_A_KIND: "four of a kind";
   /** Five cards of one suit, not in a row. */
   readonly FLUSH: "flush";
+  /** Four cards of one rank. */
+  readonly FOUR_OF_A_KIND: "four of a kind";
   /** Three cards of one rank and two of another. */
   readonly FULL_HOUSE: "full house";
   /** None of the other categories. */
