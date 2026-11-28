@@ -1,6 +1,10 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts", "src/presets/index.ts"],
+  "entryPoints": [
+    "src/index.ts",
+    "src/blackjack/index.ts",
+    "src/presets/index.ts"
+  ],
   "out": "docs-site",
   "plugin": ["./scripts/typedoc-router.ts"],
   "router": "deckshoes",

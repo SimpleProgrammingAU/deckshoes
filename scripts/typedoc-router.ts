@@ -2,11 +2,12 @@
  * A TypeDoc plugin that keeps the API reference's page paths where they were
  * published.
  *
- * With two entry points, TypeDoc puts each page under its module's name, so
- * `classes/InvalidCardError.html` would move to
+ * With more than one entry point, TypeDoc puts each page under its module's
+ * name, so `classes/InvalidCardError.html` would move to
  * `classes/deckshoes.InvalidCardError.html`. This router drops the prefix for
- * the `deckshoes` module only. Presets pages keep theirs, such as
- * `functions/deckshoes_presets.standard52.html`.
+ * the `deckshoes` module only. Subpath pages keep theirs, such as
+ * `functions/deckshoes_presets.standard52.html` and
+ * `functions/deckshoes_blackjack.handTotal.html`.
  */
 import { existsSync } from "node:fs";
 import path from "node:path";

@@ -1,7 +1,8 @@
 /**
- * Installs the packed tarball into a throwaway project and loads both entry
- * points with `import` and `require()`, the way users will. Then type-checks a
- * file that uses both, against the published types. Run `pnpm build` first.
+ * Installs the packed tarball into a throwaway project and loads every entry
+ * point with `import` and `require()`, the way users will. Then type-checks a
+ * file that uses them all, against the published types. Run `pnpm build`
+ * first.
  */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -44,6 +45,26 @@ for (const name of ["standard52", "piquet", "euchre", "pinochle"]) {
     throw new Error("the deckshoes entry point exports the " + name + " preset");
   }
 }
+const softSeventeen = [card("A", "S"), card("6", "H")];
+if (handTotal(softSeventeen) !== 17 || !isSoft(softSeventeen) || isBust(softSeventeen) || !isBlackjack([card("A", "S"), card("K", "H")])) {
+  throw new Error("deckshoes/blackjack loaded but its hand functions misbehaved");
+}
+for (const [hand, ErrorClass, code] of [[[null], InvalidCardError, "INVALID_CARD"], ["AS", InvalidArgumentError, "INVALID_ARGUMENT"]]) {
+  let blackjackError;
+  try {
+    handTotal(hand);
+  } catch (error) {
+    blackjackError = error;
+  }
+  if (!(blackjackError instanceof ErrorClass) || !isDeckshoesError(blackjackError, code)) {
+    throw new Error("deckshoes/blackjack throws its own error classes, not the ones deckshoes exports");
+  }
+}
+for (const name of ["handTotal", "isSoft", "isBlackjack", "isBust"]) {
+  if (name in root) {
+    throw new Error("the deckshoes entry point exports blackjack's " + name);
+  }
+}
 const shuffled = shuffle(deck, { random: seededRandom(42) });
 if (shuffled.length !== 52 || shuffled[0] !== card("7", "H")) {
   throw new Error("shuffle() with seededRandom(42) gave the wrong order");
@@ -69,11 +90,12 @@ if (chainedDraw.cards[0] !== drawn.cards[0] || chainedDraw.remainder[0] !== draw
 `;
 
 /**
- * Uses both entry points together. If the build gave each entry point its own
- * copy of the branded Card type, the two wouldn't be assignable or comparable.
+ * Uses every entry point together. If the build gave each entry point its own
+ * copy of the branded Card type, they wouldn't be assignable or comparable.
  */
 const TYPES = `
 import { type Card, card, type CardStack, chain, type Chain, draw, type DrawResult, seededRandom, shuffle, type TerminatedChain } from "deckshoes";
+import { handTotal, isBlackjack, isBust, isSoft } from "deckshoes/blackjack";
 import { euchre, pinochle, type PinochleOptions, piquet, standard52 } from "deckshoes/presets";
 
 const options: PinochleOptions = { size: 80 };
@@ -87,6 +109,10 @@ const drawn: DrawResult<Card> = draw(standard52(), 2);
 export const remainder: CardStack<Card> = drawn.remainder;
 const terminated: TerminatedChain<DrawResult<Card>> = chain(standard52()).draw(2);
 export const drawnCards: CardStack<Card> = terminated.value().cards;
+const blackjackHand: Card[] = [card("A", "S"), card("K", "H")];
+export const total: number = handTotal(blackjackHand);
+export const soft: boolean = isSoft(standard52());
+export const blackjack: boolean = isBlackjack(blackjackHand) && !isBust(drawnCards);
 `;
 
 /** Strict settings for TYPES, checking the published .d.ts files too. */
@@ -129,6 +155,7 @@ try {
     [
       `import * as root from "deckshoes";`,
       `import { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } from "deckshoes";`,
+      `import { handTotal, isBlackjack, isBust, isSoft } from "deckshoes/blackjack";`,
       `import { euchre, pinochle, piquet, standard52 } from "deckshoes/presets";`,
       CHECK,
     ].join("\n"),
@@ -138,6 +165,7 @@ try {
     [
       `const root = require("deckshoes");`,
       `const { card, chain, draw, InvalidArgumentError, InvalidCardError, isDeckshoesError, seededRandom, shuffle } = root;`,
+      `const { handTotal, isBlackjack, isBust, isSoft } = require("deckshoes/blackjack");`,
       `const { euchre, pinochle, piquet, standard52 } = require("deckshoes/presets");`,
       CHECK,
     ].join("\n"),
