@@ -35,7 +35,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 
 Each helper is its own entry point with its own size budget, so you only download what you import.
 
-- `deckshoes/poker`: rank and compare 5- and 7-card hands.
+- `deckshoes/poker`: the category of a poker hand, its best five cards, and which of two poker hands wins, from hold'em's seven cards down to two hole cards. **Done.**
 - `deckshoes/blackjack`: hand totals, soft hands, blackjack and bust, and running and true counts, Hi-Lo by default. **Done.**
 - `deckshoes/bridge`: high-card points and hand distribution.
 

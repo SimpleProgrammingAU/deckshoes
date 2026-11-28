@@ -66,7 +66,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Blackjack helpers come from `deckshoes/blackjack`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): poker and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Blackjack and poker helpers come from `deckshoes/blackjack` and `deckshoes/poker`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -574,7 +574,7 @@ chain(groups[3] ?? [])
 
 ## Game helpers
 
-Game helpers come from their own entry points, one for each game, so you only download the games you import. They're functions, with no chain methods: unwrap a chain with `.value()` first. They read cards by rank, so cloned cards work, and they throw the same errors as the rest of deckshoes.
+Game helpers come from their own entry points, one for each game, so you only download the games you import. They're functions, with no chain methods: unwrap a chain with `.value()` first. They read cards by rank, and by suit where the game needs it, so cloned cards work, and they throw the same errors as the rest of deckshoes.
 
 ### Blackjack
 
@@ -642,6 +642,49 @@ trueCount(6, burn(sixDecks, 156).cards, deck); // => 2
 const spanish21 = deck.filter((c) => c.rank !== "10");
 const spanishShoe = shoe(spanish21, 6, { random: seededRandom(42) });
 trueCount(12, spanishShoe.cards, spanish21); // => 2
+```
+
+### Poker
+
+`deckshoes/poker` judges poker hands: their category, their cards, and which wins.
+
+- **`handCategory(cards)`** names a poker hand's category, from `Category.STRAIGHT_FLUSH` down through `Category.FULL_HOUSE` and `Category.TWO_PAIR` to `Category.HIGH_CARD`.
+- **`bestHand(cards)`** gives its cards, most significant first: the cards that make the category, then the kickers, high to low.
+- **`compareHands(cards, otherCards)`** gives 1 if the first poker hand wins, -1 if it loses, or 0 if they tie and split the pot, so it sorts poker hands too.
+
+Each takes every card a player can use and judges the best five, as hold'em does with two hole cards and five community cards, or all of them while there are fewer than five, so a pair before the flop is already one pair. The ace is high, or low in the wheel, 5 4 3 2 A, and suits never rank. A poker hand is dealt from one deck, so a card given twice throws. Omaha, low hands and wild cards aren't covered yet ([#100](https://github.com/SimpleProgrammingAU/deckshoes/issues/100)).
+
+```ts
+import { formatStack, parseStack } from "deckshoes";
+import {
+  bestHand,
+  Category,
+  compareHands,
+  handCategory,
+} from "deckshoes/poker";
+
+// A hold'em showdown: each player's hole cards with the community cards.
+const communityCards = parseStack("KS 8D 8C 4H 2S");
+const alice = [...parseStack("AH KD"), ...communityCards];
+const bob = [...parseStack("9S 9D"), ...communityCards];
+handCategory(alice); // => Category.TWO_PAIR
+formatStack(bestHand(alice)); // => "KD KS 8D 8C AH"
+compareHands(alice, bob); // => 1
+
+// Suits never rank, so the same ranks split the pot.
+const carol = [...parseStack("AC KH"), ...communityCards];
+compareHands(alice, carol); // => 0
+
+// The wheel is the lowest straight, but a straight still beats three aces.
+compareHands(parseStack("5S 4H 3D 2C AS"), parseStack("AH AD AC KS QH")); // => 1
+
+// Before the flop, a pair in the hole is ahead of A K. That says who's ahead
+// now, not who's likely to win.
+handCategory(parseStack("2C 2D")); // => Category.ONE_PAIR
+compareHands(parseStack("2C 2D"), parseStack("AS KH")); // => 1
+
+// In stud, the best showing hand acts first: compare the up cards alone.
+compareHands(parseStack("QD QS 4C"), parseStack("AH KH 9H")); // => 1
 ```
 
 ## Saving and loading
