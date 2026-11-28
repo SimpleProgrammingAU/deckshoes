@@ -648,7 +648,7 @@ trueCount(12, spanishShoe.cards, spanish21); // => 2
 
 `deckshoes/poker` judges poker hands: their category, their cards, and which wins.
 
-- **`handCategory(cards)`** names a poker hand's category, from `Category.STRAIGHT_FLUSH` down through `Category.FULL_HOUSE` and `Category.TWO_PAIR` to `Category.HIGH_CARD`.
+- **`handCategory(cards)`** names a poker hand's category. From highest to lowest, they're `Category.STRAIGHT_FLUSH`, `Category.FOUR_OF_A_KIND`, `Category.FULL_HOUSE`, `Category.FLUSH`, `Category.STRAIGHT`, `Category.THREE_OF_A_KIND`, `Category.TWO_PAIR`, `Category.ONE_PAIR` and `Category.HIGH_CARD`, and a higher category beats a lower one, whatever the ranks.
 - **`bestHand(cards)`** gives its cards, most significant first: the cards that make the category, then the kickers, high to low.
 - **`compareHands(cards, otherCards)`** gives 1 if the first poker hand wins, -1 if it loses, or 0 if they tie and split the pot, so it sorts poker hands too.
 
@@ -683,7 +683,8 @@ compareHands(parseStack("5S 4H 3D 2C AS"), parseStack("AH AD AC KS QH")); // => 
 handCategory(parseStack("2C 2D")); // => Category.ONE_PAIR
 compareHands(parseStack("2C 2D"), parseStack("AS KH")); // => 1
 
-// In stud, the best showing hand acts first: compare the up cards alone.
+// In stud, the player whose up cards make the best poker hand acts first:
+// compare the up cards alone.
 compareHands(parseStack("QD QS 4C"), parseStack("AH KH 9H")); // => 1
 ```
 
