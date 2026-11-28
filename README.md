@@ -732,12 +732,16 @@ highCardPoints([...north, ...south]); // => 29
 // Four hands of 13 from a shuffled deck share its 40 high-card points.
 const deck = shuffle(standard52(), { random: seededRandom(42) });
 const { hands } = deal(deck, 4, 13);
-hands.map((hand) => highCardPoints(hand)); // => [11, 9, 11, 9]
+const points = hands.map((hand) => highCardPoints(hand));
+points; // => [11, 9, 11, 9]
+points.reduce((sum, each) => sum + each, 0); // => 40
 hands.map((hand) => distribution(hand).join("-")); // => ["5-3-3-2", "6-3-2-2", "5-4-3-1", "4-3-3-3"]
 
 // Which suit is which: count one suit's cards, such as to look for five or
 // more spades.
-count(north, ({ suit }) => suit === "S"); // => 4
+const spades = count(north, ({ suit }) => suit === "S");
+spades; // => 4
+spades >= 5; // => false
 ```
 
 ## Saving and loading
