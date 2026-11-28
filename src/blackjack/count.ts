@@ -10,8 +10,8 @@ import {
 } from "../internal/blackjack.ts";
 import {
   cardsProblem,
+  namedStackProblem,
   optionsProblem,
-  stackProblem,
 } from "../internal/checks.ts";
 import { display } from "../internal/display.ts";
 import { rankEntry } from "../internal/rank-entry.ts";
@@ -198,7 +198,9 @@ export function trueCount(
       `Invalid running count ${display(runningCount)}: expected a finite number`,
     );
   }
-  const problem = stackProblem(remainder) ?? stackProblem(deck);
+  const problem =
+    namedStackProblem(remainder, "remainder") ??
+    namedStackProblem(deck, "deck");
   if (problem !== undefined) throw problem;
   const left = remainder.length;
   if (left === 0) {

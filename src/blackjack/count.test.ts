@@ -330,19 +330,24 @@ describe("trueCount", () => {
     ).toMatchObject({ code: "INVALID_ARGUMENT" });
   });
 
-  it.each(nonArrays())("rejects %s as the remainder", (_label, remainder) => {
-    expect(
-      thrownBy(() => trueCount(6, asStack(remainder), deck)),
-    ).toMatchObject({
-      code: "INVALID_ARGUMENT",
-    });
-  });
+  it.each(nonArrays())(
+    "rejects %s as the remainder, naming it",
+    (_label, remainder) => {
+      expect(
+        thrownBy(() => trueCount(6, asStack(remainder), deck)),
+      ).toMatchObject({
+        code: "INVALID_ARGUMENT",
+        message: expect.stringMatching(/^Invalid remainder /u) as unknown,
+      });
+    },
+  );
 
-  it.each(nonArrays())("rejects %s as the deck", (_label, given) => {
+  it.each(nonArrays())("rejects %s as the deck, naming it", (_label, given) => {
     expect(
       thrownBy(() => trueCount(6, threeDecks, asStack(given))),
     ).toMatchObject({
       code: "INVALID_ARGUMENT",
+      message: expect.stringMatching(/^Invalid deck /u) as unknown,
     });
   });
 

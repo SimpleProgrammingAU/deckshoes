@@ -6,6 +6,7 @@ import {
   cardTotalProblem,
   countProblem,
   flagProblem,
+  namedStackProblem,
   notInOrder,
   optionsProblem,
   positionProblem,
@@ -183,6 +184,16 @@ describe("stackProblem", () => {
   it("accepts any array and rejects anything else", () => {
     expect(stackProblem([])).toBeUndefined();
     expect(stackProblem("AS")).toMatchObject({ code: "INVALID_ARGUMENT" });
+  });
+});
+
+describe("namedStackProblem", () => {
+  it("accepts any array and rejects anything else, naming the stack", () => {
+    expect(namedStackProblem([], "deck")).toBeUndefined();
+    expect(namedStackProblem(null, "deck")).toMatchObject({
+      code: "INVALID_ARGUMENT",
+      message: "Invalid deck null: expected an array of cards",
+    });
   });
 });
 
