@@ -66,6 +66,26 @@ const CHAIN_IMPORT = /Only src\/index\.ts imports the chain.*\(ADR 0001\)/u;
 /** What a library module that imports a Node built-in is told. */
 const NODE_IMPORT = /Node built-ins/u;
 
+/** What a module that imports an entry point is told. #74 asks that it names ADR 0001. */
+const ENTRY_POINT_IMPORT = /not an entry point.*\(ADR 0001\)/u;
+
+/** Imports of an entry point, which no library module makes, value or type (#74). */
+const ENTRY_POINT_IMPORTS = [
+  'import { InvalidCardError } from "deckshoes";',
+  'import { standard52 } from "deckshoes/presets";',
+  'import { handTotal } from "deckshoes/blackjack";',
+  'import { chain } from "../index.ts";',
+  'import { card } from "./index.ts";',
+  'import { card } from "../index.js";',
+  'import { standard52 } from "../presets/index.ts";',
+  'import type { Card } from "deckshoes";',
+  'import type { Card } from "../index.ts";',
+  'import "deckshoes";',
+  'export { card } from "../index.ts";',
+  'export * from "deckshoes";',
+  'export type { Card } from "deckshoes";',
+];
+
 /** The rule that flags type tests' fake cards, so #96 turns it off for them alone. */
 const CLASS_INSTANCE = "@typescript-eslint/no-unsafe-class-instance-assignment";
 
@@ -74,6 +94,7 @@ describe("the rules ESLint applies to library code", () => {
     LIBRARY_FILE,
     "src/internal/operation.ts",
     "src/presets/operation.ts",
+    "src/presets/index.ts",
   ])(
     "restrict reading a stack and imports in %s, allow an index loop, and require pure marks",
     async (file) => {
@@ -144,6 +165,22 @@ describe("importing in library code", () => {
     expect(found).toHaveLength(1);
     expect(found[0]).toMatch(NODE_IMPORT);
   });
+
+  it.each(ENTRY_POINT_IMPORTS)("rejects %s", (code) => {
+    const found = problems(code, libraryImports);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(ENTRY_POINT_IMPORT);
+  });
+
+  it.each([
+    'import { card } from "../card.ts";',
+    'import { lookup } from "../internal/lookup.ts";',
+    'import { reindex } from "./reindex.ts";',
+    'import { table } from "./index-table.ts";',
+    'import { deckshoes } from "./deckshoes.ts";',
+  ])("allows %s", (code) => {
+    expect(problems(code, libraryImports)).toEqual([]);
+  });
 });
 
 describe("importing in the root entry point", () => {
@@ -162,6 +199,15 @@ describe("importing in the root entry point", () => {
     const found = problems('import fs from "node:fs";', entryPoint);
     expect(found).toHaveLength(1);
     expect(found[0]).toMatch(NODE_IMPORT);
+  });
+
+  it.each([
+    ...ENTRY_POINT_IMPORTS,
+    'export { standard52 } from "./presets/index.ts";',
+  ])("rejects %s", (code) => {
+    const found = problems(code, entryPoint);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(ENTRY_POINT_IMPORT);
   });
 });
 
