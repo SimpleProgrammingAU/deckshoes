@@ -1,6 +1,6 @@
 # Game helpers ship from their own subpaths
 
-Each game's helpers ship from a subpath named after the game, as presets do ([ADR 0008](./0008-presets-ship-from-a-subpath.md)), starting with `deckshoes/blackjack`. They're plain functions with no chain methods. Their parameters are typed to standard cards (`CardStack`), but they read each card by its rank, so a cloned card, such as one sent with `postMessage`, gives the same answer as the real one. A card without a standard rank throws `INVALID_CARD`, naming its position. They throw the root entry point's error classes, and import the library's modules directly, never an entry point.
+Each game's helpers ship from a subpath named after the game, as presets do ([ADR 0008](./0008-presets-ship-from-a-subpath.md)), starting with `deckshoes/blackjack`. They're plain functions with no chain methods. Their parameters are typed to standard cards (`CardStack`), as notations and presets are, rather than generic as stack operations are ([ADR 0004](./0004-a-stack-is-a-frozen-array-top-first.md)), but they read each card by its rank, so a cloned card, such as one sent with `postMessage`, gives the same answer as the real one. A card without a standard rank throws `INVALID_CARD`, naming its position. They throw the root entry point's error classes, and import the library's modules directly, never an entry point.
 
 ```ts no-test
 import { card } from "deckshoes";
@@ -32,4 +32,4 @@ trueCount(runningCount(seen), shoe.cards, standard52());
 - Lint stops any library module, entry points included, from importing `deckshoes`, `deckshoes/*` or an `index.ts`, value or type (#74), so a helper can't reach the root's chain through its errors.
 - A helper may default a setting to its game's dominant convention, such as Hi-Lo for `runningCount`'s tags. A rank order has no default ([ADR 0012](./0012-rank-and-suit-orders-are-lists-passed-to-every-call.md)), because the right one depends on the game, but a game helper's subpath already names the game.
 - An input that gives a wrong number with no error when left at a default is required and positional instead, such as the deck `trueCount` divides by: Spanish 21 is dealt from 48-card decks ([ADR 0009](./0009-settings-go-in-one-options-object.md)).
-- Game helpers are typed to standard cards, so a custom deck's card with another rank, such as the 500 deck's 11, doesn't type-check, and throws `INVALID_CARD` when it gets in anyway.
+- Whether game helpers take a custom deck's cards, such as the 500 deck's 11s, is for custom decks to settle ([#39](https://github.com/SimpleProgrammingAU/deckshoes/issues/39)). Until then, they're typed to standard cards, and a card without a standard rank throws `INVALID_CARD`.
