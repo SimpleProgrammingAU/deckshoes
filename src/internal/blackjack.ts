@@ -5,7 +5,7 @@ import { InvalidArgumentError, InvalidCardError } from "../errors.ts";
 import { display } from "./display.ts";
 import { rankEntry } from "./rank-entry.ts";
 
-/** Each standard rank's value in blackjack, with an ace as 1, the only rank worth 1. Built here rather than with `lookup()`, which only the root entry point uses: sharing it would move it into the shared chunk, and change the root's measured size. */
+/** Each standard rank's value in blackjack, with an ace as 1, the only rank worth 1. Built here rather than with `lookup()`, so that `lookup()` stays out of the chunk shared between entry points: moving it there reorders the root's bundle and changes its measured size (tsdown.config.ts). */
 const VALUES: ReadonlyMap<unknown, number> = /* @__PURE__ */ new Map(
   /* @__PURE__ */ Object.entries({
     A: 1,
