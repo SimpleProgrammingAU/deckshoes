@@ -34,7 +34,7 @@
  * Category.FULL_HOUSE; // => "full house"
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export const Category: {
   /** Five cards of one suit, not in a row. */
@@ -80,6 +80,6 @@ export const Category: {
  * category; // => Category.ONE_PAIR
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export type Category = (typeof Category)[keyof typeof Category];

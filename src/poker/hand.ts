@@ -65,7 +65,7 @@ import { readPokerHand, sizesProblem } from "../internal/poker.ts";
  * handCategory(parseStack("AS AS AH AD AC")); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function handCategory(cards: CardStack): Category {
   const problem = namedStackProblem(cards, "cards");
@@ -143,7 +143,7 @@ export function handCategory(cards: CardStack): Category {
  * formatStack(omahaHand(holeCards, communityCards)); // => "AS KD JS 7S 5S"
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function bestHand(cards: CardStack): CardStack {
   const problem = namedStackProblem(cards, "cards");
@@ -217,7 +217,7 @@ export function bestHand(cards: CardStack): CardStack {
  * compareHands(parseStack("AS AH"), parseStack("KS KH KD")); // throws INVALID_ARGUMENT
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function compareHands(
   cards: CardStack,

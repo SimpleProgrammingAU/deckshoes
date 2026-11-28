@@ -55,7 +55,7 @@ import { namedStackProblem } from "../internal/checks.ts";
  * highCardPoints(holey); // throws INVALID_CARD
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function highCardPoints(hand: CardStack): number {
   const problem = namedStackProblem(hand, "hand");
@@ -118,7 +118,7 @@ export function highCardPoints(hand: CardStack): number {
  * count(hand, ({ suit }) => suit === "S"); // => 4
  * ```
  *
- * @since NEXT
+ * @since 1.1.0
  */
 export function distribution(
   hand: CardStack,

@@ -1,5 +1,15 @@
 # deckshoes
 
+## 1.1.0
+
+### Minor Changes
+
+- [#98](https://github.com/SimpleProgrammingAU/deckshoes/pull/98) [`2a0edad`](https://github.com/SimpleProgrammingAU/deckshoes/commit/2a0edadb0324d1b2ebc9f0ed95a64d56424940ea) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add blackjack helpers, imported from the new `deckshoes/blackjack` entry point. `handTotal()` gives a hand's total, counting an ace as 11 when that keeps the total at 21 or under, and `isSoft()`, `isBlackjack()` and `isBust()` say whether a hand is soft, a blackjack or bust. `runningCount()` sums the cards' tags in Hi-Lo, or in a counting system of your own through its `tag` option, and `trueCount()` divides a running count by the decks left to deal, measured by the deck the shoe was built from, so Spanish 21's 48-card decks count correctly. They read cards by rank, so cloned cards count the same as real ones.
+
+- [#103](https://github.com/SimpleProgrammingAU/deckshoes/pull/103) [`7b717bb`](https://github.com/SimpleProgrammingAU/deckshoes/commit/7b717bbfd8c3174a03de7f8c56ec254e15db518a) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add bridge helpers, imported from the new `deckshoes/bridge` entry point. `highCardPoints()` counts a hand's high-card points, 4 for an ace, 3 for a king, 2 for a queen and 1 for a jack, and `distribution()` gives its suit lengths, longest first, such as `[4, 3, 3, 3]`. Both take any cards, such as a hand in mid-play or a partnership's two hands. Both read each card's rank, and `distribution()` its suit too, so cloned cards work.
+
+- [#101](https://github.com/SimpleProgrammingAU/deckshoes/pull/101) [`0e0fc90`](https://github.com/SimpleProgrammingAU/deckshoes/commit/0e0fc9090d2604e1940ac8554520e1da373431e2) Thanks [@SimpleProgrammingAU](https://github.com/SimpleProgrammingAU)! - Add poker helpers, imported from the new `deckshoes/poker` entry point. `handCategory()` names a poker hand's category, such as `Category.FULL_HOUSE`, `bestHand()` gives its cards, most significant first, and `compareHands()` says which of two poker hands wins, or that they tie, and works as a sort comparator. Each judges the best five of the cards it's given, such as hold'em's hole cards with the community cards, or all of them while there are fewer than five, so a pair before the flop is one pair. They read cards by rank and suit, so cloned cards work, and a card given twice throws.
+
 ## 1.0.0
 
 ### Major Changes
