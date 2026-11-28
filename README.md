@@ -66,7 +66,7 @@ chain(standard52())
   .value(); // => { hands, remainder }
 ```
 
-Next on the [roadmap](./ROADMAP.md): optional poker, blackjack and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
+Since 1.0, blackjack helpers come from `deckshoes/blackjack`: see [Game helpers](#game-helpers). Next on the [roadmap](./ROADMAP.md): poker and bridge helpers, realistic shuffles, and custom decks, which bring jokers and the 500, Spanish and Tarot decks.
 
 ## Cards
 
@@ -570,6 +570,75 @@ const groups = sorted.groupBySuit(SuitOrder.BRIDGE).value();
 chain(groups[3] ?? [])
   .peek(2)
   .value(); // => [card("A", "S"), card("2", "S")]
+```
+
+## Game helpers
+
+Game helpers come from their own entry points, one for each game, so you only download the games you import. They're functions, with no chain methods: unwrap a chain with `.value()` first. They read cards by rank, so cloned cards work, and they throw the same errors as the rest of deckshoes.
+
+### Blackjack
+
+`deckshoes/blackjack` totals hands and keeps count.
+
+- **`handTotal(hand)`** sums a hand's values: a 2 to 10 is worth its number, a J, Q or K 10, and an ace 11, or 1 when 11 would take the total over 21.
+- **`isSoft(hand)`** says whether the total counts an ace as 11, as in a soft 17. **`isBlackjack(hand)`** says whether the hand is an ace and a 10, J, Q or K, and **`isBust(hand)`** whether its total is over 21. `isBlackjack` sees only the cards, so treat a split hand's two-card 21 as your rules say.
+
+```ts
+import { type Card, card } from "deckshoes";
+import { handTotal, isBlackjack, isBust, isSoft } from "deckshoes/blackjack";
+
+const dealer = [card("A", "S"), card("6", "H")];
+handTotal(dealer); // => 17
+isSoft(dealer); // => true
+
+// A dealer who stands on soft 17 draws below 17, and one who hits soft 17
+// draws to it as well.
+const standsOnSoft17 = (hand: readonly Card[]) => handTotal(hand) < 17;
+const hitsSoft17 = (hand: readonly Card[]) =>
+  handTotal(hand) < 17 || (handTotal(hand) === 17 && isSoft(hand));
+standsOnSoft17(dealer); // => false
+hitsSoft17(dealer); // => true
+
+// Drawing a 9 makes a hard 16: the ace drops back to 1.
+const drawn = [...dealer, card("9", "C")];
+handTotal(drawn); // => 16
+isSoft(drawn); // => false
+isBust([...drawn, card("8", "D")]); // => true
+
+isBlackjack([card("K", "D"), card("A", "C")]); // => true
+```
+
+Counting cards takes two more:
+
+- **`runningCount(cards)`** sums the cards' Hi-Lo tags: +1 for a 2 to 6, 0 for a 7 to 9, and −1 for a 10 to ace. Counts add up, so count each round's cards as they're seen and add them on, and start again from 0 after a reshuffle. For another counting system, pass a `tag` function, which is given each card and returns its tag.
+- **`trueCount(runningCount, remainder, deck)`** divides a running count by the decks left to deal: the cards left in the shoe over the cards in the deck it was built from. Spanish 21 (Pontoon in Australian casinos) deals 48-card decks, the standard 52 without its 10s, so pass the deck you built the shoe with. The true count isn't rounded: round it as your betting rules say.
+
+```ts
+import { burn, dealFromShoe, discard, seededRandom, shoe } from "deckshoes";
+import { runningCount, trueCount } from "deckshoes/blackjack";
+import { standard52 } from "deckshoes/presets";
+
+const deck = standard52();
+const sixDecks = shoe(deck, 6, { random: seededRandom(42) });
+
+// Count each round's cards and add them on.
+const round = dealFromShoe(sixDecks, 4, 2);
+let count = runningCount(round.hands.flat());
+const next = dealFromShoe(discard(round.shoe, round.hands.flat()), 4, 2);
+count += runningCount(next.hands.flat());
+count; // => 2
+
+// The running count per deck left to deal: 296 cards is about 5.7 decks.
+trueCount(count, next.shoe.cards, deck); // => 0.3513513513513513
+Math.trunc(trueCount(count, next.shoe.cards, deck)); // => 0
+
+// With three decks left, a running count of +6 is a true count of +2.
+trueCount(6, burn(sixDecks, 156).cards, deck); // => 2
+
+// Spanish 21 measures the decks left in 48-card decks.
+const spanish21 = deck.filter((c) => c.rank !== "10");
+const spanishShoe = shoe(spanish21, 6, { random: seededRandom(42) });
+trueCount(12, spanishShoe.cards, spanish21); // => 2
 ```
 
 ## Saving and loading
