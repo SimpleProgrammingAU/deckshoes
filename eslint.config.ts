@@ -16,6 +16,12 @@ import deckshoes from "./eslint-plugin/index.ts";
 
 /** Virtual files that eslint-plugin-jsdoc's processor creates for `@example` code. */
 const EXAMPLES = "**/*.ts/*.ts";
+/**
+ * The playground's code, linted like an example. Its `deckshoes` imports
+ * resolve only once StackBlitz installs the release, so it's linted without
+ * type information; `pnpm typecheck` checks it against `src`.
+ */
+const PLAYGROUND = "playground/**/*.ts";
 const BENCHMARKS = ["src/**/*.bench.ts"];
 const TYPE_TESTS = ["src/**/*.test-d.ts"];
 const TESTS = [
@@ -203,7 +209,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       unicorn.configs.unopinionated,
     ],
     files: ["**/*.ts"],
-    ignores: [EXAMPLES],
+    ignores: [EXAMPLES, PLAYGROUND],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -432,7 +438,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       tseslint.configs.stylistic,
       unicorn.configs.unopinionated,
     ],
-    files: [EXAMPLES],
+    files: [EXAMPLES, PLAYGROUND],
     name: "deckshoes/examples",
     plugins: { perfectionist },
     rules: {
@@ -440,6 +446,7 @@ const config: ReturnType<typeof defineConfig> = defineConfig([
       // `value; // => result` lines are how examples show results.
       "@typescript-eslint/no-unused-expressions": "off",
       "no-console": "off",
+      "unicorn/no-unused-builtin-method-return": "off",
       // The rule can't tell `chain(stack).sort(rankOrder)`, which returns a new
       // chain, from Array#sort, which sorts in place.
       "unicorn/no-array-sort": "off",
