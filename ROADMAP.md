@@ -36,7 +36,7 @@ Tooling, CI, release pipeline, documentation rules and contributor workflow. No 
 Each helper is its own entry point with its own size budget, so you only download what you import.
 
 - `deckshoes/poker`: rank and compare 5- and 7-card hands.
-- `deckshoes/blackjack`: hard and soft hand totals, Hi-Lo running count.
+- `deckshoes/blackjack`: hand totals, soft hands, blackjack and bust, and running and true counts, Hi-Lo by default. **Done.**
 - `deckshoes/bridge`: high-card points and hand distribution.
 
 M3 also brings an online playground, linked from the README and the API docs.
