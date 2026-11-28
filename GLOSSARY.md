@@ -225,6 +225,39 @@ The sum of the tags of the cards seen since the last shuffle.
 The running count divided by the number of decks left to deal.
 _Avoid_: count per deck
 
+## Poker
+
+**Poker hand**:
+The cards a poker player is judged by: the best five of the cards they can use, or all of them while there are fewer than five, such as two hole cards before the flop.
+_Avoid_: five-card hand, combination, holding
+
+**Category**:
+The kind of poker hand, from highest to lowest: straight flush, four of a kind, full house, flush, straight, three of a kind, two pair, one pair and high card. A poker hand in a higher category beats any in a lower one.
+_Avoid_: hand rank, hand ranking, hand type
+
+**Kicker**:
+A card in a poker hand outside the cards that make its category, compared only when those cards tie: the A, 7 and 2 in K K A 7 2.
+_Avoid_: side card
+
+**Wheel**:
+A 2 3 4 5, the lowest straight, where the ace counts low.
+_Avoid_: bicycle
+
+**Royal flush**:
+A K Q J 10 of one suit: the highest straight flush, though not a category of its own.
+
+**Hole cards**:
+Cards dealt face down to one player, seen only by them, such as hold'em's two or stud's first two and last.
+_Avoid_: pocket cards, down cards
+
+**Up cards**:
+Cards dealt face up to one player, which every player can see, as in stud.
+_Avoid_: showing cards, door cards
+
+**Community cards**:
+Cards dealt face up in the middle of the table for every player to use, such as hold'em's five.
+_Avoid_: board, shared cards
+
 ## Library
 
 **Random source**:
