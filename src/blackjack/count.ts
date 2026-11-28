@@ -154,7 +154,7 @@ export function runningCount(
  * @param remainder - The cards left to deal, such as a shoe's `cards`.
  * @param deck - One of the decks the shoe was built from, such as
  * `standard52()`, to measure the decks left by.
- * @returns The running count per deck left to deal.
+ * @returns The running count divided by the decks left to deal.
  * @throws {@link deckshoes!InvalidArgumentError | InvalidArgumentError} When
  * `runningCount` isn't a finite number, `remainder` or `deck` isn't an array,
  * or either is empty.

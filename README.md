@@ -630,7 +630,8 @@ const next = dealFromShoe(discard(round.shoe, round.hands.flat()), 4, 2);
 count += runningCount(next.hands.flat());
 count; // => 2
 
-// The running count per deck left to deal: 296 cards is about 5.7 decks.
+// The running count divided by the decks left to deal: 296 cards is about
+// 5.7 decks.
 trueCount(count, next.shoe.cards, deck); // => 0.35135135135135137
 Math.trunc(trueCount(count, next.shoe.cards, deck)); // => 0
 
