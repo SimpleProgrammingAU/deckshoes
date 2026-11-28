@@ -186,6 +186,45 @@ _Avoid_: ranking, comparator, sort order
 The suits from lowest to highest, each listed once. Bridge order, from clubs through diamonds and hearts to spades, is the built-in suit order.
 _Avoid_: suit ranking
 
+## Blackjack
+
+**Total**:
+The sum of a hand's values in blackjack, with an ace counted as 11 when that keeps the total at 21 or under, and as 1 otherwise.
+_Avoid_: score, points, count
+
+**Soft**:
+A hand whose total counts an ace as 11, such as A 6, a soft 17.
+
+**Hard**:
+A hand whose total counts no ace as 11, such as 10 7 or A 6 K, both hard 17.
+
+**Blackjack**:
+A two-card hand of an ace and a 10, J, Q or K.
+_Avoid_: natural
+
+**Bust**:
+A hand whose total is over 21.
+_Avoid_: busted, broke
+
+**Counting system**:
+A tag for every card, which a player adds up as cards are seen, to judge what's left to deal. Hi-Lo is the most common.
+_Avoid_: count system, strategy
+
+**Tag**:
+The number a counting system gives a card, such as +1 for a 5 in Hi-Lo.
+_Avoid_: value, weight, count value
+
+**Hi-Lo**:
+The counting system that tags 2 to 6 as +1, 7 to 9 as 0, and 10, J, Q, K and A as −1, so a standard 52 adds up to 0.
+_Avoid_: High-Low, Hi-Low
+
+**Running count**:
+The sum of the tags of the cards seen since the last shuffle.
+
+**True count**:
+The running count divided by the number of decks left to deal.
+_Avoid_: count per deck
+
 ## Library
 
 **Random source**:
