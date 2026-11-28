@@ -33,6 +33,7 @@
     "paths": {
       "deckshoes": ["./src/index.ts"],
       "deckshoes/blackjack": ["./src/blackjack/index.ts"],
+      "deckshoes/poker": ["./src/poker/index.ts"],
       "deckshoes/presets": ["./src/presets/index.ts"]
     }
   },
