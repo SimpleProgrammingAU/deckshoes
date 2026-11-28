@@ -13,6 +13,29 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const shell = process.platform === "win32";
 
 const CHECK = `
+// Throws unless each call throws the root entry point's error class, with
+// its code, so a subpath can't have its own copies of the classes.
+function throwsRootErrors(subpath, calls) {
+  for (const [call, ErrorClass, code] of calls) {
+    let thrown;
+    try {
+      call();
+    } catch (error) {
+      thrown = error;
+    }
+    if (!(thrown instanceof ErrorClass) || !isDeckshoesError(thrown, code)) {
+      throw new Error(subpath + " throws its own error classes, not the ones deckshoes exports");
+    }
+  }
+}
+// Throws if the root entry point exports any of a subpath's names.
+function notInRoot(subpath, names) {
+  for (const name of names) {
+    if (name in root) {
+      throw new Error("the deckshoes entry point exports " + name + ", from " + subpath);
+    }
+  }
+}
 if (!isDeckshoesError(new InvalidCardError("x"), "INVALID_CARD")) {
   throw new Error("deckshoes loaded but isDeckshoesError() misbehaved");
 }
@@ -31,63 +54,30 @@ for (const [call, preset, size] of [["piquet()", piquet(), 32], ["euchre()", euc
     throw new Error("deckshoes/presets " + call + " has its own card objects, not the ones card() returns");
   }
 }
-let presetError;
-try {
-  pinochle({ size: 72 });
-} catch (error) {
-  presetError = error;
-}
-if (!(presetError instanceof InvalidArgumentError) || !isDeckshoesError(presetError, "INVALID_ARGUMENT")) {
-  throw new Error("deckshoes/presets throws its own error classes, not the ones deckshoes exports");
-}
-for (const name of ["standard52", "piquet", "euchre", "pinochle"]) {
-  if (name in root) {
-    throw new Error("the deckshoes entry point exports the " + name + " preset");
-  }
-}
+throwsRootErrors("deckshoes/presets", [[() => pinochle({ size: 72 }), InvalidArgumentError, "INVALID_ARGUMENT"]]);
+notInRoot("deckshoes/presets", ["standard52", "piquet", "euchre", "pinochle"]);
 const softSeventeen = [card("A", "S"), card("6", "H")];
 if (handTotal(softSeventeen) !== 17 || !isSoft(softSeventeen) || isBust(softSeventeen) || !isBlackjack([card("A", "S"), card("K", "H")])) {
   throw new Error("deckshoes/blackjack loaded but its hand functions misbehaved");
 }
-for (const [hand, ErrorClass, code] of [[[null], InvalidCardError, "INVALID_CARD"], ["AS", InvalidArgumentError, "INVALID_ARGUMENT"]]) {
-  let blackjackError;
-  try {
-    handTotal(hand);
-  } catch (error) {
-    blackjackError = error;
-  }
-  if (!(blackjackError instanceof ErrorClass) || !isDeckshoesError(blackjackError, code)) {
-    throw new Error("deckshoes/blackjack throws its own error classes, not the ones deckshoes exports");
-  }
-}
+throwsRootErrors("deckshoes/blackjack", [
+  [() => handTotal([null]), InvalidCardError, "INVALID_CARD"],
+  [() => handTotal("AS"), InvalidArgumentError, "INVALID_ARGUMENT"],
+]);
 if (runningCount(deck) !== 0 || runningCount([card("2", "S"), card("K", "H"), card("5", "D")]) !== 1 || trueCount(6, deck.slice(0, 26), deck) !== 12) {
   throw new Error("deckshoes/blackjack loaded but its counts misbehaved");
 }
-for (const name of ["handTotal", "isSoft", "isBlackjack", "isBust", "runningCount", "trueCount"]) {
-  if (name in root) {
-    throw new Error("the deckshoes entry point exports blackjack's " + name);
-  }
-}
+notInRoot("deckshoes/blackjack", ["handTotal", "isSoft", "isBlackjack", "isBust", "runningCount", "trueCount"]);
 const seven = [card("K", "S"), card("K", "H"), card("K", "D"), card("4", "C"), card("4", "S"), card("9", "H"), card("2", "D")];
 if (handCategory(seven) !== Category.FULL_HOUSE || bestHand(seven).length !== 5 || bestHand(seven)[3] !== card("4", "C") || compareHands(seven, deck.slice(0, 5)) !== -1 || !Object.isFrozen(Category)) {
   throw new Error("deckshoes/poker loaded but its functions misbehaved");
 }
-for (const [cards, ErrorClass, code] of [[[null], InvalidCardError, "INVALID_CARD"], ["AS", InvalidArgumentError, "INVALID_ARGUMENT"], [[], InsufficientCardsError, "INSUFFICIENT_CARDS"]]) {
-  let pokerError;
-  try {
-    handCategory(cards);
-  } catch (error) {
-    pokerError = error;
-  }
-  if (!(pokerError instanceof ErrorClass) || !isDeckshoesError(pokerError, code)) {
-    throw new Error("deckshoes/poker throws its own error classes, not the ones deckshoes exports");
-  }
-}
-for (const name of ["Category", "bestHand", "compareHands", "handCategory"]) {
-  if (name in root) {
-    throw new Error("the deckshoes entry point exports poker's " + name);
-  }
-}
+throwsRootErrors("deckshoes/poker", [
+  [() => handCategory([null]), InvalidCardError, "INVALID_CARD"],
+  [() => handCategory("AS"), InvalidArgumentError, "INVALID_ARGUMENT"],
+  [() => handCategory([]), InsufficientCardsError, "INSUFFICIENT_CARDS"],
+]);
+notInRoot("deckshoes/poker", ["Category", "bestHand", "compareHands", "handCategory"]);
 const shuffled = shuffle(deck, { random: seededRandom(42) });
 if (shuffled.length !== 52 || shuffled[0] !== card("7", "H")) {
   throw new Error("shuffle() with seededRandom(42) gave the wrong order");
