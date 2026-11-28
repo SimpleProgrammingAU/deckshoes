@@ -112,6 +112,7 @@ someFunction(-1); // throws INVALID_ARGUMENT
 - Import from `"deckshoes"`, or from a subpath for presets and game helpers, such as `"deckshoes/presets"` or `"deckshoes/blackjack"`, the way users will.
 - Pass a seeded random source to every shuffle, so the results shown are the results you get.
 - Add `no-test` to the fence (` ```ts no-test `) for illustrations that shouldn't run, such as the block above.
+- The README's quick start is also the playground's code, in `playground/index.ts`. StackBlitz opens it from `main` and runs it against the latest release on npm, and a test fails when the two differ, so change both together. A quick start that needs an unreleased change breaks the playground until that change is released.
 
 ## Errors
 
